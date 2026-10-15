@@ -154,7 +154,7 @@ P0 が1つでもあれば C 以下。判定は件数で機械的に行い、甘�
    - `review`: `{"round": <round>, "grade": "A|B|C|D", "pass": <grade が settings/reviewLoop.pass と一致すれば true>, "p0": 件数, "p1": 件数, "p2": 件数, "text": "5 章の全文", "at": "<今>"}`
    - `reviewHistory`: これまでの配列に `{"round", "grade", "p0", "p1", "p2", "at"}` を足す（消さない）
 2. 合格（`pass: true`）のとき：
-   - `status: "確認待ち"`（`"公開済み"` のカードは変えない）
+   - `status: "公開待ち"`（`"公開済み"` のカードは変えない）
    - `loop: {"state": "passed", "round", "max", "updatedAt"}`
 3. 不合格のとき：
    - `round < maxRounds`（既定3）なら、`loop.state: "writing"` にし、`jobs/article-<articleId>-<round+1>` を次の形で書いて、作成の Routine を起動する（`ops/agent-jobs.md` の 3）：

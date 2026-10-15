@@ -312,8 +312,8 @@ const ic=(k,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24">${IC[k]||""}</svg
 /* ---------- 定義 ---------- */
 const PILLAR={launch:"打ち上げ",sky:"天体",spot:"宇宙スポット",gear:"機材",other:"その他"};
 const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","終了":"mute"};
-const AR_STATUS=["未着手","下書き","確認待ち","公開済み"];
-const AR_PILL={"未着手":"mute","下書き":"warn","確認待ち":"info","公開済み":"good"};
+const AR_STATUS=["未着手","下書き","公開待ち","公開済み"];
+const AR_PILL={"未着手":"mute","下書き":"warn","公開待ち":"info","公開済み":"good"};
 const POST_STATUS={"下書き":"warn","予約済み":"info","投稿済み":"good"};
 // 更新ルール（02-site-design.md ルール2）：イベント日からのずれ（日）と作業内容
 const RULES=[
@@ -779,7 +779,7 @@ function openDraft(aid){
       ${S.canWrite?`<div class="ag-box"><div class="d-t">次にすること</div>
         <label class="d-fld">書き直しの指示（なくてもよい）<textarea id="rwNote" rows="2"></textarea></label>
         <div class="d-actions"><button type="button" class="d-btn small secondary" id="rwGo" ${S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running"))?"disabled":""}>書き直しを頼む</button>
-        ${a.status!=="確認待ち"&&a.status!=="公開済み"?`<button type="button" class="d-btn small secondary" id="okGo">この稿で確認待ちにする</button>`:""}</div></div>`:""}
+        ${a.status!=="公開待ち"&&a.status!=="公開済み"?`<button type="button" class="d-btn small secondary" id="okGo">この稿で公開待ちにする</button>`:""}</div></div>`:""}
     </div></div></div>`;
   requestAnimationFrame(()=>{$("#sbk").classList.add("open");$("#sheet").classList.add("open")});
   const close=()=>{const s=$("#sheet"),b=$("#sbk");if(!s)return;s.classList.remove("open");b.classList.remove("open");setTimeout(()=>{$("#sheetHost").innerHTML=""},380);removeEventListener("keydown",onKey)};
@@ -793,7 +793,7 @@ function openDraft(aid){
   host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp()});
   const rw=$("#rwGo");if(rw) rw.onclick=async()=>{rw.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#rwNote").value.trim()});close()};
   const ok=$("#okGo");if(ok) ok.onclick=async()=>{
-    try{await S.db.doc("articles/"+a._id).update({status:"確認待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}});toast("確認待ちにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+    try{await S.db.doc("articles/"+a._id).update({status:"公開待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}});toast("公開待ちにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
 }
 
 /* ---------- 編集シート ---------- */
