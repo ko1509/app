@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ミライミニイク（宇宙を見に行くガイド）：WordPress の初期設定をまとめて行うスクリプト（WP-CLI 用）
+# ミアゲタビ（宇宙を見に行くガイド）：WordPress の初期設定をまとめて行うスクリプト（WP-CLI 用）
 #
 # 使い方（SSH でサーバーに入り、WordPress のフォルダで実行）:
 #   cd ~/<ドメイン>/public_html
@@ -67,10 +67,10 @@ for p in seo-simple-pack wp-multibyte-patch contact-form-7 pochipp; do
     $WP plugin install "$p" --activate >/dev/null && echo "  導入: $p"
   fi
 done
-if [ -f mirai-core.zip ]; then
-  $WP plugin install mirai-core.zip --activate --force >/dev/null && echo "  導入: mirai-core"
+if [ -f miagetabi-core.zip ]; then
+  $WP plugin install miagetabi-core.zip --activate --force >/dev/null && echo "  導入: miagetabi-core"
 else
-  echo "  （mirai-core.zip をこのフォルダに置くと一緒に入ります）"
+  echo "  （miagetabi-core.zip をこのフォルダに置くと一緒に入ります）"
 fi
 
 echo "== コメント欄を閉じる（スパム対策。必要になったら開く）"

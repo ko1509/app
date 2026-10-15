@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: ミライミニイク Core
+ * Plugin Name: ミアゲタビ Core
  * Description: 宇宙を見に行くガイドのための、イベント情報（日時・状況・最終確認日・公式情報）の入力欄、記事冒頭の「今の状況」ボックス、Event構造化データ、記事テンプレート3種（ブロックパターン）を追加します。SWELLと一緒に使う前提です。
  * Version: 1.0.0
  * Requires at least: 6.3
  * Requires PHP: 7.4
- * Author: ミライミニイク
+ * Author: ミアゲタビ
  * License: GPL-2.0-or-later
- * Text Domain: mirai-core
+ * Text Domain: miagetabi-core
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -55,7 +55,7 @@ function mm_get( $post_id, $key ) {
  * 入力欄（投稿の編集画面のメタボックス）
  * ------------------------------------------------------------- */
 add_action( 'add_meta_boxes', function () {
-	add_meta_box( 'mm_event', 'イベント情報（ミライミニイク）', 'mm_render_meta_box', 'post', 'side', 'high' );
+	add_meta_box( 'mm_event', 'イベント情報（ミアゲタビ）', 'mm_render_meta_box', 'post', 'side', 'high' );
 } );
 
 function mm_render_meta_box( $post ) {
@@ -232,9 +232,9 @@ add_action( 'wp_enqueue_scripts', function () {
 .mm-box__list dt{font-weight:700;white-space:nowrap}.mm-box__list dd{margin:0;overflow-wrap:anywhere}
 .mm-box__verified{margin:.8em 0 0!important;font-size:.85em;opacity:.8}
 @media (max-width:480px){.mm-box__list{grid-template-columns:1fr}.mm-box__list dd{margin-bottom:.4em}}';
-	wp_register_style( 'mirai-core', false, array(), '1.0.0' );
-	wp_enqueue_style( 'mirai-core' );
-	wp_add_inline_style( 'mirai-core', $css );
+	wp_register_style( 'miagetabi-core', false, array(), '1.0.0' );
+	wp_enqueue_style( 'miagetabi-core' );
+	wp_add_inline_style( 'miagetabi-core', $css );
 } );
 
 /* ---------------------------------------------------------------
@@ -352,7 +352,7 @@ add_action( 'init', function () {
 	if ( ! function_exists( 'register_block_pattern' ) ) {
 		return;
 	}
-	register_block_pattern_category( 'mirai', array( 'label' => 'ミライミニイク' ) );
+	register_block_pattern_category( 'miagetabi', array( 'label' => 'ミアゲタビ' ) );
 
 	$launch = mm_b_status()
 		. mm_b_p( '【3行で結論】いつ・どこで・何を持って行けばいいか。初めての人がこの3行だけ読めば動けるように書く。' )
@@ -426,7 +426,7 @@ add_action( 'init', function () {
 		. mm_b_h2( '更新履歴' )
 		. mm_b_list( array( 'YYYY/MM/DD 公開' ) );
 
-	register_block_pattern( 'mirai/launch', array( 'title' => 'A 打ち上げ観覧ガイド', 'categories' => array( 'mirai' ), 'content' => $launch ) );
-	register_block_pattern( 'mirai/sky', array( 'title' => 'B 天体イベントガイド', 'categories' => array( 'mirai' ), 'content' => $sky ) );
-	register_block_pattern( 'mirai/spot', array( 'title' => 'C 宇宙スポット見学ガイド', 'categories' => array( 'mirai' ), 'content' => $spot ) );
+	register_block_pattern( 'miagetabi/launch', array( 'title' => 'A 打ち上げ観覧ガイド', 'categories' => array( 'miagetabi' ), 'content' => $launch ) );
+	register_block_pattern( 'miagetabi/sky', array( 'title' => 'B 天体イベントガイド', 'categories' => array( 'miagetabi' ), 'content' => $sky ) );
+	register_block_pattern( 'miagetabi/spot', array( 'title' => 'C 宇宙スポット見学ガイド', 'categories' => array( 'miagetabi' ), 'content' => $spot ) );
 } );

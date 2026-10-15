@@ -1,4 +1,4 @@
-<title>宇宙ガイドサイト 立ち上げ計画</title>
+<title>ミアゲタビ 立ち上げ計画</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,12 +89,12 @@ td:first-child{font-variant-numeric:tabular-nums}
 
 <div class="wrap">
   <header class="hero">
-    <p class="kicker">宇宙を見に行くガイドサイト</p>
-    <h1>宇宙ガイドサイト 立ち上げ計画</h1>
+    <p class="kicker">宇宙を見に行くガイド</p>
+    <h1>ミアゲタビ 立ち上げ計画</h1>
     <p class="lead">ロケットの打ち上げ・天体イベント・宇宙スポットを、初めての人でも「いつ・どこへ・何を持って」行けばいいかわかるように案内するサイトの計画です。自動運転は別サイトで運営します。</p>
     <div class="meta">
       <span class="tag">作成 <b>2026年10月15日</b></span>
-      <span class="tag">サイト名 <b>未決定（本命：ミアゲタビ）</b></span>
+      <span class="tag">サイト <b><a href="https://miagetabi.space/" target="_blank" rel="noopener">miagetabi.space</a></b></span>
       <span class="tag">構成 <b>WordPress＋SWELL</b></span>
       <span class="tag">「推測」＝公式情報で確かめられなかったこと</span>
     </div>
@@ -608,6 +608,9 @@ td:first-child{font-variant-numeric:tabular-nums}
 </ol>
 <p>自動運転の競合（自動運転ラボなど）は <code>../plan-mobility/README.md</code> に移した。</p></section>
 <section class="sec" id="s2"><p class="eyebrow">2</p><h2>サイト設計</h2><h3>2-1. サイト名の案（宇宙サイト）</h3>
+<blockquote>
+<p><strong>決定（2026-10-15）：サイト名「ミアゲタビ」、ドメイン <code>miagetabi.space</code>。</strong> キャッチコピーは「宇宙を見に行くガイド」。下の表は検討の記録として残す。</p>
+</blockquote>
 <p>2026-10-15 にテーマを宇宙に統一したので、名前も考え直した（自動運転サイトの名前は <code>../plan-mobility/README.md</code>）。</p>
 <p>選定の基準：
 1. 打ち上げ・天体・宇宙スポットの<strong>全部</strong>に合う（ロケットだけ、星だけに寄らない）
@@ -752,7 +755,7 @@ td:first-child{font-variant-numeric:tabular-nums}
 <p>※カテゴリーの一覧ページは WordPress の標準では <code>/category/launch/</code> になる。気になるようなら後で直せばよい（記事のURLには影響しない）。</p>
 <p><strong>タグ（横串）</strong>：地域（<code>/tag/kagoshima/</code>）、季節、無料、日帰り、子連れOK。トップとカレンダーは「日付順」で横串に並べる。</p>
 <p><strong>構造化データ</strong>：回ごとの記事には <code>Event</code> スキーマ（startDate, location, eventStatus = EventScheduled / EventPostponed / EventRescheduled）を入れる。延期時は <code>eventStatus</code> も更新する（検索結果に反映されやすい）。</p>
-<p><strong>CMS</strong>：WordPress＋SWELL（決定）。イベント日・今の状況・最終確認日は自作プラグイン <code>site/mirai-core</code> で入力し、記事の冒頭に自動で表示する。構築手順は <code>../site/README.md</code>。</p>
+<p><strong>CMS</strong>：WordPress＋SWELL（決定）。イベント日・今の状況・最終確認日は自作プラグイン <code>site/miagetabi-core</code> で入力し、記事の冒頭に自動で表示する。構築手順は <code>../site/README.md</code>。</p>
 <hr />
 <h3>2-3. 「直前に検索が集中する」性質を活かした更新ルール</h3>
 <p>検索は「イベント当日〜3日前」に一気に増え、終わると急に減る（推測：Googleトレンドで「ふたご座流星群」「H3 打ち上げ」を見るとこの形。公開後に自分のSearch Consoleで確かめる）。だから<strong>公開は早く、更新は直前に厚く</strong>する。</p>
@@ -1307,10 +1310,10 @@ affiliate_slots: [tripod, smartphone_lens, warm_gear, dark_sky_hotel]
 <section class="sec" id="s4c"><p class="eyebrow">4-C</p><h2>テンプレート：宇宙スポット見学</h2><blockquote>
 <p>用途：宇宙センター・JAXAの施設・天文台・科学館・星空の名所など、「行けばいつでも宇宙を感じられる場所」。1か所につき1記事。
 URL例：<code>/spot/tsukuba-space-center/</code>・<code>/spot/stargazing-kanto/</code>
-WordPressでは、プラグイン <code>mirai-core</code> のパターン「C 宇宙スポット見学ガイド」から始める。</p>
+WordPressでは、プラグイン <code>miagetabi-core</code> のパターン「C 宇宙スポット見学ガイド」から始める。</p>
 </blockquote>
 <hr />
-<h3>イベント情報欄（mirai-core）の使い方</h3>
+<h3>イベント情報欄（miagetabi-core）の使い方</h3>
 <ul>
 <li>今の状況：ふだんは「開催中・公開中」。休館・ツアー中止のときは「休止中・休館中」</li>
 <li>イベント日：特別公開・企画展があるときだけ入れる（ふだんは空でよい）</li>
@@ -1631,7 +1634,7 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 <li>AIの出力をそのまま公開しない：<strong>日時・料金・予約の要否・見学できるか（立入禁止・休館）</strong>の4点は必ず公式ページで目視確認</li>
 <li>1記事あたり目安：リサーチ15分＋下書き30分＋確認・画像・入稿45分＝<strong>約1.5時間</strong></li>
 </ul></section>
-<section class="sec" id="s7"><p class="eyebrow">付録B</p><h2>サイト構築の手順（WordPress＋SWELL）</h2><p>宇宙を見に行くガイドサイト（サイト名の本命：ミアゲタビ。<code>plan/02-site-design.md</code> で決める）を、手持ちのレンタルサーバー・WordPress・SWELLで立ち上げる手順。</p>
+<section class="sec" id="s7"><p class="eyebrow">付録B</p><h2>サイト構築の手順（WordPress＋SWELL）</h2><p>宇宙を見に行くガイドサイト「ミアゲタビ」（<a href="https://miagetabi.space/" target="_blank" rel="noopener">https://miagetabi.space/</a> ）を、手持ちのレンタルサーバー・WordPress・SWELLで立ち上げる手順。</p>
 <p><strong>今回のゴール：10/17（土）までに、記事#1「H3ロケット10号機を見る方法」を公開できる状態にする。</strong>
 そのため、ステップ1〜5（約2〜3時間）だけを先にやる。デザインの作り込みは後回し。</p>
 <div class="tbl"><table>
@@ -1647,7 +1650,7 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 <td>手順</td>
 </tr>
 <tr>
-<td><code>dist/mirai-core.zip</code></td>
+<td><code>dist/miagetabi-core.zip</code></td>
 <td>自作プラグイン。イベント情報の入力欄・冒頭の「今の状況」ボックス・Event構造化データ・記事テンプレート3種</td>
 </tr>
 <tr>
@@ -1661,6 +1664,103 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 </tbody>
 </table></div>
 <hr />
+<h3>いまの状態（2026-10-15 夜に外から確認）</h3>
+<p>サイトの外から見える情報だけで確かめた（管理画面は見ていない）。</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>項目</th>
+<th>状態</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WordPress＋SWELL（子テーマ）</td>
+<td>✅ 動いている</td>
+<td></td>
+</tr>
+<tr>
+<td>サイト名・キャッチフレーズ・説明文</td>
+<td>✅「ミアゲタビ ｜ 宇宙を見に行くガイド」</td>
+<td>SEO SIMPLE PACK 3.7.0 で設定済み</td>
+</tr>
+<tr>
+<td>SSL（https）</td>
+<td>✅ 有効。http から https へ自動で転送されている</td>
+<td>正規URL（canonical）も https</td>
+</tr>
+<tr>
+<td>タイムゾーン</td>
+<td>✅ 東京</td>
+<td></td>
+</tr>
+<tr>
+<td>パーマリンク</td>
+<td>✅ <code>/カテゴリー/投稿名/</code></td>
+<td></td>
+</tr>
+<tr>
+<td>カテゴリー</td>
+<td>✅ お知らせ・ロケット打ち上げ・天体イベント・宇宙スポット・機材・持ち物（スラッグも計画どおり）</td>
+<td></td>
+</tr>
+<tr>
+<td>検索エンジンへの公開</td>
+<td>✅ インデックスを許可</td>
+<td></td>
+</tr>
+<tr>
+<td>Pochipp</td>
+<td>✅ 入っている</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>サンプル記事「Hello world!」</strong></td>
+<td>❌ 公開されたまま（<code>/news/hello-world/</code>）</td>
+<td>削除する</td>
+</tr>
+<tr>
+<td><strong>サンプルページ「Sample Page」</strong></td>
+<td>❌ 公開されたまま（<code>/sample-page/</code>）</td>
+<td>削除する</td>
+</tr>
+<tr>
+<td><strong>サイトマップ</strong> <code>/wp-sitemap.xml</code></td>
+<td>❌ 404（見つからない）</td>
+<td>下の「サイトマップが404のとき」</td>
+</tr>
+<tr>
+<td><strong>自作プラグイン miagetabi-core</strong></td>
+<td>❌ まだ入っていない</td>
+<td><code>dist/miagetabi-core.zip</code> をアップロード</td>
+</tr>
+<tr>
+<td><strong>Googleアナリティクス（GA4）</strong></td>
+<td>❌ まだ</td>
+<td>SEO SIMPLE PACK に測定IDを入れる</td>
+</tr>
+<tr>
+<td><strong>Search Console</strong></td>
+<td>❌ まだ</td>
+<td>ステップ5</td>
+</tr>
+<tr>
+<td>運営者情報・プライバシーポリシー・お問い合わせ</td>
+<td>未公開（W2でよい）</td>
+<td>文面は <code>pages.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>メモ：外部から <code>https://miagetabi.space/wp-json/</code> を開くと 403 になる。サーバーの「海外からのREST APIアクセス制限」によるものとみられる（推測）。日本から使う分には問題ない。もし管理画面の編集画面で「更新に失敗しました」が出たら、この設定を確認する。</p>
+<h4>サイトマップが404のとき（上から順に試す）</h4>
+<ol>
+<li><strong>設定 → 表示設定</strong>：「検索エンジンがサイトをインデックスしないようにする」に<strong>チェックが入っていない</strong>ことを確認する（入っているとサイトマップは止まる）。</li>
+<li><strong>設定 → パーマリンク</strong>：何も変えずに「変更を保存」を押す（URLの決まりを作り直す）。</li>
+<li>サーバーやSWELLのキャッシュを削除して、<code>https://miagetabi.space/wp-sitemap.xml</code> を開き直す。</li>
+<li>それでも404なら、<strong>サイトマップ専用のプラグイン</strong>（例：XML Sitemap &amp; Google News）を入れて、そのサイトマップのURLを Search Console に送る。WordPress標準のサイトマップを止めているプラグインがある可能性もある（推測）。</li>
+</ol>
+<hr />
 <h3>SWELLとSEOの関係（先に結論）</h3>
 <p><strong>SWELLはSEOに有利です。ただし有利なのは「土台」の部分で、検索順位を決めるのは記事の中身です。</strong></p>
 <p>SWELLがやってくれること（自分で作らなくていい部分）：
@@ -1672,13 +1772,13 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 - <strong>スマホ表示</strong>：スマホで読みやすい。Googleはスマホ版のページを基準に評価する。</p>
 <p>SWELLだけではできないこと：
 - <strong>記事の中身</strong>：検索した人の疑問（いつ・どこで・どうやって）に、どこよりも早く正確に答えること。順位はほぼここで決まる。
-- <strong>イベントの構造化データ</strong>：SWELLが出すのは「記事」の情報だけ。打ち上げ日・状況（延期など）は、自作プラグイン <code>mirai-core</code> で Event として出す。両方出してもぶつからない。
+- <strong>イベントの構造化データ</strong>：SWELLが出すのは「記事」の情報だけ。打ち上げ日・状況（延期など）は、自作プラグイン <code>miagetabi-core</code> で Event として出す。両方出してもぶつからない。
 - <strong>更新の速さ</strong>：延期が発表されたら30分以内に直す、という運用。</p>
 <p>SWELLと一緒に<strong>入れないほうがいいプラグイン</strong>（機能がかぶって遅くなる・表示が崩れる）：All in One SEO、Yoast SEO、Autoptimize、Jetpack、各種キャッシュ系（サーバーのキャッシュとSWELLの設定で足りる）など。SEOの設定は SWELL 開発元がすすめる <strong>SEO SIMPLE PACK</strong> を使う。</p>
 <hr />
 <h3>ステップ1　ドメインとサーバー（30分）</h3>
 <ol>
-<li><strong>サイト名とドメインを決める</strong>（<code>plan/02-site-design.md</code> の本命は「ミアゲタビ（miagetabi）」）。ドメイン・X・Instagramの3つが取れるか、同時に確かめる。</li>
+<li><strong>サイト名とドメインを決める</strong> → 決定：ミアゲタビ／<code>miagetabi.space</code>。ドメイン・X・Instagramの3つが取れるか、同時に確かめる。</li>
 <li>レンタルサーバーの管理画面で、ドメインを追加する。</li>
 <li><strong>無料SSL</strong>をオンにする（URLが <code>https://</code> になる）。</li>
 <li>サーバーの「WordPress簡単インストール」で WordPress を入れる。
@@ -1698,9 +1798,9 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 <h3>ステップ3　初期設定（30分）</h3>
 <h4>SSHが使える場合（おすすめ・5分）</h4>
 <ol>
-<li><code>site/dist/mirai-core.zip</code> と <code>site/setup-wpcli.sh</code> を、WordPressのフォルダ（<code>wp-config.php</code> がある場所）にアップロードする。</li>
+<li><code>site/dist/miagetabi-core.zip</code> と <code>site/setup-wpcli.sh</code> を、WordPressのフォルダ（<code>wp-config.php</code> がある場所）にアップロードする。</li>
 <li>SSHで入り、そのフォルダで <code>bash setup-wpcli.sh</code> を実行する。
-   - タイムゾーン、パーマリンク、カテゴリー4つ、固定ページ3つ（下書き）、プラグイン（SEO SIMPLE PACK・WP Multibyte Patch・Contact Form 7・Pochipp・mirai-core）が、まとめて設定される。
+   - タイムゾーン、パーマリンク、カテゴリー4つ、固定ページ3つ（下書き）、プラグイン（SEO SIMPLE PACK・WP Multibyte Patch・Contact Form 7・Pochipp・miagetabi-core）が、まとめて設定される。
    - 何度実行しても、同じものが二重にできることはない。</li>
 </ol>
 <h4>手作業でやる場合</h4>
@@ -1730,7 +1830,7 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 </tr>
 <tr>
 <td>プラグイン → 新規追加 → アップロード</td>
-<td><code>site/dist/mirai-core.zip</code></td>
+<td><code>site/dist/miagetabi-core.zip</code></td>
 </tr>
 <tr>
 <td>設定 → ディスカッション</td>
@@ -1774,8 +1874,8 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 <hr />
 <h3>ステップ6　記事#1を書いて出す（10/17まで）</h3>
 <ol>
-<li>投稿 → 新規追加。右上の「＋」→ パターン →「ミライミニイク」→ <strong>「A 打ち上げ観覧ガイド」</strong> を入れる。見出しがそろった下書きが入る。</li>
-<li>右側の「<strong>イベント情報（ミライミニイク）</strong>」欄を埋める：
+<li>投稿 → 新規追加。右上の「＋」→ パターン →「ミアゲタビ」→ <strong>「A 打ち上げ観覧ガイド」</strong> を入れる。見出しがそろった下書きが入る。</li>
+<li>右側の「<strong>イベント情報（ミアゲタビ）</strong>」欄を埋める：
    | 欄 | 記事#1の入力例 |
    |---|---|
    | イベント日 | 2026-10-20 |
@@ -1839,7 +1939,7 @@ WordPressでは、プラグイン <code>mirai-core</code> のパターン「C �
 <p><code>plan/03-first-20-articles.md</code> の「URL」列のとおり。管理アプリの記事データ（<code>app/seed/articles.json</code> の <code>path</code>）にも入っている。</p>
 <h3>この手順で確かめたこと</h3>
 <ul>
-<li><code>mirai-core</code> は、WordPress 7.1.3（日本語版）＋PHP 8.3 の手元環境で次を確認した：</li>
+<li><code>miagetabi-core</code> は、WordPress 7.1.3（日本語版）＋PHP 8.3 の手元環境で次を確認した：</li>
 <li>有効化できる</li>
 <li>入力欄の保存と、不正な値の除去（<code>javascript:</code> のURL、HTMLタグ）</li>
 <li>冒頭ボックスの表示（記事にショートコードがあるときは二重に出ない）</li>

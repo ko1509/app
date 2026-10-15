@@ -2,6 +2,8 @@
 
 ## 2-1. サイト名の案（宇宙サイト）
 
+> **決定（2026-10-15）：サイト名「ミアゲタビ」、ドメイン `miagetabi.space`。** キャッチコピーは「宇宙を見に行くガイド」。下の表は検討の記録として残す。
+
 2026-10-15 にテーマを宇宙に統一したので、名前も考え直した（自動運転サイトの名前は `../plan-mobility/README.md`）。
 
 選定の基準：
@@ -76,7 +78,7 @@
 
 **構造化データ**：回ごとの記事には `Event` スキーマ（startDate, location, eventStatus = EventScheduled / EventPostponed / EventRescheduled）を入れる。延期時は `eventStatus` も更新する（検索結果に反映されやすい）。
 
-**CMS**：WordPress＋SWELL（決定）。イベント日・今の状況・最終確認日は自作プラグイン `site/mirai-core` で入力し、記事の冒頭に自動で表示する。構築手順は `../site/README.md`。
+**CMS**：WordPress＋SWELL（決定）。イベント日・今の状況・最終確認日は自作プラグイン `site/miagetabi-core` で入力し、記事の冒頭に自動で表示する。構築手順は `../site/README.md`。
 
 ---
 
