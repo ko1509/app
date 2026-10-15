@@ -1,0 +1,617 @@
+<title>ミライミニイク 管理アプリ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* レイアウト：KOAlil.com 管理アプリと同じ Liquid Glass。色の流れる背景の上に、ガラスのナビ・カード・下部タブバーが浮かぶ。
+   この題材だけのもの：イベント日からの「T−n」カウントダウンと、打ち上げ／天体／自動運転の3色 */
+:root{
+  --ambient-1:#7cc4ff; --ambient-2:#ffb38a; --ambient-3:#b9a6ff; --ambient-4:#8ee6c7; --ambient-base:#eef1f6;
+  --glass:rgba(255,255,255,.58); --glass-strong:rgba(255,255,255,.78); --glass-solid:rgba(255,255,255,.94);
+  --glass-edge:rgba(255,255,255,.75); --glass-rim:rgba(0,0,0,.06); --glass-sheen:rgba(255,255,255,.55);
+  --glass-shadow:0 10px 30px rgba(15,30,60,.10),0 2px 6px rgba(15,30,60,.06); --glass-blur:blur(22px) saturate(185%);
+  --lens:rgba(255,255,255,.92);
+  --label:#1d1d1f; --label-2:#6e6e73; --label-3:#86868b; --separator:rgba(60,60,67,.14);
+  --fill:rgba(118,118,128,.12); --fill-strong:rgba(118,118,128,.2);
+  --accent:#0071e3; --on-accent:#ffffff;
+  --good:#1a7f37; --warn:#b25000; --bad:#d70015;
+  --good-bg:rgba(52,199,89,.16); --warn-bg:rgba(255,149,0,.18); --bad-bg:rgba(255,59,48,.14);
+  --launch:#e8590c; --sky:#5856d6; --ride:#0f9d8a;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --tabbar-h:44px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ambient-1:#1d4f91; --ambient-2:#7a3a1c; --ambient-3:#43307e; --ambient-4:#16564a; --ambient-base:#05070b;
+  --glass:rgba(44,46,54,.5); --glass-strong:rgba(48,50,58,.72); --glass-solid:rgba(28,28,32,.96);
+  --glass-edge:rgba(255,255,255,.16); --glass-rim:rgba(255,255,255,.05); --glass-sheen:rgba(255,255,255,.12);
+  --glass-shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3); --lens:rgba(255,255,255,.2);
+  --label:#f5f5f7; --label-2:#a1a1a6; --label-3:#8e8e93; --separator:rgba(84,84,88,.5);
+  --fill:rgba(118,118,128,.24); --fill-strong:rgba(118,118,128,.36);
+  --accent:#2997ff; --on-accent:#ffffff;
+  --good:#30d158; --warn:#ffb340; --bad:#ff6961;
+  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
+  --launch:#ff8a3d; --sky:#8e8cff; --ride:#3ed6bf; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ambient-1:#1d4f91; --ambient-2:#7a3a1c; --ambient-3:#43307e; --ambient-4:#16564a; --ambient-base:#05070b;
+  --glass:rgba(44,46,54,.5); --glass-strong:rgba(48,50,58,.72); --glass-solid:rgba(28,28,32,.96);
+  --glass-edge:rgba(255,255,255,.16); --glass-rim:rgba(255,255,255,.05); --glass-sheen:rgba(255,255,255,.12);
+  --glass-shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3); --lens:rgba(255,255,255,.2);
+  --label:#f5f5f7; --label-2:#a1a1a6; --label-3:#8e8e93; --separator:rgba(84,84,88,.5);
+  --fill:rgba(118,118,128,.24); --fill-strong:rgba(118,118,128,.36);
+  --accent:#2997ff; --on-accent:#ffffff;
+  --good:#30d158; --warn:#ffb340; --bad:#ff6961;
+  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
+  --launch:#ff8a3d; --sky:#8e8cff; --ride:#3ed6bf; color-scheme:dark}
+@media (prefers-reduced-transparency: reduce){:root{--glass:var(--glass-solid);--glass-strong:var(--glass-solid);--glass-blur:none}}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--ambient-base);color:var(--label);font-family:var(--font);font-size:15px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom,0px))}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:8px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* 背景 */
+.ambient{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--ambient-base);pointer-events:none}
+.ambient i{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(70px);opacity:.55}
+.ambient i:nth-child(1){background:var(--ambient-1);top:-22vmax;left:-14vmax;animation:drift1 38s ease-in-out infinite alternate}
+.ambient i:nth-child(2){background:var(--ambient-2);top:18vh;right:-24vmax;animation:drift2 44s ease-in-out infinite alternate}
+.ambient i:nth-child(3){background:var(--ambient-3);bottom:-30vmax;left:10vw;animation:drift1 52s ease-in-out infinite alternate-reverse}
+.ambient i:nth-child(4){background:var(--ambient-4);top:45vh;left:-20vmax;width:40vmax;height:40vmax;animation:drift2 47s ease-in-out infinite alternate-reverse}
+@keyframes drift1{to{transform:translate(8vmax,6vmax) scale(1.08)}}
+@keyframes drift2{to{transform:translate(-7vmax,-5vmax) scale(.94)}}
+
+/* ガラス */
+.glass,.navbar-inner,.d-card,.d-stat,.d-group,.d-col,.tabbar,.toast,.tminus{
+  background:var(--glass);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-edge);box-shadow:var(--glass-shadow),inset 0 1px 0 var(--glass-sheen),inset 0 -1px 0 var(--glass-rim)}
+
+/* ナビ（浮かぶカプセル） */
+.navbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding-top:10px}
+.navbar-inner{max-width:1180px;margin:0 auto;height:52px;border-radius:999px;padding:0 8px 0 14px;display:flex;align-items:center;gap:10px}
+.brand{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:16px;white-space:nowrap}
+.brand-mark{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(150deg,var(--sky),var(--launch));box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+.brand-mark svg{width:17px;height:17px}
+.nav-spacer{flex:1}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--label-2);padding:0 10px;height:30px;border-radius:999px;background:var(--fill);white-space:nowrap}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--label-3)}
+.conn.on i{background:var(--good)} .conn.off i{background:var(--warn)}
+@media (max-width:420px){.conn .txt{display:none}}
+
+/* ページ */
+.page{max-width:1180px;margin:0 auto;display:grid;gap:22px}
+.d-head{padding-block:22px 0;display:grid;gap:2px}
+.d-head p{margin:0;color:var(--label-2);font-size:15px;font-weight:600}
+.d-head h1{margin:0;font-size:clamp(32px,5.5vw,48px);line-height:1.08;letter-spacing:-.03em;font-weight:700;text-wrap:balance;word-break:auto-phrase}
+.d-sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.d-sec h2{margin:0;font-size:22px;letter-spacing:-.02em}
+.d-sec p{margin:0;color:var(--label-2);font-size:14px}
+.d-card{border-radius:24px;padding:18px;min-width:0}
+.d-grid2{display:grid;gap:20px;grid-template-columns:1fr}
+@media (min-width:900px){.d-grid2{grid-template-columns:3fr 2fr}}
+.d-grid2>*{min-width:0}
+.stack{display:grid;gap:22px;align-content:start;min-width:0}
+
+/* T−n カウントダウン */
+.strip{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.tminus{border-radius:22px;padding:14px 16px;display:grid;gap:4px;min-width:0;cursor:pointer;text-align:left;color:inherit}
+.tminus:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent),var(--glass-shadow)}
+.tminus .t{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.tminus .n{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.tminus .s{font-size:12px;color:var(--label-3)}
+.tminus[data-p="launch"] .t{color:var(--launch)} .tminus[data-p="sky"] .t{color:var(--sky)} .tminus[data-p="ride"] .t{color:var(--ride)}
+
+/* 数字のタイル */
+.d-stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.d-stat{border-radius:22px;padding:14px 16px;display:grid;gap:2px;min-width:0}
+.d-stat .k{font-size:13px;color:var(--label-2);font-weight:500}
+.d-stat .v{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.d-stat .v small{font-size:13px;font-weight:600;color:var(--label-3);margin-left:2px}
+.d-stat .s{font-size:12px;color:var(--label-3)}
+.d-bar{height:6px;border-radius:3px;background:var(--fill-strong);overflow:hidden;margin-top:6px}
+.d-bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.d-stat.good .d-bar i{background:var(--good)} .d-stat.low .d-bar i{background:var(--warn)}
+
+/* 設定アプリ風のリスト */
+.d-group{border-radius:22px;overflow:hidden}
+.d-group-title{font-size:13px;color:var(--label-2);font-weight:600;margin:0 6px 8px;display:flex;justify-content:space-between}
+.d-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 14px;position:relative;min-width:0;color:inherit;width:100%;border:0;background:transparent;text-align:left;font:inherit}
+.d-row+.d-row::before{content:"";position:absolute;top:0;right:0;left:64px;border-top:.5px solid var(--separator)}
+button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
+.d-main{min-width:0}
+.d-t{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.d-sub{font-size:13px;color:var(--label-2);overflow-wrap:anywhere}
+.d-when{font-size:12px;color:var(--label-3);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.d-row.late .d-when{color:var(--bad);font-weight:700}
+.d-row.done .d-t{text-decoration:line-through;color:var(--label-3)}
+.d-empty{padding:22px 16px;text-align:center;color:var(--label-2);font-size:14px}
+
+/* 絵文字の代わりのピクトタイル */
+.d-picto{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(0,0,0,.15)}
+.d-picto::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.45),transparent 50%)}
+.d-picto svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
+.pc-launch{background:var(--launch)} .pc-sky{background:var(--sky)} .pc-ride{background:var(--ride)} .pc-other{background:var(--label-3)}
+
+/* チェック（丸） */
+.chk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--label-3);display:grid;place-items:center;cursor:pointer;background:transparent;color:#fff;padding:0}
+.chk[aria-pressed="true"]{background:var(--good);border-color:var(--good)}
+.chk svg{width:14px;height:14px;stroke-width:3;opacity:0} .chk[aria-pressed="true"] svg{opacity:1}
+.chk:disabled{cursor:not-allowed;opacity:.5}
+
+/* ピル */
+.d-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.d-pill.good{background:var(--good-bg);color:var(--good)} .d-pill.warn{background:var(--warn-bg);color:var(--warn)}
+.d-pill.bad{background:var(--bad-bg);color:var(--bad)} .d-pill.mute{background:var(--fill);color:var(--label-2)}
+.d-pill.info{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.d-pill.launch{background:color-mix(in srgb,var(--launch) 16%,transparent);color:var(--launch)}
+.d-pill.sky{background:color-mix(in srgb,var(--sky) 16%,transparent);color:var(--sky)}
+.d-pill.ride{background:color-mix(in srgb,var(--ride) 16%,transparent);color:var(--ride)}
+.pills{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+
+/* ボタン・セグメント */
+.d-btn{border:0;border-radius:999px;padding:0 16px;height:36px;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:var(--on-accent);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 12px color-mix(in srgb,var(--accent) 30%,transparent)}
+.d-btn.secondary{background:var(--glass-strong);color:var(--accent);box-shadow:inset 0 1px 0 var(--glass-sheen),0 0 0 1px var(--glass-edge)}
+.d-btn.danger{background:var(--bad)}
+.d-btn.small{height:30px;font-size:13px;padding:0 12px}
+.d-btn:active{transform:scale(.97)} .d-btn:disabled{opacity:.45;cursor:not-allowed}
+.d-seg{display:inline-flex;padding:3px;border-radius:999px;background:var(--fill);flex-wrap:wrap;max-width:100%}
+.d-seg button{border:0;background:transparent;padding:0 14px;height:30px;border-radius:999px;font-size:14px;cursor:pointer;color:var(--label);white-space:nowrap}
+.d-seg button[aria-pressed="true"]{background:var(--lens);font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.d-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* カンバン（記事） */
+.d-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+@media (max-width:860px){.d-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.d-col{border-radius:22px;padding:10px;display:grid;gap:8px;align-content:start;min-width:0}
+.d-col h3{margin:2px 6px 4px;font-size:14px;display:flex;justify-content:space-between;gap:6px}
+.d-col h3 span{color:var(--label-3);font-weight:500}
+.d-kcard{background:var(--glass-strong);border-radius:16px;padding:10px 12px;display:grid;gap:6px;min-width:0;border:1px solid var(--glass-edge);text-align:left;cursor:pointer;width:100%;color:inherit;font:inherit;
+  box-shadow:inset 0 1px 0 var(--glass-sheen),0 2px 8px rgba(0,0,0,.06)}
+.d-kcard:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent)}
+.d-kcard .t{font-weight:600;font-size:14px;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.kc{display:inline-flex;align-items:center;gap:3px;max-width:100%;padding:1px 6px;border-radius:7px;background:var(--fill);color:var(--label-2);font-size:11.5px;font-weight:600;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.kc-bad{background:var(--bad-bg);color:var(--bad)} .kc-warn{background:var(--warn-bg);color:var(--warn)}
+.kc-launch{color:var(--launch)} .kc-sky{color:var(--sky)} .kc-ride{color:var(--ride)}
+
+/* 表 */
+.d-table{overflow-x:auto}
+.d-table table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+.d-table th,.d-table td{padding:9px 12px;text-align:left;border-bottom:.5px solid var(--separator);vertical-align:top}
+.d-table th{font-size:12px;color:var(--label-2);font-weight:600;white-space:nowrap}
+.d-table td.r,.d-table th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.d-table tr:last-child td{border-bottom:0}
+.d-table tr[data-edit]{cursor:pointer} .d-table tr[data-edit]:hover td{background:var(--fill)}
+
+/* フォーム */
+.d-form{display:grid;gap:12px}
+.d-fields{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.d-fld{display:grid;gap:4px;font-size:13px;color:var(--label-2);font-weight:500;min-width:0}
+.d-fld.wide{grid-column:1/-1}
+.d-fld input,.d-fld select,.d-fld textarea{width:100%;min-width:0;border:0;border-radius:12px;background:var(--fill);padding:9px 12px;font-size:16px;color:var(--label);font-family:inherit}
+.d-fld textarea{min-height:84px;resize:vertical;line-height:1.5}
+.d-fld input:focus,.d-fld select:focus,.d-fld textarea:focus{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.d-fld input[type="date"]{-webkit-appearance:none;appearance:none}
+
+/* プロンプト */
+pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16px;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;max-height:420px;overflow:auto}
+.note{margin:0;padding:10px 12px;border-radius:14px;background:var(--warn-bg);font-size:13px;color:var(--label)}
+
+/* シート（下からせり上がる編集画面） */
+.sheet-backdrop{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.32);opacity:0;transition:opacity .35s var(--ease)}
+.sheet-backdrop.open{opacity:1}
+.sheet{position:fixed;z-index:50;left:0;right:0;bottom:0;top:max(10px,env(safe-area-inset-top,0px));margin:0 auto;max-width:720px;display:flex;flex-direction:column;
+  background:var(--glass-solid);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--glass-edge);
+  border-radius:14px 14px 0 0;overflow:hidden;box-shadow:0 -10px 40px rgba(0,0,0,.2);transform:translateY(100%);transition:transform .45s var(--ease)}
+.sheet.open{transform:none}
+@media (min-width:900px){.sheet{top:40px;bottom:40px;border-radius:18px;transform:translateY(24px) scale(.98);opacity:0;transition:transform .4s var(--ease),opacity .3s}.sheet.open{transform:none;opacity:1}}
+.sheet-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;flex:none;height:52px;padding:0 8px;border-bottom:.5px solid var(--separator);background:var(--glass)}
+.sheet-bar h2{margin:0;font-size:17px;font-weight:600;text-align:center}
+.text-btn{display:inline-flex;align-items:center;gap:2px;border:0;background:none;cursor:pointer;color:var(--accent);font-size:17px;padding:6px 8px;border-radius:8px}
+.text-btn:hover{background:var(--fill)} .text-btn.strong{font-weight:600;justify-self:end}
+.text-btn:disabled{opacity:.4;cursor:not-allowed}
+.sheet-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
+
+/* 下のタブバー（浮かぶ・スライドするレンズ） */
+.tabbar{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:2px;padding:3px;border-radius:999px;max-width:calc(100vw - 16px)}
+.tabbar .lens{position:absolute;z-index:0;top:3px;left:0;width:0;height:0;border-radius:999px;background:var(--lens);box-shadow:0 4px 14px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.7);
+  transition:transform .45s cubic-bezier(.3,1.35,.5,1),width .45s cubic-bezier(.3,1.35,.5,1),height .45s cubic-bezier(.3,1.35,.5,1)}
+.tabbar.no-anim .lens{transition:none}
+.tabbar button{position:relative;z-index:1;border:0;background:transparent;cursor:pointer;display:grid;justify-items:center;align-content:center;gap:2px;min-width:58px;min-height:38px;padding:2px 8px;border-radius:999px;color:var(--label-2);font-size:10px;line-height:11px;font-weight:600;white-space:nowrap}
+.tabbar button svg{width:19px;height:19px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar button:active{transform:scale(.94)}
+.tabbar .dot{position:absolute;top:0;right:8px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:9.5px;line-height:15px;font-variant-numeric:tabular-nums}
+@media (max-width:440px){
+  :root{--tabbar-h:92px}
+  .tabbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:26px;width:calc(100vw - 16px)}
+  .tabbar .lens{border-radius:20px}
+  .tabbar button{min-width:0;min-height:42px;font-size:11px;line-height:12px;border-radius:20px}
+}
+
+.toast{position:fixed;left:50%;z-index:70;bottom:calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:10px 18px;border-radius:999px;font-size:15px;font-weight:500;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity .25s,transform .35s var(--ease)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}.ambient i{animation:none}}
+</style>
+
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <span class="brand"><span class="brand-mark"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/></svg></span>ミライミニイク</span>
+    <span class="nav-spacer"></span>
+    <span class="conn" id="conn"><i></i><span class="txt">接続中…</span></span>
+  </div>
+</header>
+
+<main class="page" id="page"></main>
+
+<nav class="tabbar" id="tabbar" aria-label="画面の切り替え"><span class="lens" aria-hidden="true"></span></nav>
+<div class="toast" id="toast" role="status"></div>
+<div id="sheetHost"></div>
+
+<script>
+(function(){
+/* ---------- アイコン ---------- */
+const IC={
+  home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>',
+  cal:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  doc:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+  sns:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6M7 14l1 5h3"/>',
+  kpi:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  ai:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  launch:'<path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/>',
+  sky:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/>',
+  ride:'<rect x="4" y="4" width="16" height="13" rx="3"/><path d="M4 11h16M8 20v-3M16 20v-3"/><circle cx="8" cy="14" r=".8"/><circle cx="16" cy="14" r=".8"/>',
+  other:'<circle cx="12" cy="12" r="8"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
+};
+const ic=(k,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24">${IC[k]||""}</svg>`;
+
+/* ---------- 定義 ---------- */
+const PILLAR={launch:"打ち上げ",sky:"天体",ride:"自動運転",other:"その他"};
+const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","終了":"mute"};
+const AR_STATUS=["未着手","下書き","確認待ち","公開済み"];
+const AR_PILL={"未着手":"mute","下書き":"warn","確認待ち":"info","公開済み":"good"};
+const POST_STATUS={"下書き":"warn","予約済み":"info","投稿済み":"good"};
+// 更新ルール（02-site-design.md ルール2）：イベント日からのずれ（日）と作業内容
+const RULES=[
+  {o:-7,t:"天気の傾向・宿の空き・交通の注意を追記／SNS告知①"},
+  {o:-3,t:"公式情報を再確認／タイトルに曜日を入れる"},
+  {o:-1,t:"天気予報・延期情報を反映／SNS告知②"},
+  {o:0,t:"冒頭の「今の状況」を更新／中継リンクを上に／実況"},
+  {o:1,t:"結果・写真を追記／次のチャンスへの導線"},
+  {o:7,t:"振り返り：タイトル調整か次回記事へ誘導"}
+];
+const PUBLISH_LEAD={sky:30,launch:2,ride:14,other:14};
+const KPI_DEF=[
+  {k:"articles",l:"公開記事数",u:"本",pass:20,good:25},
+  {k:"pv",l:"月間PV",u:"PV",pass:3000,good:10000},
+  {k:"searchShare",l:"検索流入の比率",u:"%",pass:30,good:50},
+  {k:"x",l:"Xフォロワー",u:"人",pass:300,good:1000},
+  {k:"ig",l:"Instagram",u:"人",pass:200,good:800},
+  {k:"clicks",l:"アフィリエイトのクリック",u:"回",pass:50,good:200},
+  {k:"revenue",l:"アフィリエイト収益（累計）",u:"円",pass:3000,good:10000},
+  {k:"signups",l:"通知の登録者",u:"人",pass:30,good:100}
+];
+const TABS=[
+  {id:"home",l:"今日",ic:"home",eyebrow:"今日やること",title:"編集デスク"},
+  {id:"events",l:"イベント",ic:"cal",eyebrow:"打ち上げ・天体・運行日",title:"イベント"},
+  {id:"articles",l:"記事",ic:"doc",eyebrow:"最初の20本",title:"記事ボード"},
+  {id:"sns",l:"SNS",ic:"sns",eyebrow:"X・Instagram",title:"告知の予定"},
+  {id:"kpi",l:"KPI",ic:"kpi",eyebrow:"3か月後の判断",title:"KPI"},
+  {id:"prompts",l:"AI",ic:"ai",eyebrow:"下調べ・構成・更新・告知",title:"AIプロンプト"}
+];
+
+const S={events:[],articles:[],posts:[],kpi:[],checks:{},tab:"home",db:null,canWrite:true,ready:false,
+  filter:{pillar:"all"},promptSel:"research",promptVals:{}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const parse=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]):null};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const diff=d=>Math.round((d-today())/864e5);
+const WD="日月火水木金土";
+const fmt=d=>d?`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`:"—";
+const tlabel=n=>n===0?"T−0":n>0?"T−"+n:"T+"+(-n);
+const picto=p=>`<span class="d-picto pc-${PILLAR[p]?p:"other"}">${ic(PILLAR[p]?p:"other","")}</span>`;
+const ppill=p=>`<span class="d-pill ${PILLAR[p]&&p!=="other"?p:"mute"}">${PILLAR[p]||"その他"}</span>`;
+const spill=(s,map)=>`<span class="d-pill ${map[s]||"mute"}">${esc(s||"—")}</span>`;
+const pubDate=a=>{const ev=parse(a.eventDate);return parse(a.publishBy)||(ev?addDays(ev,-(PUBLISH_LEAD[a.pillar]??14)):null)};
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),2200)}
+
+/* ---------- 更新タスク ---------- */
+function buildTasks(){
+  const out=[];
+  for(const a of S.articles){
+    const ev=parse(a.eventDate),pub=pubDate(a),done=S.checks[a._id]||{};
+    if(pub&&a.status!=="公開済み") out.push({a,key:"pub",date:pub,text:`公開する（いま：${a.status||"未着手"}）`,done:false,kind:"pub"});
+    if(ev) for(const r of RULES) out.push({a,key:String(r.o),date:addDays(ev,r.o),text:r.t,done:!!done[String(r.o)],kind:"upd"});
+  }
+  return out.sort((x,y)=>x.date-y.date);
+}
+
+/* ---------- タブバー ---------- */
+function buildTabbar(){
+  const tb=$("#tabbar");
+  tb.insertAdjacentHTML("beforeend",TABS.map(t=>`<button type="button" data-tab="${t.id}">${ic(t.ic)}<span>${t.l}</span><span class="dot" id="dot-${t.id}" hidden></span></button>`).join(""));
+  tb.addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab)});
+  addEventListener("resize",()=>placeLens(false));
+}
+function placeLens(anim){
+  const tb=$("#tabbar"),b=tb.querySelector(`button[data-tab="${S.tab}"]`),lens=tb.querySelector(".lens");if(!b)return;
+  tb.classList.toggle("no-anim",!anim);
+  lens.style.width=b.offsetWidth+"px";lens.style.height=b.offsetHeight+"px";
+  lens.style.transform=`translate(${b.offsetLeft}px,${b.offsetTop-3}px)`;
+}
+function go(id){
+  S.tab=id;try{localStorage.setItem("mm-tab",id)}catch(_){}
+  render();placeLens(true);scrollTo({top:0});
+}
+
+/* ---------- 描画 ---------- */
+function render(){
+  document.querySelectorAll("#tabbar button[data-tab]").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  const tasks=buildTasks();
+  const due=tasks.filter(t=>!t.done&&diff(t.date)<=0&&diff(t.date)>=-14).length;
+  const dot=$("#dot-home");if(dot){dot.hidden=!due;dot.textContent=due}
+  const T=TABS.find(t=>t.id===S.tab);
+  const head=`<div class="d-head"><p>${esc(T.eyebrow)}・<span class="num">${fmt(today())}</span></p><h1>${esc(T.title)}</h1></div>`;
+  if(!S.ready){$("#page").innerHTML=head+`<div class="d-card d-empty">データを読み込んでいます。</div>`;return}
+  const body={home:viewHome,events:viewEvents,articles:viewArticles,sns:viewSns,kpi:viewKpi,prompts:viewPrompts}[S.tab](tasks);
+  $("#page").innerHTML=head+body;
+  bind();
+}
+
+function strip(){
+  const up=S.events.map(e=>({e,d:parse(e.date)})).filter(x=>x.d&&diff(x.d)>=-1&&x.e.status!=="終了").sort((a,b)=>a.d-b.d).slice(0,4);
+  if(!up.length) return `<div class="d-card d-empty">日付の決まったイベントはまだありません。「イベント」タブで追加すると、ここにカウントダウンが出ます。</div>`;
+  return `<div class="strip">${up.map(({e,d})=>`<button type="button" class="tminus" data-p="${esc(e.pillar)}" data-edit="event" data-id="${esc(e._id)}">
+    <div class="pills">${ppill(e.pillar)}${spill(e.status,EV_STATUS)}</div>
+    <div class="t">${tlabel(diff(d))}</div><div class="n">${esc(e.title)}</div>
+    <div class="s num">${fmt(d)} ${esc(e.time||"")}・${esc(e.place||"")}</div></button>`).join("")}</div>`;
+}
+
+function taskRow(t){
+  const n=diff(t.date),late=!t.done&&n<0;
+  const lead=t.kind==="upd"
+    ?`<button type="button" class="chk" data-chk="${esc(t.a._id)}" data-k="${esc(t.key)}" aria-pressed="${t.done}" aria-label="完了にする" ${S.canWrite?"":"disabled"}>${ic("check","i")}</button>`
+    :picto(t.a.pillar);
+  return `<div class="d-row ${late?"late":""} ${t.done?"done":""}">${lead}
+    <div class="d-main"><div class="d-t">${esc(t.a.title)}</div><div class="d-sub">${t.kind==="pub"?'<span class="d-pill warn">公開</span> ':""}${esc(t.text)}</div></div>
+    <div class="d-when">${fmt(t.date)}<br>${t.kind==="upd"?tlabel(-Number(t.key)):"公開期限"}</div></div>`;
+}
+function group(title,list,emptyMsg){
+  return `<div><div class="d-group-title"><span>${title}</span><span class="num">${list.filter(t=>!t.done).length}件</span></div>
+    <div class="d-group">${list.length?list.map(taskRow).join(""):`<div class="d-empty">${emptyMsg}</div>`}</div></div>`;
+}
+
+function viewHome(tasks){
+  const win=tasks.filter(t=>diff(t.date)<=7&&diff(t.date)>=-14);
+  const late=win.filter(t=>!t.done&&diff(t.date)<0),now=win.filter(t=>diff(t.date)===0),soon=win.filter(t=>diff(t.date)>0);
+  const counts=AR_STATUS.map(s=>[s,S.articles.filter(a=>(a.status||"未着手")===s).length]);
+  const pubN=counts[3][1];
+  return `${strip()}
+  <div class="d-grid2">
+    <div class="stack">${group("遅れている作業",late,"遅れはありません。")}${group("今日",now,"今日が期限の作業はありません。")}${group("この先7日",soon,"7日以内の作業はありません。")}</div>
+    <div class="stack">
+      <div><div class="d-sec"><h2>記事の進み具合</h2><p>90日で20本</p></div>
+        <div class="d-stats">${counts.map(([s,n])=>`<div class="d-stat"><span class="k">${s}</span><span class="v">${n}<small>本</small></span></div>`).join("")}</div>
+        <div class="d-card" style="margin-top:12px"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">公開 ${pubN} / 20本</h2><p class="num">${Math.round(pubN/20*100)}%</p></div>
+        <div class="d-bar"><i style="width:${Math.min(100,pubN/20*100)}%"></i></div></div></div>
+      <div><div class="d-sec"><h2>最新のKPI</h2><p>${latestKpi()?esc(latestKpi()._id):"未記録"}</p></div>${kpiTiles(latestKpi(),4)}</div>
+    </div></div>`;
+}
+
+function viewEvents(){
+  const f=S.filter.pillar;
+  const list=S.events.filter(e=>f==="all"||e.pillar===f).sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999"));
+  return `<div class="d-actions">${seg()}<span style="flex:1"></span>${addBtn("event","イベントを追加")}</div>
+  <div class="d-group">${list.length?list.map(e=>{const d=parse(e.date);return `<button type="button" class="d-row" data-edit="event" data-id="${esc(e._id)}">${picto(e.pillar)}
+    <div class="d-main"><div class="d-t">${esc(e.title)}</div><div class="d-sub">${esc(e.place||"")}${e.note?"・"+esc(e.note):""}</div>
+    <div class="pills" style="margin-top:4px">${spill(e.status,EV_STATUS)}${e.source?`<a class="d-pill info" href="${esc(e.source)}" target="_blank" rel="noopener">出典</a>`:""}</div></div>
+    <div class="d-when">${d?fmt(d):esc(e.dateText||"未定")}<br>${d?`<b class="mono">${tlabel(diff(d))}</b>`:""}${e.time?"<br>"+esc(e.time):""}</div></button>`}).join("")
+    :`<div class="d-empty">イベントはまだありません。打ち上げ・天体イベント・自動運転の運行日を追加してください。</div>`}</div>`;
+}
+function seg(){return `<div class="d-seg" role="group" aria-label="柱で絞り込む">${[["all","すべて"],...Object.entries(PILLAR).filter(([k])=>k!=="other")].map(([k,l])=>`<button type="button" data-filter="${k}" aria-pressed="${S.filter.pillar===k}">${l}</button>`).join("")}</div>`}
+
+function viewArticles(){
+  const f=S.filter.pillar;
+  const list=S.articles.filter(a=>f==="all"||a.pillar===f).sort((a,b)=>(a.priority??999)-(b.priority??999));
+  return `<div class="d-actions">${seg()}<span style="flex:1"></span>${addBtn("article","記事を追加")}</div>
+  <div class="d-board">${AR_STATUS.map(s=>{const col=list.filter(a=>(a.status||"未着手")===s);
+    return `<section class="d-col"><h3>${s}<span class="num">${col.length}</span></h3>${col.length?col.map(a=>{const pub=pubDate(a),ev=parse(a.eventDate);
+      const late=pub&&s!=="公開済み"&&diff(pub)<0,near=pub&&s!=="公開済み"&&!late&&diff(pub)<=3;
+      return `<button type="button" class="d-kcard" data-edit="article" data-id="${esc(a._id)}">
+        <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
+        <div class="pills"><span class="kc kc-${esc(a.pillar)}">${PILLAR[a.pillar]||"その他"}</span>
+        ${pub&&s!=="公開済み"?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
+        ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}</div>
+        ${a.keyword?`<div class="kc" title="${esc(a.keyword)}">${esc(a.keyword)}</div>`:""}</button>`}).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`}).join("")}</div>`;
+}
+
+function viewSns(){
+  const list=[...S.posts].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  return `<div class="d-actions"><span class="d-pill info">型：T−7 予告 → T−1 持ち物・天気 → 当日 実況 → T+1 結果</span><span style="flex:1"></span>${addBtn("post","投稿を追加")}</div>
+  <div class="d-group">${list.length?list.map(p=>{const a=S.articles.find(x=>x._id===p.articleId),d=parse(p.date);
+    return `<button type="button" class="d-row" data-edit="post" data-id="${esc(p._id)}"><span class="d-picto pc-${p.channel==="Instagram"?"sky":"other"}">${ic("sns","")}</span>
+    <div class="d-main"><div class="d-t" style="white-space:pre-wrap;font-weight:500">${esc(p.text||"（本文なし）")}</div>
+    <div class="pills" style="margin-top:4px"><span class="d-pill mute">${esc(p.channel||"X")}</span>${spill(p.status,POST_STATUS)}<span class="d-pill mute num">${[...(p.text||"")].length}字</span>${a?`<span class="d-sub">${esc(a.title)}</span>`:""}</div></div>
+    <div class="d-when">${fmt(d)}${p.time?"<br>"+esc(p.time):""}</div></button>`}).join("")
+    :`<div class="d-empty">投稿の予定はまだありません。「AI」タブの型4で文面を作り、ここに貼り付けてください。</div>`}</div>`;
+}
+
+function latestKpi(){return [...S.kpi].sort((a,b)=>b._id.localeCompare(a._id))[0]}
+function kpiTiles(k,limit){
+  if(!k) return `<div class="d-card d-empty">まだ記録がありません。「KPI」タブで月ごとの数字を入れると、目標との差が出ます。</div>`;
+  return `<div class="d-stats">${KPI_DEF.slice(0,limit||KPI_DEF.length).map(d=>{const raw=k[d.k],val=raw==null||raw===""?NaN:Number(raw);
+    if(isNaN(val)) return `<div class="d-stat"><span class="k">${d.l}</span><span class="v" style="color:var(--label-3)">—</span><span class="s">合格 ${d.pass.toLocaleString()}${d.u}</span></div>`;
+    const cls=val>=d.good?"good":val>=d.pass?"":"low";
+    return `<div class="d-stat ${cls}"><span class="k">${d.l}</span><span class="v">${val.toLocaleString()}<small>${d.u}</small></span>
+      <div class="d-bar"><i style="width:${Math.min(100,val/d.good*100).toFixed(0)}%"></i></div><span class="s">合格 ${d.pass.toLocaleString()}・好調 ${d.good.toLocaleString()}</span></div>`}).join("")}</div>`;
+}
+function viewKpi(){
+  const list=[...S.kpi].sort((a,b)=>a._id.localeCompare(b._id)),k=latestKpi();
+  return `<div><div class="d-sec"><h2>${k?esc(k._id)+" の記録":"最新の記録"}</h2><p>判断日：2027/1/12</p></div>${kpiTiles(k)}</div>
+  <div class="d-card"><p style="margin:0;font-size:14px;color:var(--label-2)">合格ラインを半分以上クリア → 続けて観覧カレンダーを作る。好調ライン → 取材を増やし、自治体向けの準備を始める。見直しライン → 伸びた柱に絞る。</p></div>
+  <div><div class="d-sec"><h2>月ごとの記録</h2>${addBtn("kpi","月を追加")}</div>
+  <div class="d-card" style="padding:6px">${list.length?`<div class="d-table"><table><thead><tr><th>月</th>${KPI_DEF.map(d=>`<th class="r">${d.l}</th>`).join("")}</tr></thead><tbody>
+  ${list.map(r=>`<tr data-edit="kpi" data-id="${esc(r._id)}"><td class="num">${esc(r._id)}</td>${KPI_DEF.map(d=>`<td class="r">${r[d.k]!=null&&r[d.k]!==""?Number(r[d.k]).toLocaleString():"—"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+  :`<div class="d-empty">記録がありません。月末に Search Console・GA4・各ASPの数字を入れてください。</div>`}</div></div>`;
+}
+
+/* ---------- AIプロンプト ---------- */
+const PROMPTS=[
+ {id:"research",n:"型1 リサーチ",m:"15分",vars:["イベント名","参考URL"],t:`あなたは日本語Webメディアのリサーチャーです。
+次のイベントについて、公式情報だけを使って表にしてください。
+イベント：{イベント名}
+参考URL：{参考URL}
+
+出力（表）：項目 / 内容 / 出典URL / 確認状態（確定・推測）
+項目：日時（JST）、予備期間、場所、見える場所（公式案内のみ）、交通手段、延期を発表する場所、過去の同じ種類のイベントでの混雑（あれば）
+ルール：出典がない情報は「推測」と書く。エネルギー・原子力の話題は含めない。`},
+ {id:"draft",n:"型2 構成と下書き",m:"30分",vars:["テンプレート","リサーチ表"],t:`次のテンプレートと表を使って記事の下書きを書いてください。
+読者：20〜30代の初心者。専門用語は使わず、使う場合は一言で言い換える。
+ゴール：読んだ人が「いつ・どこに・何を持って行けばいいか」を決められること。
+テンプレート：{テンプレート}
+表：{リサーチ表}
+ルール：
+- 冒頭ボックスを必ず作る
+- 「推測」の情報にはラベルを付ける
+- アフィリエイトの位置には [AFF:hotel] のように目印だけ入れる
+- 断定できない数字（混雑・見える個数）は出典か推測を明記`},
+ {id:"update",n:"型3 更新",m:"10分",vars:["現在の記事","新しい公式発表"],t:`次の記事の「冒頭ボックス」と該当する節だけを、新しい公式発表に合わせて書き換えてください。
+変更しない部分は出力しないでください。最後に「更新履歴」に追加する1行を出してください。
+現在の記事：{現在の記事}
+新しい公式発表：{新しい公式発表}`},
+ {id:"sns",n:"型4 SNS告知",m:"5分",vars:["記事タイトル","冒頭ボックス","URL"],t:`次の記事からX用の投稿を3パターン（各120字以内）、Instagramのキャプション1つ（ハッシュタグ8個まで）を作ってください。
+条件：日時と場所を最初に。絵文字は1〜2個。「○日前」「今夜」などのタイミングを入れる。
+記事：{記事タイトル}
+冒頭ボックス：{冒頭ボックス}
+URL：{URL}`}
+];
+const TEMPLATES={"A 打ち上げ観覧":"冒頭ボックス（日時・今の状況・見やすい場所・到着時刻・延期を知る方法）／まず結論／基本情報／見える場所（公式と推測を分ける）／到着時刻とタイムライン／アクセス[AFF:交通]／泊まる場所[AFF:宿]／持ち物[AFF:機材]／スマホで撮るコツ／延期・中止になったら（情報源2つ以上）／ライブ中継／FAQ／更新履歴",
+ "B 天体イベント":"冒頭ボックス（いつ・方角・見える数・スマホ難易度・天気の確認先）／まず結論／いつ何時に／どこで見る[AFF:宿]／スマホで撮る方法（iPhone・Android）[AFF:三脚]／持ち物と寒さ対策／天気が悪いとき・見逃したとき／FAQ／更新履歴",
+ "C 乗車レポート":"冒頭ボックス（誰でも乗れる？・いつ・乗り場・運転席に人は？・最終確認日）／どんな乗り物？／乗り方（予約〜乗車）／実際に乗ってみた／アクセス[AFF:交通]／周辺スポット・泊まるなら[AFF:宿]／運休・変更の情報源／FAQ／更新履歴"};
+const fillPrompt=()=>{const p=PROMPTS.find(x=>x.id===S.promptSel);return p.t.replace(/\{([^}]+)\}/g,(m,k)=>S.promptVals[k]||m)};
+function viewPrompts(){
+  const p=PROMPTS.find(x=>x.id===S.promptSel),vals=S.promptVals;
+  return `<div class="d-seg" role="group" aria-label="プロンプトの型">${PROMPTS.map(x=>`<button type="button" data-prompt="${x.id}" aria-pressed="${x.id===p.id}">${x.n}<span style="color:var(--label-3);margin-left:4px">${x.m}</span></button>`).join("")}</div>
+  <div class="d-grid2">
+    <div class="d-card d-form">${p.vars.map(k=>k==="テンプレート"
+      ?`<label class="d-fld">${k}<select id="pv-tpl" data-pv="${k}"><option value="">選ぶ</option>${Object.entries(TEMPLATES).map(([n,v])=>`<option value="${esc(v)}" ${vals[k]===v?"selected":""}>${n}</option>`).join("")}</select></label>`
+      :`<label class="d-fld">${k}<textarea id="pv-${esc(k)}" data-pv="${k}" rows="3">${esc(vals[k]||"")}</textarea></label>`).join("")}
+      <p class="note">AIの出力はそのまま公開しない。日時・料金・予約の要否・誰が乗れるかの4点は、公式ページで目で確かめる。</p></div>
+    <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">できあがったプロンプト</h2><button type="button" class="d-btn small" id="copyP">${ic("copy")}コピー</button></div>
+      <pre class="prompt" id="pout">${esc(fillPrompt())}</pre></div>
+  </div>`;
+}
+
+/* ---------- 編集シート ---------- */
+const FORMS={
+  event:{col:"events",title:"イベント",fields:[
+    ["title","イベント名","text","wide"],["pillar","柱","select",Object.keys(PILLAR)],["status","状態","select",Object.keys(EV_STATUS)],
+    ["date","日付（決まっていれば）","date"],["time","時刻","text"],["dateText","未定のときの表記（例：2026年度中）","text"],["place","場所","text"],
+    ["source","出典URL","url","wide"],["note","メモ","textarea","wide"]]},
+  article:{col:"articles",title:"記事",fields:[
+    ["title","タイトル案","text","wide"],["priority","優先順位","number"],["pillar","柱","select",Object.keys(PILLAR)],["status","状態","select",AR_STATUS],
+    ["template","テンプレート","select",["A 打ち上げ","B 天体","C 乗車","常設"]],["keyword","検索キーワード","text","wide"],["intent","検索意図","textarea","wide"],
+    ["eventDate","イベント日（更新タスクの基準）","date"],["publishBy","公開期限（空なら自動）","date"],["monetize","収益化の導線","text","wide"],
+    ["url","公開URL","url","wide"],["lastVerified","最終確認日","date"],["note","メモ","textarea","wide"]]},
+  post:{col:"posts",title:"SNS投稿",fields:[
+    ["date","投稿日","date"],["time","時刻","text"],["channel","媒体","select",["X","Instagram","両方"]],["status","状態","select",Object.keys(POST_STATUS)],
+    ["text","本文","textarea","wide"],["articleId","関連記事","article","wide"]]},
+  kpi:{col:"kpi",title:"KPI（月）",fields:[["month","月（例：2026-12）","text","wide"],...KPI_DEF.map(d=>[d.k,`${d.l}（${d.u}）`,"number"])]}
+};
+const listFor=k=>({event:S.events,article:S.articles,post:S.posts,kpi:S.kpi}[k]);
+function addBtn(kind,label){return S.canWrite?`<button type="button" class="d-btn small" data-add="${kind}">${ic("plus")}${label}</button>`:""}
+
+function openSheet(kind,id){
+  const F=FORMS[kind],cur={...(id?listFor(kind).find(x=>x._id===id)||{}:{})};
+  if(kind==="kpi"&&id) cur.month=id;
+  const ro=!S.canWrite;
+  const fld=([k,l,t,opt])=>{const v=cur[k]??"",fid=`f-${kind}-${k}`,cls=`d-fld${opt==="wide"||t==="textarea"?" wide":""}`;
+    if(t==="select") return `<label class="${cls}" for="${fid}">${l}<select id="${fid}" name="${k}" ${ro?"disabled":""}>${opt.map(o=>`<option value="${esc(o)}" ${String(v)===o?"selected":""}>${esc(PILLAR[o]||o)}</option>`).join("")}</select></label>`;
+    if(t==="article") return `<label class="${cls}" for="${fid}">${l}<select id="${fid}" name="${k}" ${ro?"disabled":""}><option value="">なし</option>${[...S.articles].sort((a,b)=>(a.priority??999)-(b.priority??999)).map(a=>`<option value="${esc(a._id)}" ${v===a._id?"selected":""}>${esc(a.title)}</option>`).join("")}</select></label>`;
+    if(t==="textarea") return `<label class="${cls}" for="${fid}">${l}<textarea id="${fid}" name="${k}" ${ro?"readonly":""}>${esc(v)}</textarea></label>`;
+    return `<label class="${cls}" for="${fid}">${l}<input id="${fid}" name="${k}" type="${t}" value="${esc(v)}" ${ro||(kind==="kpi"&&k==="month"&&id)?"readonly":""}></label>`};
+  $("#sheetHost").innerHTML=`<div class="sheet-backdrop" id="sbk"></div>
+  <form class="sheet" id="sheet" aria-label="${F.title}の編集">
+    <div class="sheet-bar"><button type="button" class="text-btn" id="scancel">キャンセル</button><h2>${id?F.title+"を編集":F.title+"を追加"}</h2>
+      <button type="submit" class="text-btn strong" ${ro?"disabled":""}>保存</button></div>
+    <div class="sheet-scroll"><div class="d-form"><div class="d-fields">${F.fields.map(fld).join("")}</div>
+      ${id&&!ro?`<div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn danger small" id="sdel">削除</button></div>`:""}
+      ${ro?`<p class="note">閲覧のみです。編集できるのは編集者以上です。</p>`:""}</div></div>
+  </form>`;
+  requestAnimationFrame(()=>{$("#sbk").classList.add("open");$("#sheet").classList.add("open")});
+  const close=()=>{const s=$("#sheet"),b=$("#sbk");if(!s)return;s.classList.remove("open");b.classList.remove("open");setTimeout(()=>{$("#sheetHost").innerHTML=""},380);removeEventListener("keydown",onKey)};
+  const onKey=e=>{if(e.key==="Escape")close()};addEventListener("keydown",onKey);
+  $("#sbk").onclick=close;$("#scancel").onclick=close;
+  const del=$("#sdel");
+  if(del) del.onclick=async()=>{
+    if(del.dataset.armed!=="1"){del.dataset.armed="1";del.textContent="もう一度押すと削除";return}
+    try{await S.db.doc(F.col+"/"+id).delete();toast("削除しました");close()}catch(e){toast("削除できませんでした："+(e.message||e.code))}
+  };
+  $("#sheet").addEventListener("submit",async e=>{e.preventDefault();if(ro||!S.db)return;
+    const fd=new FormData(e.target),data={};
+    for(const [k,,t] of F.fields){let v=fd.get(k);if(v==null)continue;v=String(v).trim();if(t==="number")v=v===""?null:Number(v);data[k]=v}
+    let docId=id;
+    if(kind==="kpi"){if(!/^\d{4}-\d{2}$/.test(data.month||"")){toast("月は 2026-12 の形で入れてください");return}docId=data.month;delete data.month}
+    else if(kind!=="post"&&!data.title){toast("名前を入れてください");return}
+    data.updatedAt=new Date().toISOString();
+    try{await (docId?S.db.doc(F.col+"/"+docId):S.db.collection(F.col).doc()).set(data);toast("保存しました");close()}
+    catch(err){toast(err.code==="invalid_argument"?"保存する権限がありません":"保存できませんでした："+(err.message||err.code))}
+  });
+}
+
+/* ---------- イベントの結びつけ ---------- */
+function bind(){
+  const pg=$("#page");
+  pg.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",e=>{if(e.target.closest("a"))return;openSheet(el.dataset.edit,el.dataset.id)}));
+  pg.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openSheet(b.dataset.add,null));
+  pg.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{S.filter.pillar=b.dataset.filter;render()});
+  pg.querySelectorAll("[data-chk]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.chk,k=b.dataset.k,cur={...(S.checks[id]||{})};cur[k]=b.getAttribute("aria-pressed")!=="true";
+    S.checks[id]=cur;render();
+    try{await S.db.doc("checks/"+id).set({done:cur})}catch(e){toast("保存できませんでした："+(e.message||e.code))}
+  });
+  pg.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{S.promptSel=b.dataset.prompt;render()});
+  pg.querySelectorAll("[data-pv]").forEach(el=>el.addEventListener("input",()=>{S.promptVals[el.dataset.pv]=el.value;$("#pout").textContent=fillPrompt()}));
+  const cp=$("#copyP");
+  if(cp) cp.onclick=()=>{const txt=$("#pout").textContent;
+    navigator.clipboard.writeText(txt).then(()=>toast("コピーしました")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#pout"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("選択しました。コピーしてください")})};
+}
+
+/* ---------- 起動 ---------- */
+try{const t=localStorage.getItem("mm-tab");if(TABS.some(x=>x.id===t))S.tab=t}catch(_){}
+buildTabbar();render();requestAnimationFrame(()=>placeLens(false));
+
+(async function boot(){
+  const conn=$("#conn"),setConn=(cls,txt)=>{conn.className="conn "+cls;conn.querySelector(".txt").textContent=txt};
+  const api=window.claude;
+  const db=api&&api.use?await api.use("db"):null;
+  if(!db){setConn("off","データに接続できません");S.ready=true;S.canWrite=false;render();return}
+  S.db=db;
+  try{const user=await api.use("user");if(user){const ed=await user.canEdit();if(ed===false)S.canWrite=false}}catch(_){}
+  setConn("on",S.canWrite?"共有データに保存":"閲覧のみ");
+  const pending=new Set(["events","articles","posts","kpi","checks"]);
+  const done=n=>{pending.delete(n);if(!pending.size)S.ready=true;render()};
+  const sub=(col,fn)=>db.collection(col).onSnapshot(s=>{fn(s.docs.map(d=>({...d.data(),_id:d.id})));done(col)},()=>setConn("off","接続が切れました。再読み込みしてください"));
+  sub("events",l=>S.events=l);
+  sub("articles",l=>S.articles=l);
+  sub("posts",l=>S.posts=l);
+  sub("kpi",l=>S.kpi=l);
+  sub("checks",l=>{S.checks={};for(const c of l)S.checks[c._id]=c.done||{}});
+})();
+})();
+</script>
