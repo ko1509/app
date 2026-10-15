@@ -97,12 +97,8 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .hbtn{position:relative;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:999px;border:0;background:var(--fill);color:var(--label);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
 .hbtn[aria-current="page"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
 .hdot{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}
-.hbtn.auto i{width:26px;height:16px;border-radius:8px;background:var(--fill-strong);position:relative;flex:none;transition:background .2s}
-.hbtn.auto i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
-.hbtn.auto[aria-pressed="true"] i{background:var(--brand)} .hbtn.auto[aria-pressed="true"] i::after{transform:translateX(10px)}
-.hbtn.auto b{font-weight:700}
-.island .isl-s{display:none}
-@media (max-width:520px){.hbtn.auto .txt,.hbtn.auto b{display:none}.island .isl-l{display:none}.island .isl-s{display:inline}.island{padding:0 10px}.navbar-inner{gap:6px;padding:0 6px 0 10px}.conn.on{display:none}}
+@media (max-width:520px){.island{max-width:40vw;padding-right:8px}.island .isl-txt b{display:none}.island .isl-n{display:none}.navbar-inner{gap:6px;padding:0 6px 0 10px}.conn.on{display:none}}
+@media (max-width:400px){.island .isl-msg{display:none}}
 @media (max-width:400px){.brand .logo{height:14px}}
 
 /* ページ */
@@ -250,9 +246,33 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .sheet-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
 
 /* エージェント */
-.island{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--label);color:var(--ambient-base);font-size:12px;font-weight:600;max-width:46vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border:0;font-family:inherit}
-.island i{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none} .island i.idle{background:var(--label-3);animation:none}
-@media (prefers-reduced-motion:no-preference){.island i{animation:pulse 1.4s ease-in-out infinite}}
+/* デジタルアイランド（ヘッダーのガラスに馴染む色。動いているときは少し濃く、左にエージェントのアイコン） */
+.island{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 6px;border-radius:999px;border:1px solid var(--glass-edge);
+  background:color-mix(in srgb,var(--glass-strong) 70%,var(--fill));box-shadow:inset 0 1px 0 var(--glass-sheen),0 1px 3px rgba(0,0,0,.06);
+  color:var(--label);font-size:12.5px;font-weight:600;min-width:0;max-width:min(440px,46vw);overflow:hidden;white-space:nowrap;cursor:pointer;font-family:inherit;transition:max-width .4s var(--ease),background .3s}
+.island:not(.is-run){padding-left:12px}
+.island.is-run{background:color-mix(in srgb,var(--good) 10%,var(--glass-strong))}
+.island i.idle{width:7px;height:7px;border-radius:50%;background:var(--label-3);flex:none}
+.island .isl-ic{width:24px;height:24px;border-radius:50%} .island .isl-ic svg{width:14px;height:14px}
+@media (prefers-reduced-motion:no-preference){.island.is-run .isl-ic{animation:pulse 1.6s ease-in-out infinite}}
+.isl-txt{display:flex;gap:6px;align-items:baseline;min-width:0;overflow:hidden}
+.isl-txt b{flex:none} .isl-msg{color:var(--label-2);font-weight:500;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.isl-el{flex:none;font-family:var(--en);font-size:11.5px;color:var(--good)}
+.isl-n{flex:none;font-size:11px;padding:1px 6px;border-radius:999px;background:var(--fill-strong);color:var(--label-2)}
+.isl-ap{font-family:var(--en);font-size:10.5px;letter-spacing:.14em;color:var(--brand);margin-right:4px}
+/* 完全自動運転：ヘッダーのフチがオレンジに光る */
+.navbar.is-autopilot .navbar-inner{border-color:transparent;box-shadow:0 0 0 1.5px var(--brand),0 0 16px color-mix(in srgb,var(--brand) 40%,transparent),var(--glass-shadow)}
+@media (prefers-reduced-motion:no-preference){.navbar.is-autopilot .navbar-inner{animation:apglow 2.6s ease-in-out infinite alternate}}
+@keyframes apglow{to{box-shadow:0 0 0 2px var(--brand),0 0 30px color-mix(in srgb,var(--brand) 65%,transparent),var(--glass-shadow)}}
+/* 自動運転のスイッチ（記事タブ・SNS タブ） */
+.auto-sw{display:grid;gap:5px;justify-items:start;border:1px solid var(--glass-edge);background:var(--glass-strong);border-radius:16px;padding:8px 12px;cursor:pointer;font:inherit;color:inherit;text-align:left}
+.auto-sw .en{font-size:9.5px}
+.auto-row{display:flex;align-items:center;gap:8px} .auto-row b{font-size:14px}
+.auto-sw .tg{width:36px;height:22px;border-radius:11px;background:var(--fill-strong);position:relative;flex:none;transition:background .2s}
+.auto-sw .tg::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease)}
+.auto-sw.is-on .tg{background:var(--brand)} .auto-sw.is-on .tg::after{transform:translateX(14px)} .auto-sw.is-on b{color:var(--brand)}
+.auto-sw.is-part .tg{background:color-mix(in srgb,var(--brand) 45%,var(--fill-strong))} .auto-sw.is-part .tg::after{transform:translateX(7px)} .auto-sw.is-part b{color:var(--warn)}
+.auto-pair{display:flex;gap:8px;flex-wrap:wrap}
 @keyframes pulse{50%{opacity:.3}}
 .ag-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
 /* エージェント欄（KOAlil 管理アプリと同じ形：タイル・作業内容・受け渡しの流れ・動いている作業） */
@@ -458,8 +478,8 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
     <button type="button" class="hbtn back" id="backBtn" hidden aria-label="戻る"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <span class="brand" role="img" aria-label="ミアゲタビ"><img class="logo logo-l" src="assets/logo-header.png" alt="" width="459" height="60"><img class="logo logo-d" src="assets/logo-header-dark.png" alt="" width="459" height="60"></span>
     <span class="nav-spacer"></span>
-    <button type="button" class="island" id="island" hidden></button>
-    <button type="button" class="hbtn auto" id="autoBtn" hidden aria-pressed="false" title="自動運用（エージェントの定時実行）を切り替える"><i></i><span class="txt">自動運用</span><b>—</b></button>
+    <button type="button" class="island" id="island" hidden aria-label="いま動いている作業"></button>
+    <span class="nav-spacer"></span>
     <button type="button" class="hbtn" id="themeBtn" aria-label="ダークモードとライトモードを切り替える"></button>
     <button type="button" class="hbtn" id="inboxBtn" aria-label="受信箱"><svg class="i" viewBox="0 0 24 24"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></svg><span class="hdot" id="dot-inbox" hidden></span></button>
     <span class="conn" id="conn"><i></i><span class="txt">接続中…</span></span>
@@ -861,25 +881,27 @@ async function setPause(role,paused){
   toast((paused?`${AG[role].l}を止めました`:`${AG[role].l}を再開しました`)+note);
   if(!paused){const waiting=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).reverse();for(const j of waiting.slice(0,3)){await fire(role,j._id)}}
 }
-// 自動運用：オフで全役割を止め（by:"auto"）、オンで自動運用が止めた役割だけを戻す。運営者が個別に止めた役割（by:"owner"）はそのまま
-const autoOn=()=>ROLES.some(r=>!S.pause[r]);
-function renderAuto(){
-  const b=$("#autoBtn");if(!b)return;
-  if(!S.ready||!S.db){b.hidden=true;return}
-  const on=autoOn();b.hidden=false;b.setAttribute("aria-pressed",String(on));b.querySelector("b").textContent=on?"ON":"OFF";
-  b.disabled=!S.canWrite;
+// 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
+// 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","writer","reviewer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
+const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
+function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
+function autoSwitch(g){
+  const st=groupState(g),G=GROUPS[g],label={on:"ON",part:"一部停止",off:"OFF"}[st];
+  return `<button type="button" class="auto-sw is-${st}" data-auto="${g}" aria-pressed="${st!=="off"}" ${S.canWrite?"":"disabled"} title="${esc(G.l)}：${G.roles.map(r=>AG[r].l).join("・")}">
+    <span class="en">${G.en}</span><span class="auto-row"><i class="tg"></i><b>${label}</b><span class="d-sub">${G.roles.filter(r=>!S.pause[r]).length}/${G.roles.length}</span></span></button>`;
 }
-async function setAuto(on){
-  const roles={};
-  for(const r of ROLES){const cur=S.pauseRaw[r]||{paused:false};
-    if(on) roles[r]=cur.paused&&cur.by!=="auto"?cur:{paused:false,at:iso(),by:"auto"};
-    else roles[r]=cur.paused?cur:{paused:true,at:iso(),by:"auto"};}
-  try{await S.db.doc("settings/agentPause").set({roles,auto:on,updatedAt:iso()})}catch(e){toast("保存できませんでした："+(e.message||e.code));return}
+async function setGroup(g,on){
+  const roles={};for(const r of ROLES)roles[r]=S.pauseRaw[r]||{paused:false};
+  for(const r of GROUPS[g].roles)roles[r]=on?{paused:false,at:iso(),by:"auto"}:{paused:true,at:iso(),by:"auto"};
+  try{await S.db.doc("settings/agentPause").set({roles,updatedAt:iso()})}catch(e){toast("保存できませんでした："+(e.message||e.code));return}
   let ng=0;
-  if(S.mcp) for(const r of ROLES){const trig=S.bg[AG[r].trig];if(!trig)continue;const want=!roles[r].paused;if(want===!S.pause[r])continue;
-    try{await S.mcp.callTool(S.bg.server||"Claude Code Remote","update_trigger",{trigger_id:trig,enabled:want},{cache:false})}catch(_){ng++}}
-  const kept=ROLES.filter(r=>roles[r].paused&&roles[r].by!=="auto").map(r=>AG[r].l);
-  toast(on?`自動運用をオンにしました${kept.length?"（"+kept.join("・")+"は止めたまま）":""}${ng?"・定時の切り替えに失敗"+ng+"件":""}`:`自動運用をオフにしました（全員停止）${ng?"・定時の切り替えに失敗"+ng+"件":""}`);
+  if(S.mcp)for(const r of GROUPS[g].roles){const trig=S.bg[AG[r].trig];if(!trig)continue;if(on===!S.pause[r])continue;
+    try{await S.mcp.callTool(S.bg.server||"Claude Code Remote","update_trigger",{trigger_id:trig,enabled:on},{cache:false})}catch(_){ng++}}
+  const other=g==="article"?"sns":"article",full=on&&groupState(other)==="on";
+  toast(`${GROUPS[g].l}を${on?"オン":"オフ"}にしました${full?"・完全自動運転":""}${ng?"（定時の切り替えに失敗 "+ng+"件）":""}`);
+  if(on)for(const r of GROUPS[g].roles){const w=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===r).reverse().slice(0,2);for(const j of w)await fire(r,j._id)}
 }
 
 // ページを開いたとき、2分以上たっても起動されていない依頼を起動する（30分以内に起動したもの・止まっている役割は除く）。
@@ -891,15 +913,17 @@ function kickQueued(){
     .slice(0,3).forEach(j=>{S.kicked.add(j._id);fire(roleOf(j.kind),j._id)});
 }
 const jobTitle=j=>{const a=S.articles.find(x=>x._id===j.articleId);return a?a.title:(j.title||KIND_L[j.kind]||j._id)};
+// デジタルアイランド：いま動いている作業をリアルタイムで（複数あるときは4秒ごとに切り替え）
 function renderIsland(){
   const el=$("#island");if(!el)return;
-  const run=S.jobs.filter(j=>j.status==="running"),q=S.jobs.filter(j=>j.status==="queued").length;
-  if(!run.length&&!q){el.hidden=true;closeIslandPanel();return}
-  const t=new Date();
-  el.hidden=false;el.innerHTML=run.length?`<i></i><span class="isl-l"><span class="num">${pad(t.getHours())}:${pad(t.getMinutes())}</span>・作業中 ${run.length}${q?`・待ち ${q}`:""}</span><span class="isl-s num">${run.length}${q?"+"+q:""}</span>`:`<i class="idle"></i><span class="isl-l">順番待ち ${q}</span><span class="isl-s num">${q}</span>`;
+  if(!S.ready||!S.db){el.hidden=true;return}
+  const run=S.jobs.filter(j=>j.status==="running").sort((a,b)=>(a.startedAt||"").localeCompare(b.startedAt||"")),q=S.jobs.filter(j=>j.status==="queued").length;
+  el.hidden=false;el.classList.toggle("is-run",!!run.length);el.classList.toggle("is-auto",fullAuto());
+  if(!run.length){el.innerHTML=`<i class="idle"></i><span class="isl-txt">${fullAuto()?'<b class="isl-ap">AUTOPILOT</b>':""}${q?`順番待ち ${q}`:"待機中"}</span>`}
+  else{const j=run[Math.floor(Date.now()/4000)%run.length],r=roleOf(j.kind);
+    el.innerHTML=`<span class="isl-ic ag-ic ag-${r}">${ic(AG[r].ic,"")}</span><span class="isl-txt"><b>${esc(AG[r].l)}</b><span class="isl-msg">${esc(j.message||jobLabel(j))}</span></span><span class="isl-el num">${elapsed(j.startedAt||j.createdAt)}</span>${run.length+q>1?`<span class="isl-n num">+${run.length+q-1}</span>`:""}`}
   el.setAttribute("aria-expanded",String(!!$("#islandPanel")));
   el.onclick=e=>{e.stopPropagation();$("#islandPanel")?closeIslandPanel():openIslandPanel()};
-  if($("#islandPanel")) fillIslandPanel();
 }
 function fillIslandPanel(){
   const p=$("#islandPanel");if(!p)return;
@@ -941,7 +965,7 @@ function bindJobButtons(root){
 }
 function roleState(role){
   const run=S.jobs.find(j=>j.status==="running"&&roleOf(j.kind)===role),last=S.jobs.find(j=>roleOf(j.kind)===role);
-  if(S.pause[role]) return {k:(S.pauseRaw[role]||{}).by==="auto"?"自動運用オフ":"停止中",c:"warn",run,last};
+  if(S.pause[role]) return {k:(S.pauseRaw[role]||{}).by==="auto"?"自動運転オフ":"停止中",c:"warn",run,last};
   if(run) return {k:"作業中",c:"good",run,last};
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
@@ -961,7 +985,7 @@ function roleDetail(r){
     <dl><dt>動くとき</dt><dd>${esc(A.when)}</dd><dt>手順書</dt><dd class="mono">ops/${esc(A.manual)}</dd></dl>
     <div class="ag-dsub">主な作業</div><ul>${A.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
     <p class="ag-never">${ic("check")}<span>${esc(A.never)}</span></p>
-    ${S.pause[r]?`<p class="ag-paused">${pr.by==="auto"?"自動運用がオフのため止まっています。":"停止中です。"}${pr.at?`（${esc(ago(pr.at))}）`:""}新しい作業は始めず、依頼は順番待ちのまま残ります。</p>`:""}
+    ${S.pause[r]?`<p class="ag-paused">${pr.by==="auto"?"自動運転がオフのため止まっています。":"停止中です。"}${pr.at?`（${esc(ago(pr.at))}）`:""}新しい作業は始めず、依頼は順番待ちのまま残ります。</p>`:""}
     ${S.canWrite?`<div class="d-actions"><button type="button" class="d-btn small" data-ag-run="${r}" ${!S.pause[r]&&!cur.length&&(trig||!["writer","reviewer"].includes(r))?"":"disabled"}>${cur.length?"動いています":"今すぐ動かす"}</button>
       <button type="button" class="d-btn small ${S.pause[r]?"":"secondary"}" data-ag-pause="${r}">${S.pause[r]?"再開する":"停止する"}</button></div>`:""}
     ${cur.length?`<div class="ag-dsub">いまの作業</div>${cur.map(j=>`<p class="ag-now">${j.status==="running"?"動作中":"順番待ち"}：${esc(jobTitle(j))}${j.message?" — "+esc(j.message):""}</p>`).join("")}`
@@ -1019,7 +1043,7 @@ function agentsCard(scope){
   const active=S.jobs.filter(j=>(j.status==="queued"||j.status==="running")&&inScope(j)).sort((a,b)=>a.status===b.status?(a.startedAt||a.createdAt||"").localeCompare(b.startedAt||b.createdAt||""):a.status==="running"?-1:1);
   const tiles=roles.map(r=>{const n=active.filter(j=>roleOf(j.kind)===r),run=n.find(j=>j.status==="running"),open=S.agRole===r;
     const lj=run||n[0]||S.jobs.find(j=>roleOf(j.kind)===r),w=`<span class="ag-w">${lj?esc(lj.message||jobTitle(lj))+" · "+esc(ago(lj.updatedAt||lj.createdAt)):"まだ動いていません"}</span>`;
-    if(S.pause[r])return `<button type="button" class="ag-tile is-paused ${open?"is-open":""}" data-ag-role="${r}" aria-expanded="${open}">${agIc(r)}<div><b>${esc(AG[r].l)}</b><span class="ag-st">${(S.pauseRaw[r]||{}).by==="auto"?"自動運用オフ":"停止中"}${n.length?`・待ち ${n.length}`:""}</span></div><i class="ag-dot"></i>${w}</button>`;
+    if(S.pause[r])return `<button type="button" class="ag-tile is-paused ${open?"is-open":""}" data-ag-role="${r}" aria-expanded="${open}">${agIc(r)}<div><b>${esc(AG[r].l)}</b><span class="ag-st">${(S.pauseRaw[r]||{}).by==="auto"?"自動運転オフ":"停止中"}${n.length?`・待ち ${n.length}`:""}</span></div><i class="ag-dot"></i>${w}</button>`;
     const err=!n.length&&(()=>{const l=S.jobs.find(j=>roleOf(j.kind)===r);return l&&l.status==="error"})();
     return `<button type="button" class="ag-tile ${run?"is-run":n.length?"is-queue":err?"is-err":""} ${open?"is-open":""}" data-ag-role="${r}" aria-expanded="${open}">${agIc(r)}<div><b>${esc(AG[r].l)}</b><span class="ag-st">${run?`動作中 ${elapsed(run.startedAt||run.createdAt)}`:n.length?`順番待ち ${n.length}`:err?"前回は失敗":"待機中"}</span></div><i class="ag-dot"></i>${w}</button>`}).join("");
   const row=j=>{const r=roleOf(j.kind),since=j.startedAt||j.createdAt,stale=j.status==="running"&&j.updatedAt&&Date.now()-new Date(j.updatedAt)>15*6e4;
@@ -1027,7 +1051,7 @@ function agentsCard(scope){
       <div class="ag-msg">${j.status==="queued"?"順番待ち":""}${j.status==="queued"&&j.message?" · ":""}${esc(j.message||"")}${stale?` <span class="d-pill warn">${esc(ago(j.updatedAt))}から更新なし</span>`:""}</div></div>
       <div class="ag-side"><span class="ag-el">${since?elapsed(since):""}</span><i class="ag-dot"></i></div></div>`};
   const hist=S.jobs.filter(j=>(j.status==="done"||j.status==="error"||j.status==="waiting")&&inScope(j)).sort((a,b)=>(b.finishedAt||b.updatedAt||"").localeCompare(a.finishedAt||a.updatedAt||"")).slice(0,4);
-  return `<div class="d-card ag-card"><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">AGENTS</span>${AG_TITLE[scope]||AG_TITLE.all}</h2>${scope!=="all"?`<button type="button" class="text-btn" data-go="agents" style="font-size:14px">編集部へ</button>`:""}</div>
+  return `<div class="d-card ag-card"><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">AGENTS</span>${AG_TITLE[scope]||AG_TITLE.all}</h2>${scope==="article"||scope==="sns"?autoSwitch(scope):scope==="all"?`<span class="auto-pair">${autoSwitch("article")}${autoSwitch("sns")}</span>`:`<button type="button" class="text-btn" data-go="agents" style="font-size:14px">編集部へ</button>`}</div>
     <div class="ag-tiles n${roles.length}">${tiles}</div>
     ${S.agRole&&roles.includes(S.agRole)?roleDetail(S.agRole):""}
     ${flowSection(scope)}
@@ -1360,6 +1384,10 @@ function bind(){
   const pg=$("#page");
   pg.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",e=>{if(e.target.closest("a"))return;openSheet(el.dataset.edit,el.dataset.id)}));
   pg.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openSheet(b.dataset.add,null));
+  pg.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const g=b.dataset.auto,st=groupState(g);
+    // オフにするときだけ、もう一度押して確かめる（4秒以内）
+    if(st==="on"&&b.dataset.armed!=="1"){b.dataset.armed="1";toast(`もう一度押すと${GROUPS[g].l}をオフにします`);setTimeout(()=>{b.dataset.armed=""},4000);return}
+    setGroup(g,st!=="on")});
   pg.querySelectorAll("[data-evmode]").forEach(b=>b.onclick=()=>{S.evMode=b.dataset.evmode;try{localStorage.setItem("mm-evmode",S.evMode)}catch(_){}render()});
   pg.querySelectorAll("[data-evmonth]").forEach(b=>b.onclick=()=>{const v=+b.dataset.evmonth,t=today();let base=S.evMonth?new Date(S.evMonth+"T00:00:00"):new Date(t.getFullYear(),t.getMonth(),1);
     base=v===0?new Date(t.getFullYear(),t.getMonth(),1):new Date(base.getFullYear(),base.getMonth()+v,1);S.evMonth=`${base.getFullYear()}-${pad(base.getMonth()+1)}-01`;render()});
@@ -1390,7 +1418,8 @@ new MutationObserver(updBack).observe($("#sheetHost"),{childList:true});
   addEventListener("touchstart",e=>{const t=e.touches[0];x0=t.clientX<=24?t.clientX:null;y0=t.clientY},{passive:true});
   addEventListener("touchend",e=>{if(x0==null)return;const t=e.changedTouches[0];if(t.clientX-x0>70&&Math.abs(t.clientY-y0)<60)back();x0=null},{passive:true});
 })();
-setInterval(()=>{if(S.ready)renderIsland()},30000);
+setInterval(()=>{if(S.ready){renderIsland();renderAuto()}},1000);
+setInterval(()=>{if(S.ready&&$("#islandPanel"))fillIslandPanel()},15000);
 
 /* ---------- 起動 ---------- */
 try{const v=localStorage.getItem("mm-evmode");if(v==="cal"||v==="list")S.evMode=v}catch(_){}
@@ -1406,10 +1435,6 @@ paintTheme();
 $("#themeBtn").onclick=()=>{const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;try{localStorage.setItem("mm-theme",t)}catch(_){}paintTheme()};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme);
 $("#backBtn").onclick=()=>{back();setTimeout(updBack,450)};
-$("#autoBtn").onclick=()=>{if(!S.canWrite)return;const b=$("#autoBtn"),on=autoOn();
-  // オフにするときだけ、もう一度押して確かめる（4秒以内）
-  if(on&&b.dataset.armed!=="1"){b.dataset.armed="1";toast("もう一度押すと自動運用をオフにします（全員停止）");setTimeout(()=>{b.dataset.armed=""},4000);return}
-  b.dataset.armed="";setAuto(!on)};
 render();requestAnimationFrame(()=>placeLens(false));
 
 (async function boot(){
