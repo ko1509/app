@@ -218,6 +218,35 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
 .text-btn:disabled{opacity:.4;cursor:not-allowed}
 .sheet-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
 
+/* エージェント */
+.island{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--label);color:var(--ambient-base);font-size:12px;font-weight:600;max-width:46vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border:0;font-family:inherit}
+.island i{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+@media (prefers-reduced-motion:no-preference){.island i{animation:pulse 1.4s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.3}}
+.ag-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.ag-card{display:grid;gap:12px;align-content:start}
+.ag-head{display:flex;align-items:center;gap:10px}
+.ag-box{border-radius:16px;background:var(--fill);padding:12px;display:grid;gap:8px;min-width:0}
+.chkline{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
+.chkline input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.md{font-size:15px;line-height:1.8;min-width:0}
+.md h2{font-size:19px;margin:24px 0 8px;padding-bottom:4px;border-bottom:.5px solid var(--separator)}
+.md h3{font-size:16px;margin:18px 0 6px}
+.md h4{font-size:15px;margin:14px 0 4px}
+.md p{margin:0 0 .9em}
+.md ul,.md ol{padding-left:1.4em;margin:0 0 1em}
+.md .tw{overflow-x:auto;margin:0 0 1em}
+.md table{border-collapse:collapse;width:100%;font-size:13.5px}
+.md th,.md td{border-bottom:.5px solid var(--separator);padding:6px 8px;text-align:left;vertical-align:top}
+.md th{color:var(--label-2);font-size:12.5px}
+.md .mark{display:inline-block;padding:2px 8px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-weight:600;font-size:13px}
+.md .statusbox{border:2px dashed var(--separator);border-radius:12px;padding:10px 12px;color:var(--label-2);font-size:13px;margin:0 0 1em}
+.md blockquote{margin:0 0 1em;padding:6px 12px;border-left:3px solid var(--accent);background:var(--fill);border-radius:0 8px 8px 0}
+.md code{font-family:var(--mono);font-size:.9em;background:var(--fill);padding:0 4px;border-radius:4px}
+.md .fm{font-family:var(--mono);font-size:12px;color:var(--label-3);white-space:pre-wrap;margin:0 0 1em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--label-2);font-weight:600;white-space:nowrap} .kv dd{margin:0;overflow-wrap:anywhere;min-width:0}
+
 /* 下のタブバー（浮かぶ・スライドするレンズ） */
 .tabbar{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:2px;padding:3px;border-radius:999px;max-width:calc(100vw - 16px)}
 .tabbar .lens{position:absolute;z-index:0;top:3px;left:0;width:0;height:0;border-radius:999px;background:var(--lens);box-shadow:0 4px 14px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.7);
@@ -230,7 +259,7 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
 .tabbar .dot{position:absolute;top:0;right:8px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:9.5px;line-height:15px;font-variant-numeric:tabular-nums}
 @media (max-width:440px){
   :root{--tabbar-h:92px}
-  .tabbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:26px;width:calc(100vw - 16px)}
+  .tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-radius:26px;width:calc(100vw - 16px)}
   .tabbar .lens{border-radius:20px}
   .tabbar button{min-width:0;min-height:42px;font-size:11px;line-height:12px;border-radius:20px}
 }
@@ -247,6 +276,7 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
   <div class="navbar-inner">
     <span class="brand"><span class="brand-mark"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/></svg></span>ミアゲタビ</span>
     <span class="nav-spacer"></span>
+    <button type="button" class="island" id="island" hidden></button>
     <span class="conn" id="conn"><i></i><span class="txt">接続中…</span></span>
   </div>
 </header>
@@ -273,6 +303,7 @@ const IC={
   gear:'<circle cx="7" cy="15" r="3.5"/><circle cx="17" cy="15" r="3.5"/><path d="M10.5 15h3M5 11.5 7 5h3l1 6M19 11.5 17 5h-3l-1 6"/>',
   other:'<circle cx="12" cy="12" r="8"/>',
   check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+  agent:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4.5V8M9.5 13v.01M14.5 13v.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
 };
@@ -308,13 +339,15 @@ const TABS=[
   {id:"home",l:"今日",ic:"home",eyebrow:"今日やること",title:"編集デスク"},
   {id:"events",l:"イベント",ic:"cal",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
   {id:"articles",l:"記事",ic:"doc",eyebrow:"最初の20本",title:"記事ボード"},
+  {id:"agents",l:"エージェント",ic:"agent",eyebrow:"記事作成・査読",title:"エージェント"},
   {id:"sns",l:"SNS",ic:"sns",eyebrow:"X・Instagram",title:"告知の予定"},
   {id:"kpi",l:"KPI",ic:"kpi",eyebrow:"3か月後の判断",title:"KPI"},
   {id:"prompts",l:"AI",ic:"ai",eyebrow:"下調べ・構成・更新・告知",title:"AIプロンプト"}
 ];
 
 const S={events:[],articles:[],posts:[],kpi:[],checks:{},tab:"home",db:null,canWrite:true,ready:false,
-  filter:{pillar:"all"},promptSel:"research",promptVals:{}};
+  filter:{pillar:"all"},promptSel:"research",promptVals:{},
+  jobs:[],bg:{},pause:{},lessons:[],loopConf:{enabled:true,maxRounds:3,pass:"A"},mcp:null,kicked:new Set()};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -370,7 +403,8 @@ function render(){
   const T=TABS.find(t=>t.id===S.tab);
   const head=`<div class="d-head"><p>${esc(T.eyebrow)}・<span class="num">${fmt(today())}</span></p><h1>${esc(T.title)}</h1></div>`;
   if(!S.ready){$("#page").innerHTML=head+`<div class="d-card d-empty">データを読み込んでいます。</div>`;return}
-  const body={home:viewHome,events:viewEvents,articles:viewArticles,sns:viewSns,kpi:viewKpi,prompts:viewPrompts}[S.tab](tasks);
+  renderIsland();
+  const body={home:viewHome,events:viewEvents,articles:viewArticles,agents:viewAgents,sns:viewSns,kpi:viewKpi,prompts:viewPrompts}[S.tab](tasks);
   $("#page").innerHTML=head+body;
   bind();
 }
@@ -405,7 +439,7 @@ function viewHome(tasks){
   const pubN=counts[3][1];
   return `${strip()}
   <div class="d-grid2">
-    <div class="stack">${group("遅れている作業",late,"遅れはありません。")}${group("今日",now,"今日が期限の作業はありません。")}${group("この先7日",soon,"7日以内の作業はありません。")}</div>
+    <div class="stack">${draftGroup()}${group("遅れている作業",late,"遅れはありません。")}${group("今日",now,"今日が期限の作業はありません。")}${group("この先7日",soon,"7日以内の作業はありません。")}</div>
     <div class="stack">
       <div><div class="d-sec"><h2>記事の進み具合</h2><p>90日で20本</p></div>
         <div class="d-stats">${counts.map(([s,n])=>`<div class="d-stat"><span class="k">${s}</span><span class="v">${n}<small>本</small></span></div>`).join("")}</div>
@@ -438,7 +472,7 @@ function viewArticles(){
         <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
         <div class="pills"><span class="kc kc-${esc(a.pillar)}">${PILLAR[a.pillar]||"その他"}</span>
         ${pub&&s!=="公開済み"?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
-        ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}</div>
+        ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${loopKc(a)}</div>
         ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`}).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`}).join("")}</div>`;
 }
 
@@ -519,6 +553,249 @@ function viewPrompts(){
   </div>`;
 }
 
+/* ---------- エージェント（記事作成・査読） ---------- */
+const AG={
+  writer:{l:"記事作成",kind:"article",trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて記事を書く",pc:"sky",ic:"doc"},
+  reviewer:{l:"査読",kind:"review",trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",pc:"launch",ic:"check"}
+};
+const roleOf=kind=>kind==="review"?"reviewer":"writer";
+const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
+const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],error:["失敗","bad"]};
+const iso=()=>new Date().toISOString();
+function ago(t){const m=Math.round((Date.now()-new Date(t))/6e4);return m<1?"たった今":m<60?m+"分前":m<1440?Math.round(m/60)+"時間前":Math.round(m/1440)+"日前"}
+const loopKc=a=>a.loop&&LOOP[a.loop.state]?`<span class="kc ${a.loop.state==="failed"?"kc-bad":a.loop.state==="passed"?"":"kc-warn"}">${LOOP[a.loop.state][0]}${a.loop.round?" "+a.loop.round+"回目":""}</span>`:"";
+const loopPill=a=>a.loop&&LOOP[a.loop.state]?`<span class="d-pill ${LOOP[a.loop.state][1]}">${LOOP[a.loop.state][0]}${a.loop.round?"・"+a.loop.round+"回目":""}</span>`:'<span class="d-pill mute">まだ依頼していません</span>';
+const gradePill=r=>r&&r.grade?`<span class="d-pill ${r.grade==="A"?"good":r.grade==="B"?"warn":"bad"}">査読 ${esc(r.grade)}（P0 ${r.p0??"-"}・P1 ${r.p1??"-"}・P2 ${r.p2??"-"}）</span>`:"";
+
+function mcpErr(e){
+  const c=e&&e.code;
+  return ({server_not_connected:"Claude Code Remote のコネクタが見つかりません。claude.ai の設定 → コネクタで追加してください",
+    needs_reauth:"Claude Code Remote のコネクタをつなぎ直してください（claude.ai の設定 → コネクタ）",
+    not_in_manifest:"このページでのコネクタの利用が許可されていません。ページの「権限」から許可してください",
+    approval_required:"コネクタを使う許可が必要です。表示された確認で「許可」を選んでください",
+    selection_required:"同じ名前のコネクタが複数あります。どれを使うか選んでください",
+    blocked_by_policy:"組織の設定でこのコネクタは使えません",
+    server_unavailable:"いまコネクタにつながりません。少し待ってからもう一度押してください",
+    tool_error:"起動を断られました："+((e&&e.message)||"").slice(0,80)})[c]||("起動できませんでした（"+(c||"不明")+"）");
+}
+// Routine を起動する。jobId があれば「job:<ID>」を渡す（無ければ見回り）
+async function fire(role,jobId){
+  const trig=S.bg[AG[role].trig];
+  if(!S.mcp) return {ok:false,why:"このページではコネクタが使えません。依頼は順番待ちのまま残り、見回りで処理されます"};
+  if(!trig) return {ok:false,why:`${AG[role].l}の Routine の ID が未設定です（エージェント → 設定）`};
+  try{
+    await S.mcp.callTool(S.bg.server||"Claude Code Remote","fire_trigger",jobId?{trigger_id:trig,text:"job:"+jobId}:{trigger_id:trig},{cache:false});
+    if(jobId) S.db.doc("jobs/"+jobId).update({kickedAt:iso()}).catch(()=>{});
+    return {ok:true};
+  }catch(e){return {ok:false,why:mcpErr(e)}}
+}
+async function requestWrite(a,opt){
+  if(!S.canWrite||!S.db) return;
+  const round=((a.loop&&a.loop.round)||0)+1,id=`article-${a._id}-${round}`,now=iso();
+  try{
+    await S.db.doc("jobs/"+id).set({kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||"",
+      rewrite:round>1,status:"queued",message:"依頼しました",by:"app",createdAt:now,updatedAt:now});
+    await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||3,updatedAt:now},withExperience:!!opt.withExperience});
+  }catch(e){toast("依頼を書けませんでした："+(e.message||e.code));return}
+  if(S.pause.writer){toast("記事作成エージェントは停止中です。再開すると始まります");return}
+  const r=await fire("writer",id);toast(r.ok?"記事作成エージェントを起動しました":r.why);
+}
+async function retryJob(j){
+  try{await S.db.doc("jobs/"+j._id).update({status:"queued",message:"もう一度依頼しました",updatedAt:iso()})}catch(e){toast("書けませんでした："+(e.message||e.code));return}
+  const role=roleOf(j.kind);if(S.pause[role]){toast("停止中です。再開すると始まります");return}
+  const r=await fire(role,j._id);toast(r.ok?"もう一度起動しました":r.why);
+}
+async function setPause(role,paused){
+  const roles={writer:{paused:!!S.pause.writer},reviewer:{paused:!!S.pause.reviewer}};roles[role]={paused};
+  try{await S.db.doc("settings/agentPause").set({roles,updatedAt:iso()})}catch(e){toast("保存できませんでした："+(e.message||e.code));return}
+  toast(paused?`${AG[role].l}エージェントを止めました`:`${AG[role].l}エージェントを再開しました`);
+  if(!paused){ // 待っていた依頼を起動
+    const waiting=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).reverse();
+    for(const j of waiting.slice(0,3)){await fire(role,j._id)}
+  }
+}
+// ページを開いたとき、2分以上たっても起動されていない依頼を1回だけ起動する（30分以内に起動したものは除く）
+function kickQueued(){
+  if(!S.mcp||!S.canWrite||!S.db) return;
+  const now=Date.now();
+  S.jobs.filter(j=>j.status==="queued"&&!S.kicked.has(j._id)&&now-new Date(j.createdAt||0)>12e4&&(!j.kickedAt||now-new Date(j.kickedAt)>18e5)&&!S.pause[roleOf(j.kind)])
+    .slice(0,3).forEach(j=>{S.kicked.add(j._id);fire(roleOf(j.kind),j._id)});
+}
+function renderIsland(){
+  const el=$("#island");if(!el)return;
+  const run=S.jobs.filter(j=>j.status==="running");
+  if(!run.length){el.hidden=true;return}
+  const j=run[0],a=S.articles.find(x=>x._id===j.articleId);
+  el.hidden=false;el.innerHTML=`<i></i>${esc(AG[roleOf(j.kind)].l)}：${esc(j.message||"作業中")}${run.length>1?` ほか${run.length-1}件`:""}`;
+  el.title=a?a.title:"";
+  el.onclick=()=>go("agents");
+}
+function draftGroup(){
+  const list=S.articles.filter(a=>a.draft&&a.loop&&(a.loop.state==="passed"||a.loop.state==="failed")&&a.status!=="公開済み");
+  if(!list.length) return "";
+  return `<div><div class="d-group-title"><span>エージェントの稿（あなたの確認待ち）</span><span class="num">${list.length}件</span></div>
+  <div class="d-group">${list.map(a=>`<button type="button" class="d-row" data-draft="${esc(a._id)}">${picto(a.pillar)}
+    <div class="d-main"><div class="d-t">${esc(a.title)}</div><div class="pills" style="margin-top:4px">${loopPill(a)}${gradePill(a.review)}</div></div>
+    <div class="d-when">${a.review&&a.review.at?ago(a.review.at):""}</div></button>`).join("")}</div></div>`;
+}
+function jobRow(j){
+  const a=S.articles.find(x=>x._id===j.articleId),st=JOB_ST[j.status]||["?","mute"];
+  return `<div class="d-row"><span class="d-picto pc-${AG[roleOf(j.kind)].pc}">${ic(AG[roleOf(j.kind)].ic,"")}</span>
+    <div class="d-main"><div class="d-t">${esc(a?a.title:(j.title||j.articleId||j._id))}</div>
+    <div class="d-sub">${esc(AG[roleOf(j.kind)].l)}・${esc(j.round||1)}回目・${esc(j.message||"")}</div>
+    <div class="pills" style="margin-top:4px"><span class="d-pill ${st[1]}">${st[0]}</span>${j.status==="error"&&S.canWrite?`<button type="button" class="d-btn small secondary" data-ag-retry="${esc(j._id)}">もう一度</button>`:""}${a&&a.draft?`<button type="button" class="d-btn small secondary" data-draft="${esc(a._id)}">稿を見る</button>`:""}</div></div>
+    <div class="d-when">${ago(j.updatedAt||j.createdAt)}</div></div>`;
+}
+function viewAgents(){
+  const card=role=>{const A=AG[role],paused=!!S.pause[role],trig=S.bg[A.trig],r=S.jobs.find(j=>j.status==="running"&&roleOf(j.kind)===role),q=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).length;
+    return `<div class="d-card ag-card"><div class="ag-head"><span class="d-picto pc-${A.pc}">${ic(A.ic,"")}</span>
+      <div class="d-main"><div class="d-t">${A.l}エージェント</div><div class="d-sub">${A.desc}</div></div>
+      ${paused?'<span class="d-pill warn">停止中</span>':r?'<span class="d-pill good">作業中</span>':'<span class="d-pill mute">待機中</span>'}</div>
+      ${r?`<div class="ag-box"><div class="d-t">${esc(r.title||r.articleId)}（${esc(r.round||1)}回目）</div><div class="d-sub">${esc(r.message||"")}・${ago(r.updatedAt||r.startedAt||r.createdAt)}</div></div>`:""}
+      <div class="d-sub">順番待ち ${q}件</div>
+      <div class="d-actions"><button type="button" class="d-btn small secondary" data-ag-pause="${role}" ${S.canWrite?"":"disabled"}>${paused?"再開する":"止める"}</button>
+      <button type="button" class="d-btn small secondary" data-ag-patrol="${role}" ${S.canWrite&&trig?"":"disabled"}>見回りを今すぐ</button></div>
+      ${trig?"":`<p class="note">Routine の ID が未設定です（下の「設定」）。</p>`}</div>`};
+  const jobs=S.jobs.slice(0,30);
+  const lc=S.loopConf;
+  return `${S.mcp?"":`<p class="note">このページではコネクタ（Claude Code Remote）が使えないため、エージェントを直接起動できません。依頼は順番待ちとして残り、3時間ごとの見回りで処理されます。</p>`}
+  <div class="ag-grid">${card("writer")}${card("reviewer")}</div>
+  <div class="d-grid2">
+    <div><div class="d-group-title"><span>依頼の履歴</span><span class="num">${S.jobs.length}件</span></div>
+      <div class="d-group">${jobs.length?jobs.map(jobRow).join(""):`<div class="d-empty">まだ依頼はありません。記事ボードのカードを開いて「エージェントに書かせる」を押すと始まります。</div>`}</div></div>
+    <div class="stack">
+      <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">査読ループ</h2><p>合格は ${esc(lc.pass||"A")} だけ</p></div>
+        <label class="chkline"><input type="checkbox" id="lpOn" ${lc.enabled!==false?"checked":""} ${S.canWrite?"":"disabled"}>書いたら自動で査読に回す</label>
+        <label class="d-fld">書き直しの上限（回）<select id="lpMax" ${S.canWrite?"":"disabled"}>${[1,2,3,4,5].map(n=>`<option ${(lc.maxRounds||3)===n?"selected":""}>${n}</option>`).join("")}</select></label>
+        <div class="d-actions"><button type="button" class="d-btn small" id="lpSave" ${S.canWrite?"":"disabled"}>保存</button></div></div>
+      <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">作成エージェントへの教訓</h2><p>${S.lessons.length}件（査読から自動で追加）</p></div>
+        ${S.lessons.length?`<div class="d-group" style="background:none;border:0;box-shadow:none">${S.lessons.map((l,i)=>`<div class="d-row" style="padding:8px 0"><span class="d-sub num">${i+1}</span><div class="d-main"><div class="d-t" style="font-weight:500;font-size:14px">${esc(l.text)}</div><div class="d-sub">${esc(l.from||"")}</div></div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-lesson-del="${i}">外す</button>`:""}</div>`).join("")}</div>`:`<div class="d-sub">まだありません。</div>`}</div>
+      <details class="d-card"><summary style="cursor:pointer;font-weight:600">設定（Routine の ID）</summary>
+        <div class="d-form" style="margin-top:12px">
+          <label class="d-fld">記事作成の Routine ID<input id="bgW" value="${esc(S.bg.writerTriggerId||"")}" placeholder="trig_…" ${S.canWrite?"":"readonly"}></label>
+          <label class="d-fld">査読の Routine ID<input id="bgR" value="${esc(S.bg.reviewerTriggerId||"")}" placeholder="trig_…" ${S.canWrite?"":"readonly"}></label>
+          <div class="d-actions"><button type="button" class="d-btn small" id="bgSave" ${S.canWrite?"":"disabled"}>保存</button></div>
+          <p class="d-sub" style="margin:0">手順書：ops/agent-jobs.md・ops/article-manual.md・ops/review-manual.md（このアプリと一緒に公開）</p></div></details>
+    </div></div>`;
+}
+function bindAgents(pg){
+  pg.querySelectorAll("[data-draft]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();openDraft(b.dataset.draft)}));
+  pg.querySelectorAll("[data-ag-pause]").forEach(b=>b.onclick=()=>setPause(b.dataset.agPause,!S.pause[b.dataset.agPause]));
+  pg.querySelectorAll("[data-ag-patrol]").forEach(b=>b.onclick=async()=>{const r=await fire(b.dataset.agPatrol);toast(r.ok?"見回りを起動しました":r.why)});
+  pg.querySelectorAll("[data-ag-retry]").forEach(b=>b.onclick=()=>{const j=S.jobs.find(x=>x._id===b.dataset.agRetry);if(j)retryJob(j)});
+  pg.querySelectorAll("[data-lesson-del]").forEach(b=>b.onclick=async()=>{
+    const i=+b.dataset.lessonDel,items=S.lessons.filter((_,k)=>k!==i);
+    try{await S.db.doc("settings/writerLessons").set({items,updatedAt:iso()});toast("教訓を外しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}});
+  const ls=$("#lpSave");if(ls) ls.onclick=async()=>{
+    try{await S.db.doc("settings/reviewLoop").set({enabled:$("#lpOn").checked,maxRounds:+$("#lpMax").value,pass:"A",updatedAt:iso()});toast("査読ループの設定を保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+  const bs=$("#bgSave");if(bs) bs.onclick=async()=>{
+    const w=$("#bgW").value.trim(),r=$("#bgR").value.trim();
+    if((w&&!/^trig_\w+$/.test(w))||(r&&!/^trig_\w+$/.test(r))){toast("Routine の ID は trig_ で始まります");return}
+    try{await S.db.doc("settings/background").set({...S.bg,writerTriggerId:w,reviewerTriggerId:r,server:S.bg.server||"Claude Code Remote",updatedAt:iso()});toast("設定を保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+}
+
+/* 記事カードの中の「エージェント」欄 */
+function agentBox(a){
+  const can=S.canWrite,running=S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running"));
+  return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${loopPill(a)}${gradePill(a.review)}</div></div>
+    ${a.draft?`<div class="d-actions"><button type="button" class="d-btn small" id="agDraft">稿を見る</button><span class="d-sub">${a.draft.createdAt?ago(a.draft.createdAt)+"に書いた稿":""}</span></div>`:""}
+    <label class="chkline"><input type="checkbox" id="agExp" ${a.withExperience?"checked":""} ${can?"":"disabled"}>あとで自分の体験を書き込む欄を入れる</label>
+    <label class="d-fld">エージェントへの指示（なくてもよい）<textarea id="agNote" rows="2" placeholder="例：種子島に行けない人向けの節を厚く" ${can?"":"readonly"}></textarea></label>
+    <div class="d-actions"><button type="button" class="d-btn small secondary" id="agGo" ${can&&!running?"":"disabled"}>${a.draft?"書き直しを頼む":"エージェントに書かせる"}</button>
+    ${running?'<span class="d-sub">いま依頼が進んでいます</span>':""}</div></div>`;
+}
+function bindAgentBox(a,close){
+  const go=$("#agGo"),d=$("#agDraft");
+  if(d) d.onclick=()=>{close();setTimeout(()=>openDraft(a._id),400)};
+  if(go) go.onclick=async()=>{go.disabled=true;await requestWrite(a,{withExperience:$("#agExp").checked,note:$("#agNote").value.trim()});close()};
+}
+
+/* 稿の表示（Markdown を読みやすく） */
+function mdInline(t){
+  let s=esc(t);
+  s=s.replace(/\[(AFF:[^\]]+)\]/g,'<span class="mark">$1</span>').replace(/\[(体験記入:[^\]]+)\]/g,'<span class="mark">$1</span>');
+  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,(m,l,u)=>`<a href="${u}" target="_blank" rel="noopener">${l}</a>`);
+  s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");
+  return s;
+}
+function mdHtml(md,fields){
+  let L=String(md||"").replace(/\r\n/g,"\n").split("\n"),out=[],i=0;
+  if(L[0]&&L[0].trim()==="---"){const e=L.indexOf("---",1);if(e>0){out.push(`<div class="fm">${esc(L.slice(1,e).join("\n"))}</div>`);L=L.slice(e+1)}}
+  const isBlock=x=>/^(#{1,4}\s|[-*]\s|\d+[.)]\s|\||>|\[mm_status\])/.test(x.trim());
+  while(i<L.length){
+    const s=L[i].trim();
+    if(!s){i++;continue}
+    let m=s.match(/^(#{1,4})\s+(.*)$/);
+    if(m){const n=Math.max(2,m[1].length);out.push(`<h${n}>${mdInline(m[2])}</h${n}>`);i++;continue}
+    if(s==="[mm_status]"){const f=fields||{};out.push(`<div class="statusbox">ここに「今の状況」の囲みが出ます（プラグイン）。${f.status?"状況："+esc(f.status)+"・":""}${f.event_date?esc(f.event_date)+" "+esc(f.event_time||""):""}</div>`);i++;continue}
+    if(s.startsWith("|")&&L[i+1]&&/^\|?\s*:?-{2,}/.test(L[i+1].trim())){
+      const rows=[];while(i<L.length&&L[i].trim().startsWith("|")){rows.push(L[i].trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim()));i++}
+      out.push(`<div class="tw"><table><thead><tr>${rows[0].map(c=>`<th>${mdInline(c)}</th>`).join("")}</tr></thead><tbody>${rows.slice(2).map(r=>`<tr>${r.map(c=>`<td>${mdInline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);continue}
+    if(/^[-*]\s+/.test(s)||/^\d+[.)]\s+/.test(s)){
+      const ord=/^\d/.test(s),re=ord?/^\s*\d+[.)]\s+/:/^\s*[-*]\s+/,items=[];
+      while(i<L.length&&re.test(L[i])){items.push(L[i].replace(re,"").trim());i++}
+      out.push(`<${ord?"ol":"ul"}>${items.map(x=>`<li>${mdInline(x)}</li>`).join("")}</${ord?"ol":"ul"}>`);continue}
+    if(s.startsWith(">")){const q=[];while(i<L.length&&L[i].trim().startsWith(">")){q.push(L[i].trim().replace(/^>\s?/,""));i++}out.push(`<blockquote>${q.map(mdInline).join("<br>")}</blockquote>`);continue}
+    if(/^-{3,}$/.test(s)){out.push("<hr>");i++;continue}
+    const p=[s];i++;while(i<L.length&&L[i].trim()&&!isBlock(L[i])){p.push(L[i].trim());i++}
+    out.push(`<p>${mdInline(p.join(""))}</p>`);
+  }
+  return out.join("");
+}
+function copyText(txt,label,fallbackEl){
+  navigator.clipboard.writeText(txt).then(()=>toast(label+"をコピーしました")).catch(()=>{
+    if(fallbackEl){fallbackEl.hidden=false;fallbackEl.value=txt;fallbackEl.focus();fallbackEl.select();toast("選択しました。コピーしてください")}else toast("コピーできませんでした")});
+}
+function openDraft(aid){
+  const a=S.articles.find(x=>x._id===aid);if(!a||!a.draft){toast("まだ稿がありません");return}
+  const d=a.draft,f=d.fields||{},seo=d.seo||{},rv=a.review||{};
+  let tab="body";
+  const FN={event_date:"イベント日",event_time:"時刻",event_end:"終了日",status:"今の状況",place:"場所",sources:"公式情報のURL",note:"メモ",schema:"構造化データ"};
+  const STN={scheduled:"予定どおり",postponed:"延期（日は未定）",rescheduled:"日程変更",cancelled:"中止",ongoing:"開催中・公開中",paused:"休止中・休館中",done:"終了"};
+  const panes={
+    body:()=>`<div class="md">${mdHtml(d.markdown,f)}</div>`,
+    review:()=>rv.text?`<div class="pills" style="margin-bottom:10px">${gradePill(rv)}<span class="d-sub">${rv.at?ago(rv.at):""}</span></div><div class="md">${mdHtml(rv.text)}</div>`
+      +((a.reviewHistory||[]).length?`<div class="d-group-title" style="margin-top:16px"><span>これまでの査読</span></div><div class="pills">${a.reviewHistory.map(h=>`<span class="d-pill mute">${esc(h.round)}回目 ${esc(h.grade)}（P0 ${esc(h.p0)}・P1 ${esc(h.p1)}）</span>`).join("")}</div>`:"")
+      :`<div class="d-empty">まだ査読されていません。</div>`,
+    report:()=>d.report?`<div class="md">${mdHtml(d.report)}</div>`:`<div class="d-empty">報告はありません。</div>`,
+    fields:()=>`<div class="d-form">
+      <div><div class="d-group-title"><span>WordPress の「イベント情報（ミアゲタビ）」欄に写す値</span></div>
+      <dl class="kv">${Object.keys(FN).map(k=>`<dt>${FN[k]}</dt><dd>${k==="sources"?(f.sources||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")||"—":k==="status"?esc(STN[f.status]||f.status||"—"):k==="schema"?(f.schema?"オン":"オフ"):esc(f[k]||"—")}</dd>`).join("")}</dl></div>
+      <div><div class="d-group-title"><span>SEO SIMPLE PACK に入れる値</span></div>
+      <dl class="kv"><dt>タイトル</dt><dd>${esc(seo.title||"—")} <span class="d-sub num">${[...(seo.title||"")].length}字</span></dd><dt>説明文</dt><dd>${esc(seo.description||"—")} <span class="d-sub num">${[...(seo.description||"")].length}字</span></dd><dt>URL</dt><dd class="mono">${esc(a.path||"—")}</dd></dl>
+      <div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn small secondary" data-cp="title">タイトルをコピー</button><button type="button" class="d-btn small secondary" data-cp="desc">説明文をコピー</button></div></div>
+      ${(d.updateChecklist||[]).length?`<div><div class="d-group-title"><span>直前に確かめ直すこと</span></div><dl class="kv">${d.updateChecklist.map(c=>`<dt>${esc(c.when)}</dt><dd>${esc(c.check)}</dd>`).join("")}</dl></div>`:""}</div>`
+  };
+  $("#sheetHost").innerHTML=`<div class="sheet-backdrop" id="sbk"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-label="稿">
+    <div class="sheet-bar"><button type="button" class="text-btn" id="scancel">閉じる</button><h2>${esc((d.round||1)+"回目の稿")}</h2><span></span></div>
+    <div class="sheet-scroll"><div class="d-form">
+      <div><div class="d-t">${esc(a.title)}</div><div class="pills" style="margin-top:6px">${loopPill(a)}${gradePill(rv)}<span class="d-pill mute num">${d.chars?esc(d.chars)+"字":""}</span></div></div>
+      <div class="d-actions"><button type="button" class="d-btn small" data-cp="blocks" ${d.blocks?"":"disabled"}>WordPress 用にコピー</button><button type="button" class="d-btn small secondary" data-cp="md">Markdown をコピー</button></div>
+      <p class="d-sub" style="margin:0">WordPress の編集画面で右上の「︙」→「コードエディター」を開き、そのまま貼り付けます。</p>
+      <textarea id="cpFallback" class="mono" rows="4" hidden aria-label="コピー用" style="width:100%;font-size:12px"></textarea>
+      <div class="d-seg" role="group" aria-label="表示">${[["body","本文"],["review","査読"],["report","報告"],["fields","入力欄の値"]].map(([k,l])=>`<button type="button" data-pane="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
+      <div id="pane">${panes[tab]()}</div>
+      ${S.canWrite?`<div class="ag-box"><div class="d-t">次にすること</div>
+        <label class="d-fld">書き直しの指示（なくてもよい）<textarea id="rwNote" rows="2"></textarea></label>
+        <div class="d-actions"><button type="button" class="d-btn small secondary" id="rwGo" ${S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running"))?"disabled":""}>書き直しを頼む</button>
+        ${a.status!=="確認待ち"&&a.status!=="公開済み"?`<button type="button" class="d-btn small secondary" id="okGo">この稿で確認待ちにする</button>`:""}</div></div>`:""}
+    </div></div></div>`;
+  requestAnimationFrame(()=>{$("#sbk").classList.add("open");$("#sheet").classList.add("open")});
+  const close=()=>{const s=$("#sheet"),b=$("#sbk");if(!s)return;s.classList.remove("open");b.classList.remove("open");setTimeout(()=>{$("#sheetHost").innerHTML=""},380);removeEventListener("keydown",onKey)};
+  const onKey=e=>{if(e.key==="Escape")close()};addEventListener("keydown",onKey);
+  $("#sbk").onclick=close;$("#scancel").onclick=close;
+  const host=$("#sheet");
+  const bindCp=()=>host.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{const k=b.dataset.cp,fb=$("#cpFallback");
+    if(k==="blocks")copyText(d.blocks||"","WordPress 用のブロック",fb);else if(k==="md")copyText(d.markdown||"","Markdown",fb);
+    else if(k==="title")copyText(seo.title||"","タイトル",fb);else if(k==="desc")copyText(seo.description||"","説明文",fb)});
+  bindCp();
+  host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp()});
+  const rw=$("#rwGo");if(rw) rw.onclick=async()=>{rw.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#rwNote").value.trim()});close()};
+  const ok=$("#okGo");if(ok) ok.onclick=async()=>{
+    try{await S.db.doc("articles/"+a._id).update({status:"確認待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}});toast("確認待ちにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+}
+
 /* ---------- 編集シート ---------- */
 const FORMS={
   event:{col:"events",title:"イベント",fields:[
@@ -551,7 +828,7 @@ function openSheet(kind,id){
   <form class="sheet" id="sheet" aria-label="${F.title}の編集">
     <div class="sheet-bar"><button type="button" class="text-btn" id="scancel">キャンセル</button><h2>${id?F.title+"を編集":F.title+"を追加"}</h2>
       <button type="submit" class="text-btn strong" ${ro?"disabled":""}>保存</button></div>
-    <div class="sheet-scroll"><div class="d-form"><div class="d-fields">${F.fields.map(fld).join("")}</div>
+    <div class="sheet-scroll"><div class="d-form">${kind==="article"&&id?agentBox(cur):""}<div class="d-fields">${F.fields.map(fld).join("")}</div>
       ${id&&!ro?`<div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn danger small" id="sdel">削除</button></div>`:""}
       ${ro?`<p class="note">閲覧のみです。編集できるのは編集者以上です。</p>`:""}</div></div>
   </form>`;
@@ -559,6 +836,7 @@ function openSheet(kind,id){
   const close=()=>{const s=$("#sheet"),b=$("#sbk");if(!s)return;s.classList.remove("open");b.classList.remove("open");setTimeout(()=>{$("#sheetHost").innerHTML=""},380);removeEventListener("keydown",onKey)};
   const onKey=e=>{if(e.key==="Escape")close()};addEventListener("keydown",onKey);
   $("#sbk").onclick=close;$("#scancel").onclick=close;
+  if(kind==="article"&&id) bindAgentBox(cur,close);
   const del=$("#sdel");
   if(del) del.onclick=async()=>{
     if(del.dataset.armed!=="1"){del.dataset.armed="1";del.textContent="もう一度押すと削除";return}
@@ -571,7 +849,9 @@ function openSheet(kind,id){
     if(kind==="kpi"){if(!/^\d{4}-\d{2}$/.test(data.month||"")){toast("月は 2026-12 の形で入れてください");return}docId=data.month;delete data.month}
     else if(kind!=="post"&&!data.title){toast("名前を入れてください");return}
     data.updatedAt=new Date().toISOString();
-    try{await (docId?S.db.doc(F.col+"/"+docId):S.db.collection(F.col).doc()).set(data);toast("保存しました");close()}
+    // 既にあるカードは差分だけ書く（エージェントの稿・査読を消さないため）
+    const exists=docId&&listFor(kind).some(x=>x._id===docId);
+    try{const ref=docId?S.db.doc(F.col+"/"+docId):S.db.collection(F.col).doc();await (exists?ref.update(data):ref.set(data));toast("保存しました");close()}
     catch(err){toast(err.code==="invalid_argument"?"保存する権限がありません":"保存できませんでした："+(err.message||err.code))}
   });
 }
@@ -587,6 +867,7 @@ function bind(){
     S.checks[id]=cur;render();
     try{await S.db.doc("checks/"+id).set({done:cur})}catch(e){toast("保存できませんでした："+(e.message||e.code))}
   });
+  bindAgents(pg);
   pg.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{S.promptSel=b.dataset.prompt;render()});
   pg.querySelectorAll("[data-pv]").forEach(el=>el.addEventListener("input",()=>{S.promptVals[el.dataset.pv]=el.value;$("#pout").textContent=fillPrompt()}));
   const cp=$("#copyP");
@@ -606,14 +887,18 @@ buildTabbar();render();requestAnimationFrame(()=>placeLens(false));
   S.db=db;
   try{const user=await api.use("user");if(user){const ed=await user.canEdit();if(ed===false)S.canWrite=false}}catch(_){}
   setConn("on",S.canWrite?"共有データに保存":"閲覧のみ");
-  const pending=new Set(["events","articles","posts","kpi","checks"]);
-  const done=n=>{pending.delete(n);if(!pending.size)S.ready=true;render()};
+  const pending=new Set(["events","articles","posts","kpi","checks","jobs","settings"]);
+  const done=n=>{pending.delete(n);if(!pending.size){S.ready=true;kickQueued()}render()};
+  api.use("mcp").then(m=>{S.mcp=m;if(S.ready)kickQueued();render()}).catch(()=>{});
   const sub=(col,fn)=>db.collection(col).onSnapshot(s=>{fn(s.docs.map(d=>({...d.data(),_id:d.id})));done(col)},()=>setConn("off","接続が切れました。再読み込みしてください"));
   sub("events",l=>S.events=l);
   sub("articles",l=>S.articles=l);
   sub("posts",l=>S.posts=l);
   sub("kpi",l=>S.kpi=l);
   sub("checks",l=>{S.checks={};for(const c of l)S.checks[c._id]=c.done||{}});
+  sub("jobs",l=>{S.jobs=l.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));if(S.ready)kickQueued()});
+  sub("settings",l=>{const m={};for(const d of l)m[d._id]=d;S.bg=m.background||{};S.pause=Object.fromEntries(Object.entries((m.agentPause&&m.agentPause.roles)||{}).map(([k,v])=>[k,!!(v&&v.paused)]));
+    S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.loopConf={enabled:true,maxRounds:3,pass:"A",...(m.reviewLoop||{})}});
 })();
 })();
 </script>

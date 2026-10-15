@@ -21,6 +21,7 @@ SECTIONS = [
     ("s4b", "4-B", "テンプレート：天体イベント", PLAN / "templates/02-sky-event.md"),
     ("s4c", "4-C", "テンプレート：宇宙スポット見学", PLAN / "templates/03-space-spot.md"),
     ("s5", "5", "90日間の行動計画", PLAN / "04-90day-plan.md"),
+    ("s6q", "6", "記事の品質設計（エージェント）", PLAN / "06-article-quality.md"),
     ("s6", "付録A", "AIで定型化するプロンプト", PLAN / "05-ai-workflow.md"),
     ("s7", "付録B", "サイト構築の手順（WordPress＋SWELL）", ROOT / "site/README.md"),
 ]
