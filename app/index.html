@@ -1,4 +1,6 @@
 <title>ミアゲタビ 管理アプリ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap">
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* レイアウト：KOAlil.com 管理アプリと同じ Liquid Glass。色の流れる背景の上に、ガラスのナビ・カード・下部タブバーが浮かぶ。
@@ -11,9 +13,11 @@
   --lens:rgba(255,255,255,.92);
   --label:#1d1d1f; --label-2:#6e6e73; --label-3:#86868b; --separator:rgba(60,60,67,.14);
   --fill:rgba(118,118,128,.12); --fill-strong:rgba(118,118,128,.2);
-  --accent:#0071e3; --on-accent:#ffffff;
-  --good:#1a7f37; --warn:#b25000; --bad:#d70015;
-  --good-bg:rgba(52,199,89,.16); --warn-bg:rgba(255,149,0,.18); --bad-bg:rgba(255,59,48,.14);
+  /* アクセントはサイトの SIGNAL ORANGE（ロゴの星と発射台の色） */
+  --brand:#E8481C; --accent:#E8481C; --on-accent:#ffffff; --link:#c2380f;
+  --good:#1a7f37; --warn:#946200; --bad:#d70015;
+  --good-bg:rgba(52,199,89,.16); --warn-bg:rgba(214,170,40,.2); --bad-bg:rgba(255,59,48,.14);
+  --en:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
   --launch:#e8590c; --sky:#5856d6; --spot:#0f9d8a; --gear:#8e6b3e;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
@@ -27,9 +31,9 @@
   --glass-shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3); --lens:rgba(255,255,255,.2);
   --label:#f5f5f7; --label-2:#a1a1a6; --label-3:#8e8e93; --separator:rgba(84,84,88,.5);
   --fill:rgba(118,118,128,.24); --fill-strong:rgba(118,118,128,.36);
-  --accent:#2997ff; --on-accent:#ffffff;
-  --good:#30d158; --warn:#ffb340; --bad:#ff6961;
-  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
+  --brand:#ff6a3d; --accent:#ff6a3d; --on-accent:#ffffff; --link:#ff8a63;
+  --good:#30d158; --warn:#e3b341; --bad:#ff6961;
+  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(227,179,65,.2); --bad-bg:rgba(255,69,58,.2);
   --launch:#ff8a3d; --sky:#8e8cff; --spot:#3ed6bf; --gear:#d1a56b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --ambient-1:#1d4f91; --ambient-2:#7a3a1c; --ambient-3:#43307e; --ambient-4:#16564a; --ambient-base:#05070b;
@@ -38,9 +42,9 @@
   --glass-shadow:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3); --lens:rgba(255,255,255,.2);
   --label:#f5f5f7; --label-2:#a1a1a6; --label-3:#8e8e93; --separator:rgba(84,84,88,.5);
   --fill:rgba(118,118,128,.24); --fill-strong:rgba(118,118,128,.36);
-  --accent:#2997ff; --on-accent:#ffffff;
-  --good:#30d158; --warn:#ffb340; --bad:#ff6961;
-  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
+  --brand:#ff6a3d; --accent:#ff6a3d; --on-accent:#ffffff; --link:#ff8a63;
+  --good:#30d158; --warn:#e3b341; --bad:#ff6961;
+  --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(227,179,65,.2); --bad-bg:rgba(255,69,58,.2);
   --launch:#ff8a3d; --sky:#8e8cff; --spot:#3ed6bf; --gear:#d1a56b; color-scheme:dark}
 @media (prefers-reduced-transparency: reduce){:root{--glass:var(--glass-solid);--glass-strong:var(--glass-solid);--glass-blur:none}}
 
@@ -48,7 +52,11 @@
 body{background:var(--ambient-base);color:var(--label);font-family:var(--font);font-size:15px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   padding-block:0 calc(var(--tabbar-h) + 40px + env(safe-area-inset-bottom,0px))}
-a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+a{color:var(--link);text-decoration:none}
+/* 英字のラベル（サイトと同じく IBM Plex Mono の大文字・字間を広く。頭にオレンジの■） */
+.en,.en-l{font-family:var(--en);text-transform:uppercase;letter-spacing:.16em;font-weight:600;font-size:11px;line-height:1;color:var(--label-2);white-space:nowrap}
+.en::before,.en-l::before{content:"";display:inline-block;width:7px;height:7px;background:var(--brand);margin-right:7px;vertical-align:1px}
+.en-l{display:block;margin:0 0 6px} a:hover{text-decoration:underline}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:8px}
 svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -74,19 +82,34 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .navbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding-top:10px}
 .navbar-inner{max-width:1180px;margin:0 auto;height:52px;border-radius:999px;padding:0 8px 0 14px;display:flex;align-items:center;gap:10px}
 .brand{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:16px;white-space:nowrap}
-.brand-mark{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;
-  background:linear-gradient(150deg,var(--sky),var(--launch));box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
-.brand-mark svg{width:17px;height:17px}
+/* ロゴ：サイトのヘッダーと同じ画像（miagetabi.space の miagetabi-logo-header.png）。暗い画面では白抜き（オレンジは星と発射台のまま） */
+.brand .logo{height:18px;width:auto;display:block}
+.brand .logo-d{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand .logo-l{display:none}:root:not([data-theme="light"]) .brand .logo-d{display:block}}
+:root[data-theme="dark"] .brand .logo-l{display:none} :root[data-theme="dark"] .brand .logo-d{display:block}
+#themeBtn,#inboxBtn{width:32px;padding:0;justify-content:center} #themeBtn svg,#inboxBtn svg{width:18px;height:18px}
+.hbtn.back{padding:0 6px;background:transparent;color:var(--accent)} .hbtn.back svg{width:20px;height:20px}
 .nav-spacer{flex:1}
 .conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--label-2);padding:0 10px;height:30px;border-radius:999px;background:var(--fill);white-space:nowrap}
 .conn i{width:7px;height:7px;border-radius:50%;background:var(--label-3)}
 .conn.on i{background:var(--good)} .conn.off i{background:var(--warn)}
-@media (max-width:420px){.conn .txt{display:none}}
+@media (max-width:420px){.conn .txt{display:none}.conn{padding:0 8px}}
+.hbtn{position:relative;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:999px;border:0;background:var(--fill);color:var(--label);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit}
+.hbtn[aria-current="page"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.hdot{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}
+.hbtn.auto i{width:26px;height:16px;border-radius:8px;background:var(--fill-strong);position:relative;flex:none;transition:background .2s}
+.hbtn.auto i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
+.hbtn.auto[aria-pressed="true"] i{background:var(--brand)} .hbtn.auto[aria-pressed="true"] i::after{transform:translateX(10px)}
+.hbtn.auto b{font-weight:700}
+.island .isl-s{display:none}
+@media (max-width:520px){.hbtn.auto .txt,.hbtn.auto b{display:none}.island .isl-l{display:none}.island .isl-s{display:inline}.island{padding:0 10px}.navbar-inner{gap:6px;padding:0 6px 0 10px}.conn.on{display:none}}
+@media (max-width:400px){.brand .logo{height:14px}}
 
 /* ページ */
 .page{max-width:1180px;margin:0 auto;display:grid;gap:22px}
 .d-head{padding-block:22px 0;display:grid;gap:2px}
-.d-head p{margin:0;color:var(--label-2);font-size:15px;font-weight:600}
+.d-head p{margin:0 0 6px;color:var(--label-2);font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
+.hd-date{font-family:var(--en);font-size:12px;letter-spacing:.06em;color:var(--label-3)}
 .d-head h1{margin:0;font-size:clamp(32px,5.5vw,48px);line-height:1.08;letter-spacing:-.03em;font-weight:700;text-wrap:balance;word-break:auto-phrase}
 .d-sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
 .d-sec h2{margin:0;font-size:22px;letter-spacing:-.02em}
@@ -168,7 +191,16 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 
 /* カンバン（記事） */
 .d-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
-@media (max-width:860px){.d-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.d-board.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .d-board.n1{grid-template-columns:minmax(0,1fr)} .d-board.n5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:860px){.d-board,.d-board.n3,.d-board.n5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.d-board.n3{grid-template-columns:minmax(0,1fr)}}
+/* カテゴリの差し色（打ち上げ・天体・宇宙スポット・機材） */
+.cat-launch{--cat:var(--launch)} .cat-sky{--cat:var(--sky)} .cat-spot{--cat:var(--spot)} .cat-gear{--cat:var(--gear)} .cat-other{--cat:var(--label-3)}
+.d-kcard[class*="cat-"]{border-left:5px solid var(--cat);padding-left:10px}
+.cat-col{border-top:3px solid var(--cat)}
+.cat-name{display:inline-flex;align-items:center;gap:6px;color:var(--cat)} .cat-name i,.cat-legend i{width:9px;height:9px;border-radius:50%;background:var(--cat);display:inline-block}
+.cat-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--label-2)} .cat-legend span{display:inline-flex;align-items:center;gap:5px}
+.d-when .late{color:var(--bad);font-weight:700}
 .d-col{border-radius:22px;padding:10px;display:grid;gap:8px;align-content:start;min-width:0}
 .d-col h3{margin:2px 6px 4px;font-size:14px;display:flex;justify-content:space-between;gap:6px}
 .d-col h3 span{color:var(--label-3);font-weight:500}
@@ -200,7 +232,6 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .d-fld input[type="date"]{-webkit-appearance:none;appearance:none}
 
 /* プロンプト */
-pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16px;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.6;max-height:420px;overflow:auto}
 .note{margin:0;padding:10px 12px;border-radius:14px;background:var(--warn-bg);font-size:13px;color:var(--label)}
 
 /* シート（下からせり上がる編集画面） */
@@ -220,10 +251,131 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
 
 /* エージェント */
 .island{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--label);color:var(--ambient-base);font-size:12px;font-weight:600;max-width:46vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border:0;font-family:inherit}
-.island i{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+.island i{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none} .island i.idle{background:var(--label-3);animation:none}
 @media (prefers-reduced-motion:no-preference){.island i{animation:pulse 1.4s ease-in-out infinite}}
 @keyframes pulse{50%{opacity:.3}}
-.ag-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.ag-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+/* エージェント欄（KOAlil 管理アプリと同じ形：タイル・作業内容・受け渡しの流れ・動いている作業） */
+.ag-card .d-sec{margin:0;flex-wrap:wrap;gap:8px}
+/* エージェントのウィジェット：PC は3列、スマホは2列 */
+.ag-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ag-tiles.n1{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:760px){.ag-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ag-tile{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;align-items:center;padding:12px;border-radius:18px;
+  background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge),0 2px 8px rgba(0,0,0,.05);min-width:0;color:var(--label-3);border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
+.ag-tile>div{display:grid;min-width:0}
+.ag-tile .ag-w{grid-column:1/-1;font-size:12px;color:var(--label-2);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-tile b{font-size:14px;color:var(--label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-tile .ag-st{font-size:12px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-tile .ag-dot{opacity:.5;align-self:start;margin-top:4px}
+.ag-tile:active{transform:scale(.98)}
+.ag-tile.is-open{box-shadow:inset 0 0 0 2px var(--accent)}
+.ag-tile.is-run{background:color-mix(in srgb,var(--good) 10%,var(--glass-strong));color:var(--good)}
+.ag-tile.is-run .ag-st{color:var(--good);font-weight:600}
+.ag-tile.is-run .ag-dot{animation:pulse 1.3s ease-in-out infinite;opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}
+.ag-tile.is-queue{color:var(--warn)} .ag-tile.is-queue .ag-dot{opacity:1}
+.ag-tile.is-err{color:var(--bad)} .ag-tile.is-err .ag-st{color:var(--bad)}
+.ag-tile.is-paused .ag-ic{filter:grayscale(1);opacity:.6} .ag-tile.is-paused .ag-st{color:var(--warn);font-weight:600} .ag-tile.is-paused .ag-dot{background:var(--warn);opacity:1}
+.ag-dot{display:inline-block;flex:none;width:7px;height:7px;border-radius:50%;background:currentColor}
+.ag-ic{--c:var(--sky);flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px color-mix(in srgb,var(--c) 35%,transparent)}
+.ag-ic svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)}
+.ag-detail{display:grid;gap:6px;padding:12px 14px;border-radius:16px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);min-width:0}
+.ag-dhead{display:flex;gap:8px;align-items:center} .ag-dhead b{font-size:15px;flex:1;min-width:0}
+.ag-detail dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:13px} .ag-detail dt{color:var(--label-2)} .ag-detail dd{margin:0;overflow-wrap:anywhere}
+.ag-dsub{font-size:12px;font-weight:700;color:var(--label-2);margin-top:4px}
+.ag-detail ul{margin:0;padding-left:1.2em;font-size:13.5px;line-height:1.55}
+.ag-never{display:flex;gap:6px;align-items:flex-start;margin:2px 0 0;font-size:12.5px;color:var(--label-2)} .ag-never svg{width:15px;height:15px;color:var(--warn);margin-top:1px}
+.ag-now{margin:0;font-size:13px;overflow-wrap:anywhere}
+.ag-paused{margin:4px 0 0;padding:8px 10px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-size:13px;line-height:1.5}
+.ag-list,.ag-hist{display:grid;gap:8px}
+.ag-row,.ag-hrow{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:16px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);min-width:0}
+.ag-row .ag-dot{color:var(--good);animation:pulse 1.3s ease-in-out infinite} .ag-row[data-state="queued"] .ag-dot{color:var(--warn);animation:none}
+.ag-hist{gap:0} .ag-hrow{background:transparent;box-shadow:none;padding:7px 4px;border-radius:0;border-bottom:.5px solid var(--separator);align-items:center} .ag-hrow:last-child{border-bottom:0}
+.ag-hrow .ag-ic{width:28px;height:28px;border-radius:9px} .ag-hrow .ag-ic svg{width:16px;height:16px}
+.ag-main{display:grid;gap:2px;min-width:0;flex:1}
+.ag-t{display:flex;gap:6px;align-items:center;font-size:14px;min-width:0}
+.ag-round{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.ag-tgt{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ag-hrow .ag-tgt{font-weight:500;color:var(--label-2);flex:1 1 0}
+.ag-msg{font-size:12.5px;color:var(--label-2);overflow-wrap:anywhere}
+.ag-side{flex:none;display:grid;justify-items:end;gap:6px} .ag-hrow .ag-side{grid-auto-flow:column;align-items:center;gap:8px}
+.ag-el{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.ag-idle{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--fill)} .ag-idle div{display:grid;gap:2px} .ag-idle span{font-size:13px;color:var(--label-2)}
+.ag-idle-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--label-3);opacity:.6}
+/* 受け渡しの流れ：スマホは横スクロール、PC は折り返し */
+.fl{display:grid;gap:8px;min-width:0}
+.fl-chain{border-radius:16px;background:var(--fill);padding:10px 12px;display:grid;gap:8px;min-width:0}
+.fl-chain.is-live{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--good) 55%,transparent)}
+.fl-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;min-width:0}
+.fl-t{font-weight:600;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-total{flex:none;font-size:12px;color:var(--label-2)}
+.fl-row{display:flex;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;row-gap:8px;padding:2px 1px 4px;min-width:0}
+.fl-row::-webkit-scrollbar{display:none} .fl-row>*{flex:none}
+@media (min-width:768px){.fl-row{flex-wrap:wrap;overflow-x:visible}}
+.fl-node{display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 4px;border-radius:999px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);font-size:12.5px;white-space:nowrap;border:0;font-family:inherit;color:inherit;cursor:pointer}
+.fl-node .ag-ic{width:24px;height:24px;border-radius:50%} .fl-node .ag-ic svg{width:14px;height:14px;stroke-width:2.3}
+.fl-node b{font-weight:700} .fl-node b small{font-size:10px;font-weight:600;color:var(--label-2);margin-left:2px}
+.fl-node.sel{box-shadow:0 0 0 2px var(--accent)}
+.fl-time{font-size:11.5px;color:var(--label-2);font-variant-numeric:tabular-nums}
+.fl-node.st-running{box-shadow:0 0 0 2px var(--good)} .fl-node.st-queued{opacity:.75;box-shadow:0 0 0 1px var(--warn)}
+.fl-node.st-error{box-shadow:0 0 0 2px var(--bad)} .fl-node.st-waiting{box-shadow:0 0 0 1.5px var(--warn)}
+.fl-node.st-end{padding:4px 10px;cursor:default} .fl-node.st-end.is-published{background:var(--good);color:#fff;box-shadow:none}
+.fl-node.st-end.is-ready{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);box-shadow:none} .fl-node.st-end.is-failed{background:var(--bad-bg);color:var(--bad);box-shadow:none}
+.fl-grade{font-weight:800;font-size:11px;border-radius:6px;padding:0 5px;background:var(--fill-strong)}
+.fl-grade.g-A{color:var(--good)} .fl-grade.g-B{color:var(--warn)} .fl-grade.g-C,.fl-grade.g-D{color:var(--bad)}
+.fl-arrow{display:inline-flex;align-items:center;gap:4px;padding:0 4px;color:var(--label-3);font-size:10.5px;font-variant-numeric:tabular-nums}
+.fl-arrow i{width:18px;height:2px;background:currentColor;position:relative;border-radius:1px}
+.fl-arrow i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left:5px solid currentColor;border-right:0}
+.fl-arrow.is-wait{color:var(--warn)} .fl-arrow.is-wait i{background:repeating-linear-gradient(90deg,currentColor 0 3px,transparent 3px 6px)}
+/* アイランドのパネル（本体だけスクロール。タブバーに重ねない） */
+.ipanel{position:fixed;z-index:45;top:calc(env(safe-area-inset-top,0px) + 70px);right:max(12px,calc((100vw - 1180px)/2));width:min(420px,calc(100vw - 24px));
+  max-height:calc(100dvh - var(--tabbar-h) - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));border-radius:22px;display:flex;flex-direction:column;overflow:hidden;background:var(--glass-solid)}
+@media (max-width:600px){.ipanel{left:12px;right:12px;width:auto}}
+.ip-head{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 8px 16px;border-bottom:.5px solid var(--separator);flex:none}
+.ip-scroll{overflow-y:auto;overscroll-behavior:contain;padding:10px}
+.ip-scroll .d-group{box-shadow:none}
+/* イベントのカレンダー */
+.cal{padding:12px}
+.cal-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px} .cal-bar b{font-size:17px;min-width:110px;text-align:center} .cal-bar .d-btn{margin-left:auto}
+.cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-w{font-size:11px;font-weight:700;color:var(--label-2);text-align:center;padding:2px 0} .cal-w.sun,.cal-d.sun .cal-n{color:var(--bad)} .cal-w.sat,.cal-d.sat .cal-n{color:var(--accent)}
+.cal-d{min-height:78px;border-radius:10px;background:var(--fill);padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.cal-d.out{opacity:.4} .cal-d.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.cal-n{font-size:12px;font-weight:700}
+.cal-ev{display:block;width:100%;border:0;border-left:3px solid var(--cat);border-radius:5px;background:color-mix(in srgb,var(--cat) 18%,var(--glass-strong));color:var(--label);font:inherit;font-size:11px;line-height:1.3;padding:2px 4px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-ev.is-bad{text-decoration:line-through}
+.cal-post{font-size:10px;font-weight:700;color:#1d9bf0}
+@media (max-width:640px){.cal-d{min-height:52px;padding:3px}.cal-ev{font-size:0;height:6px;padding:0;border-left:0;background:var(--cat)}.cal-post{font-size:9px}}
+.cal-list:empty{display:none}
+/* SNS の見た目（X：投稿カード／Instagram：正方形の画像枠＋キャプション） */
+.sv-day{display:grid;gap:10px}
+.sv-dayhead{display:flex;align-items:baseline;gap:10px;padding:0 4px} .sv-dayhead b{font-size:26px;letter-spacing:-.02em} .sv-dayhead span{font-size:12px;font-weight:600;color:var(--label-2);font-family:var(--en);letter-spacing:.08em} .sv-dayhead em{margin-left:auto;font-style:normal;font-size:12px;color:var(--label-3)}
+.sv-dayhead.today b,.sv-dayhead.today span{color:var(--accent)}
+.sv-when{display:flex;align-items:baseline;gap:8px;margin:-14px -14px 0;padding:8px 14px;border-radius:18px 18px 0 0;background:var(--fill);border-bottom:.5px solid var(--separator);min-width:0}
+.sv-when b{font-size:20px;letter-spacing:-.02em} .sv-when span{font-size:13px;font-weight:600;color:var(--label-2)} .sv-when em{margin-left:auto;font-style:normal;font-size:12px;color:var(--label-3);white-space:nowrap}
+.sv-when.today{background:color-mix(in srgb,var(--accent) 14%,transparent)} .sv-when.today b,.sv-when.today span{color:var(--accent)}
+.sv-when.late{background:var(--bad-bg)} .sv-when.late b,.sv-when.late span{color:var(--bad)}
+.sv-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));align-items:start}
+.sv{display:grid;gap:10px;text-align:left;font:inherit;color:inherit;cursor:pointer;border:1px solid var(--glass-edge);background:var(--glass-solid);border-radius:18px;padding:14px;min-width:0;box-shadow:var(--glass-shadow)}
+.sv:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent)}
+.sv-head{display:flex;gap:10px;align-items:center;min-width:0}
+.sv-av{width:38px;height:38px;border-radius:50%;overflow:hidden;flex:none} .sv-av svg{width:100%;height:100%;display:block}
+.sv-who{display:grid;min-width:0;flex:1} .sv-who b{font-size:15px} .sv-who span{font-size:13px;color:var(--label-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv-logo{font-size:18px;font-weight:700;color:var(--label)} .sv-logo.ig{background:linear-gradient(45deg,#f9a03f,#d6249f,#285aeb);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sv-text{font-size:15px;line-height:1.55;overflow-wrap:anywhere} .sv-text a,.sv-text .tag{color:#1d9bf0}
+.sv-ig .sv-text{font-size:14px} .sv-ig .sv-text .tag{color:#00376b} :root[data-theme="dark"] .sv-ig .sv-text .tag{color:#e0f1ff}
+.sv-img{aspect-ratio:1/1;margin:0 -14px;background:#0B0B10;color:rgba(255,255,255,.7);display:grid;place-items:center;text-align:center;padding:20px;font-size:13px}
+.sv-count{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--label-2)} .sv-count i{width:22px;height:22px;border-radius:50%;background:conic-gradient(#1d9bf0 var(--p),var(--fill-strong) 0);flex:none}
+.sv-count.over,.sv-count.over span{color:var(--bad)} .sv-count.over i{background:conic-gradient(var(--bad) 100%,var(--bad) 0)}
+.sv-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border-top:.5px solid var(--separator);padding-top:8px;min-width:0}
+.sv-art{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+/* 受信箱 */
+.ib-list{display:grid;gap:12px}
+.ib-card{display:grid;gap:10px}
+.ib-card .md{font-size:14px;line-height:1.7}
+.ib-more summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
 .ag-card{display:grid;gap:12px;align-content:start}
 .ag-head{display:flex;align-items:center;gap:10px}
 .ag-box{border-radius:16px;background:var(--fill);padding:12px;display:grid;gap:8px;min-width:0}
@@ -264,6 +416,35 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
   .tabbar button{min-width:0;min-height:42px;font-size:11px;line-height:12px;border-radius:20px}
 }
 
+/* タブを右に置く（縦のレール） */
+.tabbar .tab-pos{color:var(--label-3)}
+:root[data-tabbar="side"]{--tabbar-h:0px}
+:root[data-tabbar="side"] .tabbar{display:flex;flex-direction:column;left:auto;transform:none;right:calc(8px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  width:62px;max-width:none;max-height:calc(100dvh - 96px - env(safe-area-inset-top,0px));overflow-y:auto;scrollbar-width:none;border-radius:26px;padding:3px;grid-template-columns:none}
+:root[data-tabbar="side"] .tabbar::-webkit-scrollbar{display:none}
+:root[data-tabbar="side"] .tabbar button{min-width:0;width:100%;min-height:46px;padding:4px 2px;font-size:10px;border-radius:20px;flex:none}
+:root[data-tabbar="side"] .tabbar .lens{border-radius:20px}
+:root[data-tabbar="side"] .tabbar .dot{right:4px}
+:root[data-tabbar="side"] .tabbar .tab-pos{margin-top:4px;color:var(--accent)}
+:root[data-tabbar="side"] body{padding-right:calc(82px + env(safe-area-inset-right,0px));padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+:root[data-tabbar="side"] .navbar{margin-right:calc(-66px - env(safe-area-inset-right,0px))}
+@media (max-width:520px){:root[data-tabbar="side"] .ag-tile .ag-w{display:none} :root[data-tabbar="side"] .ag-tile{padding:10px} :root[data-tabbar="side"] .ag-tiles{grid-template-columns:minmax(0,1fr)} :root[data-tabbar="side"] .ag-tile .ag-ic{width:30px;height:30px}}
+/* 折りたたみの iPhone（開いたときのほぼ正方形の画面）：2列のレイアウト */
+@media (min-width:600px) and (max-width:1023px) and (min-aspect-ratio:3/4) and (max-aspect-ratio:4/3){
+  .d-grid2{grid-template-columns:1fr 1fr}
+  .ag-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .d-board{grid-template-columns:repeat(4,minmax(0,1fr))} .d-board.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sheet{max-width:none;left:50%;right:0;top:10px;bottom:10px;border-radius:18px 0 0 18px}
+  .d-head h1{font-size:40px}
+}
+/* 2画面にまたがって表示したとき：左の画面にページ、右の画面にシート（記事・稿） */
+@media (horizontal-viewport-segments:2){
+  .page,.navbar-inner{max-width:calc(env(viewport-segment-width 0 0) - 32px);margin-left:0}
+  .sheet{left:env(viewport-segment-left 1 0);right:0;max-width:none;top:10px;bottom:10px;border-radius:18px;transform:none;opacity:0;transition:opacity .3s}
+  .sheet.open{opacity:1}
+  .sheet-backdrop{left:env(viewport-segment-left 1 0)}
+}
 .toast{position:fixed;left:50%;z-index:70;bottom:calc(var(--tabbar-h) + 26px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;
   padding:10px 18px;border-radius:999px;font-size:15px;font-weight:500;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity .25s,transform .35s var(--ease)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -274,9 +455,13 @@ pre.prompt{white-space:pre-wrap;margin:0;background:var(--fill);border-radius:16
 
 <header class="navbar">
   <div class="navbar-inner">
-    <span class="brand"><span class="brand-mark"><svg class="i" viewBox="0 0 24 24"><path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/></svg></span>ミアゲタビ</span>
+    <button type="button" class="hbtn back" id="backBtn" hidden aria-label="戻る"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span class="brand" role="img" aria-label="ミアゲタビ"><img class="logo logo-l" src="assets/logo-header.png" alt="" width="459" height="60"><img class="logo logo-d" src="assets/logo-header-dark.png" alt="" width="459" height="60"></span>
     <span class="nav-spacer"></span>
     <button type="button" class="island" id="island" hidden></button>
+    <button type="button" class="hbtn auto" id="autoBtn" hidden aria-pressed="false" title="自動運用（エージェントの定時実行）を切り替える"><i></i><span class="txt">自動運用</span><b>—</b></button>
+    <button type="button" class="hbtn" id="themeBtn" aria-label="ダークモードとライトモードを切り替える"></button>
+    <button type="button" class="hbtn" id="inboxBtn" aria-label="受信箱"><svg class="i" viewBox="0 0 24 24"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/></svg><span class="hdot" id="dot-inbox" hidden></span></button>
     <span class="conn" id="conn"><i></i><span class="txt">接続中…</span></span>
   </div>
 </header>
@@ -305,16 +490,27 @@ const IC={
   check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
   agent:'<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4.5V8M9.5 13v.01M14.5 13v.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
+  archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',
+  inbox:'<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'
 };
 const ic=(k,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24">${IC[k]||""}</svg>`;
 
 /* ---------- 定義 ---------- */
-const PILLAR={launch:"打ち上げ",sky:"天体",spot:"宇宙スポット",gear:"機材",other:"その他"};
-const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","終了":"mute"};
-const AR_STATUS=["未着手","下書き","公開待ち","公開済み"];
-const AR_PILL={"未着手":"mute","下書き":"warn","公開待ち":"info","公開済み":"good"};
-const POST_STATUS={"下書き":"warn","予約済み":"info","投稿済み":"good"};
+const PILLAR={launch:"打ち上げ",sky:"天体",spot:"宇宙スポット",gear:"機材",news:"お知らせ",other:"その他"};
+const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","中止":"bad","終了":"mute"};
+// 記事の状態（運営マニュアル「記事ができるまでの流れ」。確認待ち＝公開待ち）
+const AR_STATUS=["企画中","下書き","査読中","公開待ち","公開済み","要更新"];
+const AR_PILL={"企画中":"mute","下書き":"warn","査読中":"info","公開待ち":"info","公開済み":"good","要更新":"bad"};
+const ast=a=>!a.status||a.status==="未着手"?"企画中":a.status;
+// 記事ボードに出すのは公開前の4段階。公開済み・要更新は自動でアーカイブタブへ
+const BOARD=["企画中","下書き","査読中","公開待ち"];
+const isPub=a=>ast(a)==="公開済み"||ast(a)==="要更新";
+const TAGS={h3:"H3","h-iia":"H-IIA","epsilon-s":"イプシロンS",kairos:"カイロス",zero:"ZERO",tanegashima:"種子島",uchinoura:"内之浦",kushimoto:"串本",taiki:"大樹町","meteor-shower":"流星群",photography:"撮影"};
+const POST_STATUS={"下書き":"warn","差し戻し":"bad","審査済み":"info","予約済み":"info","投稿済み":"good"};
 // 更新ルール（02-site-design.md ルール2）：イベント日からのずれ（日）と作業内容
 const RULES=[
   {o:-7,t:"天気の傾向・宿の空き・交通の注意を追記／SNS告知①"},
@@ -324,7 +520,7 @@ const RULES=[
   {o:1,t:"結果・写真を追記／次のチャンスへの導線"},
   {o:7,t:"振り返り：タイトル調整か次回記事へ誘導"}
 ];
-const PUBLISH_LEAD={sky:30,launch:2,spot:14,gear:14,other:14};
+const PUBLISH_LEAD={sky:30,launch:2,spot:14,gear:14,news:7,other:14};
 const KPI_DEF=[
   {k:"articles",l:"公開記事数",u:"本",pass:20,good:25},
   {k:"pv",l:"月間PV",u:"PV",pass:3000,good:10000},
@@ -336,18 +532,19 @@ const KPI_DEF=[
   {k:"signups",l:"通知の登録者",u:"人",pass:30,good:100}
 ];
 const TABS=[
-  {id:"home",l:"今日",ic:"home",eyebrow:"今日やること",title:"編集デスク"},
-  {id:"events",l:"イベント",ic:"cal",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
-  {id:"articles",l:"記事",ic:"doc",eyebrow:"最初の20本",title:"記事ボード"},
-  {id:"agents",l:"エージェント",ic:"agent",eyebrow:"記事作成・査読",title:"エージェント"},
-  {id:"sns",l:"SNS",ic:"sns",eyebrow:"X・Instagram",title:"告知の予定"},
-  {id:"kpi",l:"KPI",ic:"kpi",eyebrow:"3か月後の判断",title:"KPI"},
-  {id:"prompts",l:"AI",ic:"ai",eyebrow:"下調べ・構成・更新・告知",title:"AIプロンプト"}
+  {id:"home",l:"今日",ic:"home",en:"TODAY",eyebrow:"今日やること",title:"編集デスク"},
+  {id:"inbox",l:"受信箱",ic:"inbox",en:"INBOX",eyebrow:"あなたの判断が要るもの",title:"受信箱",header:true},
+  {id:"articles",l:"記事",ic:"doc",en:"ARTICLES",eyebrow:"企画・進行中",title:"記事ボード"},
+  {id:"archive",l:"アーカイブ",ic:"archive",en:"ARCHIVE",eyebrow:"公開済みの記事",title:"アーカイブ"},
+  {id:"events",l:"イベント",ic:"cal",en:"EVENTS",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
+  {id:"agents",l:"編集部",ic:"agent",en:"NEWSROOM",eyebrow:"AIエージェント",title:"編集部"},
+  {id:"sns",l:"SNS",ic:"sns",en:"SOCIAL",eyebrow:"X・Instagram",title:"告知の予定"},
+  {id:"kpi",l:"KPI",ic:"kpi",en:"KPI",eyebrow:"3か月後の判断",title:"KPI"}
 ];
 
-const S={events:[],articles:[],posts:[],kpi:[],checks:{},tab:"home",db:null,canWrite:true,ready:false,
-  filter:{pillar:"all"},promptSel:"research",promptVals:{},
-  jobs:[],bg:{},pause:{},lessons:[],loopConf:{enabled:true,maxRounds:3,pass:"A"},mcp:null,kicked:new Set()};
+const S={events:[],articles:[],posts:[],kpi:[],checks:{},inbox:[],tab:"home",hist:[],db:null,canWrite:true,ready:false,
+  filter:{pillar:"all"},inputs:{},chainSel:null,agRole:null,
+  jobs:[],bg:{},pause:{},pauseRaw:{},lessons:[],plannerLog:[],loopConf:{enabled:true,maxRounds:3,pass:"A"},mcp:null,kicked:new Set()};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -370,7 +567,7 @@ function buildTasks(){
   const out=[];
   for(const a of S.articles){
     const ev=parse(a.eventDate),pub=pubDate(a),done=S.checks[a._id]||{};
-    if(pub&&a.status!=="公開済み") out.push({a,key:"pub",date:pub,text:`公開する（いま：${a.status||"未着手"}）`,done:false,kind:"pub"});
+    if(pub&&a.status!=="公開済み"&&a.status!=="要更新") out.push({a,key:"pub",date:pub,text:`公開する（いま：${ast(a)}）`,done:false,kind:"pub"});
     if(ev) for(const r of RULES) out.push({a,key:String(r.o),date:addDays(ev,r.o),text:r.t,done:!!done[String(r.o)],kind:"upd"});
   }
   return out.sort((x,y)=>x.date-y.date);
@@ -379,17 +576,28 @@ function buildTasks(){
 /* ---------- タブバー ---------- */
 function buildTabbar(){
   const tb=$("#tabbar");
-  tb.insertAdjacentHTML("beforeend",TABS.map(t=>`<button type="button" data-tab="${t.id}">${ic(t.ic)}<span>${t.l}</span><span class="dot" id="dot-${t.id}" hidden></span></button>`).join(""));
-  tb.addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab)});
+  tb.insertAdjacentHTML("beforeend",TABS.filter(t=>!t.header).map(t=>`<button type="button" data-tab="${t.id}">${ic(t.ic)}<span>${t.l}</span><span class="dot" id="dot-${t.id}" hidden></span></button>`).join("")
+    +`<button type="button" class="tab-pos" id="tabPos" aria-label="タブの位置を切り替える（下・右）"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M16 4v16"/></svg><span>位置</span></button>`);
+  tb.addEventListener("click",e=>{const p=e.target.closest("#tabPos");if(p){setTabPos(document.documentElement.dataset.tabbar==="side"?"bottom":"side");return}
+    const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab)});
   addEventListener("resize",()=>placeLens(false));
 }
+// タブの位置：下（いつもの）／右（縦に並べる。折りたたみの iPhone や片手で親指が届く位置）。端末ごとに覚える
+function setTabPos(pos){
+  if(pos==="side")document.documentElement.dataset.tabbar="side";else delete document.documentElement.dataset.tabbar;
+  try{localStorage.setItem("mm-tabpos",pos)}catch(_){}
+  requestAnimationFrame(()=>placeLens(false));
+}
 function placeLens(anim){
-  const tb=$("#tabbar"),b=tb.querySelector(`button[data-tab="${S.tab}"]`),lens=tb.querySelector(".lens");if(!b)return;
+  const tb=$("#tabbar"),b=tb.querySelector(`button[data-tab="${S.tab}"]`),lens=tb.querySelector(".lens");
+  lens.style.opacity=b?"1":"0";if(!b)return;
   tb.classList.toggle("no-anim",!anim);
   lens.style.width=b.offsetWidth+"px";lens.style.height=b.offsetHeight+"px";
   lens.style.transform=`translate(${b.offsetLeft}px,${b.offsetTop-3}px)`;
 }
-function go(id){
+function go(id,back){
+  if(!back&&S.tab!==id){S.hist.push(S.tab);if(S.hist.length>20)S.hist.shift()}
+  closeIslandPanel();
   S.tab=id;try{localStorage.setItem("mm-tab",id)}catch(_){}
   render();placeLens(true);scrollTo({top:0});
 }
@@ -397,14 +605,17 @@ function go(id){
 /* ---------- 描画 ---------- */
 function render(){
   document.querySelectorAll("#tabbar button[data-tab]").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  const ibb=$("#inboxBtn");if(S.tab==="inbox")ibb.setAttribute("aria-current","page");else ibb.removeAttribute("aria-current");
+  renderAuto();updBack();
   const tasks=buildTasks();
   const due=tasks.filter(t=>!t.done&&diff(t.date)<=0&&diff(t.date)>=-14).length;
   const dot=$("#dot-home");if(dot){dot.hidden=!due;dot.textContent=due}
+  const ib=openInbox().length,dot2=$("#dot-inbox");if(dot2){dot2.hidden=!ib;dot2.textContent=ib}
   const T=TABS.find(t=>t.id===S.tab);
-  const head=`<div class="d-head"><p>${esc(T.eyebrow)}・<span class="num">${fmt(today())}</span></p><h1>${esc(T.title)}</h1></div>`;
+  const head=`<div class="d-head"><p><span class="en">${esc(T.en)}</span><span class="num mono hd-date">${fmt(today())}</span></p><h1>${esc(T.title)}</h1></div>`;
   if(!S.ready){$("#page").innerHTML=head+`<div class="d-card d-empty">データを読み込んでいます。</div>`;return}
   renderIsland();
-  const body={home:viewHome,events:viewEvents,articles:viewArticles,agents:viewAgents,sns:viewSns,kpi:viewKpi,prompts:viewPrompts}[S.tab](tasks);
+  const body={home:viewHome,inbox:viewInbox,events:viewEvents,articles:viewArticles,archive:viewArchive,agents:viewAgents,sns:viewSns,kpi:viewKpi}[S.tab](tasks);
   $("#page").innerHTML=head+body;
   bind();
 }
@@ -435,11 +646,11 @@ function group(title,list,emptyMsg){
 function viewHome(tasks){
   const win=tasks.filter(t=>diff(t.date)<=7&&diff(t.date)>=-14);
   const late=win.filter(t=>!t.done&&diff(t.date)<0),now=win.filter(t=>diff(t.date)===0),soon=win.filter(t=>diff(t.date)>0);
-  const counts=AR_STATUS.map(s=>[s,S.articles.filter(a=>(a.status||"未着手")===s).length]);
-  const pubN=counts[3][1];
-  return `${strip()}
+  const counts=AR_STATUS.map(s=>[s,S.articles.filter(a=>ast(a)===s).length]);
+  const pubN=counts[4][1]+counts[5][1];
+  return `${agentsCard("all")}${strip()}
   <div class="d-grid2">
-    <div class="stack">${draftGroup()}${group("遅れている作業",late,"遅れはありません。")}${group("今日",now,"今日が期限の作業はありません。")}${group("この先7日",soon,"7日以内の作業はありません。")}</div>
+    <div class="stack">${inboxPeek()}${draftGroup()}${group("遅れている作業",late,"遅れはありません。")}${group("今日",now,"今日が期限の作業はありません。")}${group("この先7日",soon,"7日以内の作業はありません。")}</div>
     <div class="stack">
       <div><div class="d-sec"><h2>記事の進み具合</h2><p>90日で20本</p></div>
         <div class="d-stats">${counts.map(([s,n])=>`<div class="d-stat"><span class="k">${s}</span><span class="v">${n}<small>本</small></span></div>`).join("")}</div>
@@ -450,43 +661,104 @@ function viewHome(tasks){
 }
 
 function viewEvents(){
-  const f=S.filter.pillar;
+  const f=S.filter.pillar,mode=S.evMode||"list";
   const list=S.events.filter(e=>f==="all"||e.pillar===f).sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999"));
-  return `<div class="d-actions">${seg()}<span style="flex:1"></span>${addBtn("event","イベントを追加")}</div>
-  <div class="d-group">${list.length?list.map(e=>{const d=parse(e.date);return `<button type="button" class="d-row" data-edit="event" data-id="${esc(e._id)}">${picto(e.pillar)}
+  return `${agentsCard("events")}<div class="d-actions">${seg()}<span style="flex:1"></span><div class="d-seg" role="group" aria-label="表示">${[["list","リスト"],["cal","カレンダー"]].map(([k,l])=>`<button type="button" data-evmode="${k}" aria-pressed="${mode===k}">${l}</button>`).join("")}</div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="watch">${ic("eye")}公式を確認</button>`:""}${addBtn("event","イベントを追加")}</div>
+  ${mode==="cal"?evCalendar(list):evList(list)}`;
+}
+function evList(list){
+  return `<div class="d-group">${list.length?list.map(e=>{const d=parse(e.date);return `<button type="button" class="d-row" data-edit="event" data-id="${esc(e._id)}">${picto(e.pillar)}
     <div class="d-main"><div class="d-t">${esc(e.title)}</div><div class="d-sub">${esc(e.place||"")}${e.note?"・"+esc(e.note):""}</div>
-    <div class="pills" style="margin-top:4px">${spill(e.status,EV_STATUS)}${e.source?`<a class="d-pill info" href="${esc(e.source)}" target="_blank" rel="noopener">出典</a>`:""}</div></div>
+    <div class="pills" style="margin-top:4px">${spill(e.status,EV_STATUS)}${e.source?`<a class="d-pill info" href="${esc(e.source)}" target="_blank" rel="noopener">出典</a>`:""}${(e.history||[]).length?`<span class="d-pill warn">変更 ${e.history.length}回</span>`:""}${e.by==="eventfetch"?'<span class="d-pill info">AIが追加</span>':""}${e.checkedAt?`<span class="d-pill mute">公式確認 ${ago(e.checkedAt)}</span>`:""}</div></div>
     <div class="d-when">${d?fmt(d):esc(e.dateText||"未定")}<br>${d?`<b class="mono">${tlabel(diff(d))}</b>`:""}${e.time?"<br>"+esc(e.time):""}</div></button>`}).join("")
-    :`<div class="d-empty">イベントはまだありません。打ち上げ・天体イベント・宇宙スポットの公開日を追加してください。</div>`}</div>`;
+    :`<div class="d-empty">イベントはまだありません。</div>`}</div>`;
 }
-function seg(){return `<div class="d-seg" role="group" aria-label="柱で絞り込む">${[["all","すべて"],...Object.entries(PILLAR).filter(([k])=>k!=="other")].map(([k,l])=>`<button type="button" data-filter="${k}" aria-pressed="${S.filter.pillar===k}">${l}</button>`).join("")}</div>`}
+// カレンダー：月ごと。イベントはカテゴリの色、記事の公開期限と SNS の投稿予定も小さく出す
+function evCalendar(list){
+  const t=today(),base=S.evMonth?new Date(S.evMonth+"T00:00:00"):new Date(t.getFullYear(),t.getMonth(),1);
+  const y=base.getFullYear(),m=base.getMonth(),first=new Date(y,m,1),start=addDays(first,-first.getDay()),last=new Date(y,m+1,0);
+  const weeks=Math.ceil((first.getDay()+last.getDate())/7),key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const byDay={};for(const e of list){if(e.date)(byDay[e.date]=byDay[e.date]||[]).push(e)}
+  const posts={};for(const p of S.posts){if(p.date)(posts[p.date]=posts[p.date]||0,posts[p.date]++)}
+  const cells=[];for(let i=0;i<weeks*7;i++){const d=addDays(start,i),k=key(d),evs=byDay[k]||[],out=d.getMonth()!==m,isT=diff(d)===0;
+    cells.push(`<div class="cal-d ${out?"out":""} ${isT?"today":""} ${d.getDay()===0?"sun":d.getDay()===6?"sat":""}"><span class="cal-n num">${d.getDate()}</span>
+      ${evs.map(e=>`<button type="button" class="cal-ev cat-${PILLAR[e.pillar]&&e.pillar!=="other"?e.pillar:"other"} ${e.status==="延期"||e.status==="中止"?"is-bad":""}" data-edit="event" data-id="${esc(e._id)}" title="${esc(e.title)} ${esc(e.time||"")}">${esc(e.title)}</button>`).join("")}
+      ${posts[k]?`<span class="cal-post">SNS ${posts[k]}</span>`:""}</div>`)}
+  const inMonth=list.filter(e=>{const d=parse(e.date);return d&&d.getFullYear()===y&&d.getMonth()===m});
+  return `<div class="d-card cal"><div class="cal-bar"><span class="en" style="margin-right:6px">CALENDAR</span><button type="button" class="text-btn" data-evmonth="-1" aria-label="前の月">‹</button><b class="num">${y}年${m+1}月</b><button type="button" class="text-btn" data-evmonth="1" aria-label="次の月">›</button>
+      <button type="button" class="d-btn small secondary" data-evmonth="0">今月</button></div>
+    <div class="cal-g">${[..."日月火水木金土"].map((w,i)=>`<div class="cal-w ${i===0?"sun":i===6?"sat":""}">${w}</div>`).join("")}${cells.join("")}</div></div>
+  <div class="cal-list">${inMonth.length?evList(inMonth):""}</div>
+  ${list.some(e=>!e.date)?`<div><div class="d-group-title"><span>日付未定</span></div>${evList(list.filter(e=>!e.date))}</div>`:""}`;
+}
+function seg(){return `<div class="d-seg" role="group" aria-label="柱で絞り込む">${[["all","すべて"],...Object.entries(PILLAR).filter(([k])=>k!=="other"&&k!=="news")].map(([k,l])=>`<button type="button" data-filter="${k}" aria-pressed="${S.filter.pillar===k}">${l}</button>`).join("")}</div>`}
 
+const CATS=["launch","sky","spot","gear"];
+const catLegend=()=>`<div class="cat-legend">${CATS.map(k=>`<span class="cat-${k}"><i></i>${PILLAR[k]}</span>`).join("")}</div>`;
+function kcard(a,s){
+  const pub=pubDate(a),ev=parse(a.eventDate),late=pub&&diff(pub)<0,near=pub&&!late&&diff(pub)<=3,cat=PILLAR[a.pillar]&&a.pillar!=="other"?a.pillar:"other";
+  return `<button type="button" class="d-kcard cat-${cat}" data-edit="article" data-id="${esc(a._id)}">
+    <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
+    <div class="pills"><span class="kc kc-${esc(cat)}">${PILLAR[a.pillar]||"その他"}</span>
+    ${pub?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
+    ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${s==="企画中"?"":loopKc(a)}</div>
+    ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`;
+}
 function viewArticles(){
-  const f=S.filter.pillar;
-  const list=S.articles.filter(a=>f==="all"||a.pillar===f).sort((a,b)=>(a.priority??999)-(b.priority??999));
-  return `<div class="d-actions">${seg()}<span style="flex:1"></span>${addBtn("article","記事を追加")}</div>
-  <div class="d-board">${AR_STATUS.map(s=>{const col=list.filter(a=>(a.status||"未着手")===s);
-    return `<section class="d-col"><h3>${s}<span class="num">${col.length}</span></h3>${col.length?col.map(a=>{const pub=pubDate(a),ev=parse(a.eventDate);
-      const late=pub&&s!=="公開済み"&&diff(pub)<0,near=pub&&s!=="公開済み"&&!late&&diff(pub)<=3;
-      return `<button type="button" class="d-kcard" data-edit="article" data-id="${esc(a._id)}">
-        <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
-        <div class="pills"><span class="kc kc-${esc(a.pillar)}">${PILLAR[a.pillar]||"その他"}</span>
-        ${pub&&s!=="公開済み"?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
-        ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${loopKc(a)}</div>
-        ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`}).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`}).join("")}</div>`;
+  const f=S.filter.pillar,list=S.articles.filter(a=>f==="all"||a.pillar===f).sort((a,b)=>(a.priority??999)-(b.priority??999));
+  const plan=list.filter(a=>ast(a)==="企画中"),cats=[...CATS,...(plan.some(a=>!CATS.includes(a.pillar))?["other"]:[])].filter(k=>f==="all"||k===f);
+  const col=(title,items,cls="")=>`<section class="d-col ${cls}"><h3>${title}<span class="num">${items.length}</span></h3>${items.length?items.map(a=>kcard(a,ast(a))).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`;
+  return `${agentsCard("article")}<div class="d-actions">${seg()}<span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="plan">${ic("idea")}企画を頼む</button>`:""}${addBtn("article","記事を追加")}</div>
+  ${catLegend()}
+  <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">PLANNING</span>企画</h2></div>
+    <div class="d-board cats n${cats.length}">${cats.map(k=>col(`<span class="cat-name cat-${k}"><i></i>${PILLAR[k]}</span>`,plan.filter(a=>(CATS.includes(a.pillar)?a.pillar:"other")===k),"cat-col cat-"+k)).join("")}</div></div>
+  <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">IN PROGRESS</span>進行中</h2></div>
+    <div class="d-board n3">${["下書き","査読中","公開待ち"].map(st=>col(st,list.filter(a=>ast(a)===st))).join("")}</div></div>`;
+}
+function viewArchive(){
+  const f=S.filter.pillar,list=S.articles.filter(a=>isPub(a)&&(f==="all"||a.pillar===f));
+  const key=a=>a.publishedAt||a.lastVerified||"";
+  const need=list.filter(a=>ast(a)==="要更新"||(a.updateDraft&&!a.updateDraft.applied)).sort((x,y)=>key(y).localeCompare(key(x)));
+  const rest=list.filter(a=>!need.includes(a)).sort((x,y)=>key(y).localeCompare(key(x)));
+  const row=a=>{const lv=parse(a.lastVerified),ev=parse(a.eventDate),u=a.url||(a.path?"https://miagetabi.space"+a.path:"");
+    const stale=lv&&diff(lv)<-90,soon=ev&&diff(ev)>=0&&diff(ev)<=7;
+    return `<button type="button" class="d-row" data-edit="article" data-id="${esc(a._id)}">${picto(a.pillar)}
+    <div class="d-main"><div class="d-t">${esc(a.title)}</div>${a.path?`<div class="d-sub mono">${esc(a.path)}</div>`:""}
+    <div class="pills" style="margin-top:4px">${spill(ast(a),AR_PILL)}${a.recheck?gradePill(a.recheck):""}${a.updateDraft&&!a.updateDraft.applied?`<span class="d-pill warn">直しの案${a.updateDraft.review?"・査読"+esc(a.updateDraft.review.grade):""}</span>`:""}${soon?`<span class="d-pill bad">本番 ${fmt(ev)}・直前更新</span>`:ev&&diff(ev)>=0?`<span class="d-pill mute">本番 ${fmt(ev)}</span>`:""}${u?`<a class="d-pill info" href="${esc(u)}" target="_blank" rel="noopener">ページを開く</a>`:""}</div></div>
+    <div class="d-when">${lv?`最終確認<br><span class="${stale?"late":""}">${fmt(lv)}</span>`:"最終確認<br>—"}</div></button>`};
+  return `${agentsCard("archive")}<div class="d-actions">${seg()}<span style="flex:1"></span><span class="d-pill good num">${S.articles.filter(isPub).length}本</span></div>
+  ${need.length?`<div><div class="d-group-title"><span><span class="en" style="margin-right:8px">TO UPDATE</span>直すところがある記事</span><span class="num">${need.length}本</span></div><div class="d-group">${need.map(row).join("")}</div></div>`:""}
+  <div><div class="d-group-title"><span><span class="en" style="margin-right:8px">PUBLISHED</span>公開済み</span><span class="num">${rest.length}本</span></div>
+  <div class="d-group">${rest.length?rest.map(row).join(""):`<div class="d-empty">${need.length?"ほかの公開済みの記事はありません。":"公開済みの記事はまだありません。記事の稿を開いて「公開した」を押すと、ここに移ります。"}</div>`}</div></div>
+`;
 }
 
+// SNS：媒体ごとの見た目で下書きを確かめる（X は投稿カード、Instagram は正方形の画像枠＋キャプション）
+const xLen=t=>{let n=0;const u=/https?:\/\/\S+/g;const rest=String(t||"").replace(u,()=>{n+=23;return ""});for(const ch of rest)n+=/[ᄀ-￿]/.test(ch)&&!/[｡-ﾟ]/.test(ch)?2:1;return n};
+const snsText=t=>esc(t||"").replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|[\s　])([#＃][^\s#＃　]+)/g,'$1<span class="tag">$2</span>').replace(/\n/g,"<br>");
+const snsAvatar=`<span class="sv-av"><svg viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" fill="#111"/><path d="M6 18.4a7.4 7.4 0 0 1 14.8 0" fill="none" stroke="#fff" stroke-width="2.6"/><rect x="4" y="18" width="14.6" height="2.6" fill="#fff"/><rect x="19.6" y="18" width="4.4" height="2.6" fill="#E8481C"/><circle cx="17.6" cy="12.2" r="2.6" fill="#E8481C"/></svg></span>`;
+const relDay=d=>{if(!d)return "";const n=diff(d);return n===0?"今日":n===1?"明日":n===-1?"昨日":n>0?`あと${n}日`:`${-n}日前`};
+function postWhen(p){const d=parse(p.date),n=d?diff(d):null,past=n!=null&&n<0&&p.status!=="投稿済み";
+  return `<div class="sv-when ${n===0?"today":""} ${past?"late":""}"><b class="num">${esc(p.time||"--:--")}</b><span>${d?fmt(d):"日付なし"}${d?" · "+relDay(d):""}</span><em>${esc(p.channel||"X")}${p.kind?"・"+esc(p.kind):""}</em></div>`}
+function postMeta(p){const a=S.articles.find(x=>x._id===p.articleId);
+  return `<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
+function xCard(p){const n=xLen(p.text),d=parse(p.date);
+  return `<button type="button" class="sv sv-x" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>ミアゲタビ</b><span>@miagetabi</span></div><span class="sv-logo">𝕏</span></div>
+    <div class="sv-text">${snsText(p.text)||'<span class="d-sub">（本文なし）</span>'}</div>
+    <div class="sv-count ${n>280?"over":""}"><i style="--p:${Math.min(100,n/280*100)}%"></i><span class="num">${n}/280</span></div>${postMeta(p)}</button>`}
+function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length,d=parse(p.date),cap=String(p.text||"");
+  return `<button type="button" class="sv sv-ig" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>miagetabi</b><span>ミアゲタビ</span></div><span class="sv-logo ig">◎</span></div>
+    <div class="sv-img"><span>${esc(p.imageNote||"画像は運営者が選ぶ")}</span></div>
+    <div class="sv-text"><b>miagetabi</b> ${snsText(cap.length>150?cap.slice(0,150)+"…":cap)}${cap.length>150?' <span class="d-sub">もっと見る</span>':""}</div>
+    <div class="sv-count ${tags!==8&&tags?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/8</span></div>${postMeta(p)}</button>`}
 function viewSns(){
-  const list=[...S.posts].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-  return `<div class="d-actions"><span class="d-pill info">型：T−7 予告 → T−1 持ち物・天気 → 当日 実況 → T+1 結果</span><span style="flex:1"></span>${addBtn("post","投稿を追加")}</div>
-  <div class="d-group">${list.length?list.map(p=>{const a=S.articles.find(x=>x._id===p.articleId),d=parse(p.date);
-    return `<button type="button" class="d-row" data-edit="post" data-id="${esc(p._id)}"><span class="d-picto pc-${p.channel==="Instagram"?"sky":"other"}">${ic("sns","")}</span>
-    <div class="d-main"><div class="d-t" style="white-space:pre-wrap;font-weight:500">${esc(p.text||"（本文なし）")}</div>
-    <div class="pills" style="margin-top:4px"><span class="d-pill mute">${esc(p.channel||"X")}</span>${spill(p.status,POST_STATUS)}<span class="d-pill mute num">${[...(p.text||"")].length}字</span>${a?`<span class="d-sub">${esc(a.title)}</span>`:""}</div></div>
-    <div class="d-when">${fmt(d)}${p.time?"<br>"+esc(p.time):""}</div></button>`}).join("")
-    :`<div class="d-empty">投稿の予定はまだありません。「AI」タブの型4で文面を作り、ここに貼り付けてください。</div>`}</div>`;
+  const ch=S.snsCh||"all",list=[...S.posts].filter(p=>ch==="all"||(p.channel||"X")===ch||p.channel==="両方").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
+  const days=[...new Set(list.map(p=>p.date||""))];
+  return `${agentsCard("sns")}<div class="d-actions"><div class="d-seg" role="group" aria-label="媒体">${[["all","すべて"],["X","X"],["Instagram","Instagram"]].map(([k,l])=>`<button type="button" data-ch="${k}" aria-pressed="${ch===k}">${l}</button>`).join("")}</div><span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="sns">${ic("sns")}告知文を頼む</button>`:""}${addBtn("post","投稿を追加")}</div>
+  ${list.length?days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
+    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):xCard(p))).join("")}</div></section>`}).join("")
+    :`<div class="d-card d-empty">投稿の予定はまだありません。</div>`}`;
 }
-
 function latestKpi(){return [...S.kpi].sort((a,b)=>b._id.localeCompare(a._id))[0]}
 function kpiTiles(k,limit){
   if(!k) return `<div class="d-card d-empty">まだ記録がありません。「KPI」タブで月ごとの数字を入れると、目標との差が出ます。</div>`;
@@ -506,66 +778,30 @@ function viewKpi(){
   :`<div class="d-empty">記録がありません。月末に Search Console・GA4・各ASPの数字を入れてください。</div>`}</div></div>`;
 }
 
-/* ---------- AIプロンプト ---------- */
-const PROMPTS=[
- {id:"research",n:"型1 リサーチ",m:"15分",vars:["イベント名","参考URL"],t:`あなたは日本語Webメディアのリサーチャーです。
-次のイベントについて、公式情報だけを使って表にしてください。
-イベント：{イベント名}
-参考URL：{参考URL}
-
-出力（表）：項目 / 内容 / 出典URL / 確認状態（確定・推測）
-項目：日時（JST）、予備期間、場所、見える場所（公式案内のみ）、交通手段、延期を発表する場所、過去の同じ種類のイベントでの混雑（あれば）
-ルール：出典がない情報は「推測」と書く。エネルギー・原子力の話題は含めない。`},
- {id:"draft",n:"型2 構成と下書き",m:"30分",vars:["テンプレート","リサーチ表"],t:`次のテンプレートと表を使って記事の下書きを書いてください。
-読者：20〜30代の初心者。専門用語は使わず、使う場合は一言で言い換える。
-ゴール：読んだ人が「いつ・どこに・何を持って行けばいいか」を決められること。
-テンプレート：{テンプレート}
-表：{リサーチ表}
-ルール：
-- 冒頭ボックスを必ず作る
-- 「推測」の情報にはラベルを付ける
-- アフィリエイトの位置には [AFF:hotel] のように目印だけ入れる
-- 断定できない数字（混雑・見える個数）は出典か推測を明記`},
- {id:"update",n:"型3 更新",m:"10分",vars:["現在の記事","新しい公式発表"],t:`次の記事の「冒頭ボックス」と該当する節だけを、新しい公式発表に合わせて書き換えてください。
-変更しない部分は出力しないでください。最後に「更新履歴」に追加する1行を出してください。
-現在の記事：{現在の記事}
-新しい公式発表：{新しい公式発表}`},
- {id:"sns",n:"型4 SNS告知",m:"5分",vars:["記事タイトル","冒頭ボックス","URL"],t:`次の記事からX用の投稿を3パターン（各120字以内）、Instagramのキャプション1つ（ハッシュタグ8個まで）を作ってください。
-条件：日時と場所を最初に。絵文字は1〜2個。「○日前」「今夜」などのタイミングを入れる。
-記事：{記事タイトル}
-冒頭ボックス：{冒頭ボックス}
-URL：{URL}`}
-];
-const TEMPLATES={"A 打ち上げ観覧":"冒頭ボックス（日時・今の状況・見やすい場所・到着時刻・延期を知る方法）／まず結論／基本情報／見える場所（公式と推測を分ける）／到着時刻とタイムライン／アクセス[AFF:交通]／泊まる場所[AFF:宿]／持ち物[AFF:機材]／スマホで撮るコツ／延期・中止になったら（情報源2つ以上）／ライブ中継／FAQ／更新履歴",
- "B 天体イベント":"冒頭ボックス（いつ・方角・見える数・スマホ難易度・天気の確認先）／まず結論／いつ何時に／どこで見る[AFF:宿]／スマホで撮る方法（iPhone・Android）[AFF:三脚]／持ち物と寒さ対策／天気が悪いとき・見逃したとき／FAQ／更新履歴",
- "C 宇宙スポット見学":"冒頭ボックス（どこ？・予約は要る？・料金・所要時間・最終確認日）／どんな場所？／見どころ／見学ツアー・予約のしかた／実際に行ってみた／行き方[AFF:交通]／あわせて行きたい宇宙スポット・泊まるなら[AFF:宿]／休館・変更を確かめる方法／FAQ／更新履歴"};
-const fillPrompt=()=>{const p=PROMPTS.find(x=>x.id===S.promptSel);return p.t.replace(/\{([^}]+)\}/g,(m,k)=>S.promptVals[k]||m)};
-function viewPrompts(){
-  const p=PROMPTS.find(x=>x.id===S.promptSel),vals=S.promptVals;
-  return `<div class="d-seg" role="group" aria-label="プロンプトの型">${PROMPTS.map(x=>`<button type="button" data-prompt="${x.id}" aria-pressed="${x.id===p.id}">${x.n}<span style="color:var(--label-3);margin-left:4px">${x.m}</span></button>`).join("")}</div>
-  <div class="d-grid2">
-    <div class="d-card d-form">${p.vars.map(k=>k==="テンプレート"
-      ?`<label class="d-fld">${k}<select id="pv-tpl" data-pv="${k}"><option value="">選ぶ</option>${Object.entries(TEMPLATES).map(([n,v])=>`<option value="${esc(v)}" ${vals[k]===v?"selected":""}>${n}</option>`).join("")}</select></label>`
-      :`<label class="d-fld">${k}<textarea id="pv-${esc(k)}" data-pv="${k}" rows="3">${esc(vals[k]||"")}</textarea></label>`).join("")}
-      <p class="note">AIの出力はそのまま公開しない。日時・料金・予約の要否・見学できるか（立入禁止・休館）の4点は、公式ページで目で確かめる。</p></div>
-    <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">できあがったプロンプト</h2><button type="button" class="d-btn small" id="copyP">${ic("copy")}コピー</button></div>
-      <pre class="prompt" id="pout">${esc(fillPrompt())}</pre></div>
-  </div>`;
-}
-
-/* ---------- エージェント（記事作成・査読） ---------- */
+/* ---------- エージェント（AI編集部） ---------- */
+// 役割ごとの Routine。手順書は ops/<manual>（このアプリと一緒に公開）
 const AG={
-  writer:{l:"記事作成",kind:"article",trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて記事を書く",pc:"sky",ic:"doc"},
-  reviewer:{l:"査読",kind:"review",trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",pc:"launch",ic:"check"}
+  planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った記事案を受信箱に出す",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","運営マニュアルの3つの問いで絞り、受信箱に3件まで出す","採用・見送りの理由を次の提案に生かす"],never:"記事カードは作らない（決めるのは運営者）"},
+  writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","査読の指摘で書き直す（最大3回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
+  reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
+  eventfetch:{l:"イベント取得",kinds:["eventfetch"],trig:"eventFetchTriggerId",desc:"公式の予定表から新しい打ち上げ・天体イベントを見つけ、イベントに足す",when:"月・木 6:47＋依頼",pc:"spot",ic:"cal",manual:"event-fetch-manual.md",yen:60,tasks:["JAXA・スペースワン・インターステラの打ち上げ予定と、国立天文台・IMO の天体の暦を読む","まだ無いイベントを、公式の日時と出典つきでイベントに足す（重複は足さない）","日付が未発表のものは「日付未定」で足す。迷うものは受信箱へ"],never:"既にあるイベントの日時・状況は変えない（それは公式ウォッチ）・推測の日付を作らない"},
+  watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
+  sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"公開済みの記事から X・Instagram の告知文を下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:40,tasks:["公開済みの記事から X・Instagram の告知文を下書きする","公開・T−7・前日・当日・結果の型で、3日以内の分だけ作る"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
+  snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","文字数・ハッシュタグ数・禁止表現・安全のひとことを確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・告知文を自分で書き換えない（SNSアカウントの準備ができるまで停止中）"},
+  audit:{l:"点検",kinds:["audit"],trig:"auditTriggerId",desc:"公開中のページを見回り、止まった依頼を片付ける",when:"毎朝 5:37＋依頼",pc:"spot",ic:"scan",manual:"audit-manual.md",yen:60,tasks:["公開中の記事を毎朝開き、リンク切れ・最終確認の古さ・部品の抜けを探す","止まった依頼を片付ける（自己修復）","週1回、サイトの基本（サイトマップ・運営者情報など）を点検"],never:"サイトの設定や記事は変えない・停止中の役割を起こさない"}
 };
-const roleOf=kind=>kind==="review"?"reviewer":"writer";
+const ROLES=Object.keys(AG);
+const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
+const KIND_L={eventfetch:"イベント取得",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
-const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],error:["失敗","bad"]};
+const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
+const stamp=()=>{const d=new Date();return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`};
 function ago(t){const m=Math.round((Date.now()-new Date(t))/6e4);return m<1?"たった今":m<60?m+"分前":m<1440?Math.round(m/60)+"時間前":Math.round(m/1440)+"日前"}
 const loopKc=a=>a.loop&&LOOP[a.loop.state]?`<span class="kc ${a.loop.state==="failed"?"kc-bad":a.loop.state==="passed"?"":"kc-warn"}">${LOOP[a.loop.state][0]}${a.loop.round?" "+a.loop.round+"回目":""}</span>`:"";
 const loopPill=a=>a.loop&&LOOP[a.loop.state]?`<span class="d-pill ${LOOP[a.loop.state][1]}">${LOOP[a.loop.state][0]}${a.loop.round?"・"+a.loop.round+"回目":""}</span>`:'<span class="d-pill mute">まだ依頼していません</span>';
 const gradePill=r=>r&&r.grade?`<span class="d-pill ${r.grade==="A"?"good":r.grade==="B"?"warn":"bad"}">査読 ${esc(r.grade)}（P0 ${r.p0??"-"}・P1 ${r.p1??"-"}・P2 ${r.p2??"-"}）</span>`:"";
+const jobLabel=j=>`${KIND_L[j.kind]||j.kind}${j.kind==="review"&&j.mode&&j.mode!=="draft"?(j.mode==="update"?"（直し）":"（公開済みの点検）"):""}${j.round&&(j.kind==="article"||j.kind==="review")&&(!j.mode||j.mode==="draft")?" "+j.round+"回目":""}`;
 
 function mcpErr(e){
   const c=e&&e.code;
@@ -578,27 +814,38 @@ function mcpErr(e){
     server_unavailable:"いまコネクタにつながりません。少し待ってからもう一度押してください",
     tool_error:"起動を断られました："+((e&&e.message)||"").slice(0,80)})[c]||("起動できませんでした（"+(c||"不明")+"）");
 }
-// Routine を起動する。jobId があれば「job:<ID>」を渡す（無ければ見回り）
+// Routine を起動する。jobId があれば「job:<ID>」を渡す（無ければ定時と同じ見回り）
 async function fire(role,jobId){
   const trig=S.bg[AG[role].trig];
-  if(!S.mcp) return {ok:false,why:"このページではコネクタが使えません。依頼は順番待ちのまま残り、見回りで処理されます"};
-  if(!trig) return {ok:false,why:`${AG[role].l}の Routine の ID が未設定です（エージェント → 設定）`};
+  if(!S.mcp) return {ok:false,why:"このページではコネクタが使えません。依頼は順番待ちのまま残り、定時の見回りで処理されます"};
+  if(!trig) return {ok:false,why:`${AG[role].l}の Routine の ID が未設定です（編集部 → 設定）`};
   try{
     await S.mcp.callTool(S.bg.server||"Claude Code Remote","fire_trigger",jobId?{trigger_id:trig,text:"job:"+jobId}:{trigger_id:trig},{cache:false});
     if(jobId) S.db.doc("jobs/"+jobId).update({kickedAt:iso()}).catch(()=>{});
     return {ok:true};
   }catch(e){return {ok:false,why:mcpErr(e)}}
 }
+const busy=(kind,key,val)=>S.jobs.some(j=>j.kind===kind&&(j.status==="queued"||j.status==="running")&&(!key||j[key]===val));
+// 依頼を積んで起動する（役割が止まっていれば積むだけ）
+async function enqueue(id,job){
+  const now=iso(),role=roleOf(job.kind);
+  try{await S.db.doc("jobs/"+id).set({status:"queued",message:"依頼しました",by:"app",createdAt:now,updatedAt:now,...job})}
+  catch(e){toast("依頼を書けませんでした："+(e.message||e.code));return false}
+  if(S.pause[role]){toast(`${AG[role].l}は停止中です。再開すると始まります`);return true}
+  const r=await fire(role,id);toast(r.ok?`${AG[role].l}エージェントを起動しました`:r.why);return true;
+}
+async function requestJob(kind,extra){
+  if(!S.canWrite||!S.db) return;
+  if(busy(kind,extra&&extra.articleId?"articleId":null,extra&&extra.articleId)){toast("同じ依頼がもう進んでいます");return}
+  const id=`${kind}-${(extra&&extra.articleId)||"app"}-${stamp()}`;
+  await enqueue(id,{kind,title:(extra&&extra.title)||KIND_L[kind],...(extra||{})});
+}
 async function requestWrite(a,opt){
   if(!S.canWrite||!S.db) return;
   const round=((a.loop&&a.loop.round)||0)+1,id=`article-${a._id}-${round}`,now=iso();
-  try{
-    await S.db.doc("jobs/"+id).set({kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||"",
-      rewrite:round>1,status:"queued",message:"依頼しました",by:"app",createdAt:now,updatedAt:now});
-    await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||3,updatedAt:now},withExperience:!!opt.withExperience});
-  }catch(e){toast("依頼を書けませんでした："+(e.message||e.code));return}
-  if(S.pause.writer){toast("記事作成エージェントは停止中です。再開すると始まります");return}
-  const r=await fire("writer",id);toast(r.ok?"記事作成エージェントを起動しました":r.why);
+  const ok=await enqueue(id,{kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||"",rewrite:round>1});
+  if(!ok) return;
+  try{await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||3,updatedAt:now},withExperience:!!opt.withExperience,...(ast(a)==="企画中"?{status:"下書き"}:{})})}catch(_){}
 }
 async function retryJob(j){
   try{await S.db.doc("jobs/"+j._id).update({status:"queued",message:"もう一度依頼しました",updatedAt:iso()})}catch(e){toast("書けませんでした："+(e.message||e.code));return}
@@ -606,32 +853,73 @@ async function retryJob(j){
   const r=await fire(role,j._id);toast(r.ok?"もう一度起動しました":r.why);
 }
 async function setPause(role,paused){
-  const roles={writer:{paused:!!S.pause.writer},reviewer:{paused:!!S.pause.reviewer}};roles[role]={paused};
+  const roles={};for(const r of ROLES)roles[r]=S.pauseRaw[r]||{paused:false};roles[role]={paused,at:iso(),by:"owner"};
   try{await S.db.doc("settings/agentPause").set({roles,updatedAt:iso()})}catch(e){toast("保存できませんでした："+(e.message||e.code));return}
-  toast(paused?`${AG[role].l}エージェントを止めました`:`${AG[role].l}エージェントを再開しました`);
-  if(!paused){ // 待っていた依頼を起動
-    const waiting=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).reverse();
-    for(const j of waiting.slice(0,3)){await fire(role,j._id)}
-  }
+  // 定時の起動も止める／戻す（1役割＝1 Routine）。失敗しても db の停止で各エージェントは何もしない
+  let note="";const trig=S.bg[AG[role].trig];
+  if(S.mcp&&trig){try{await S.mcp.callTool(S.bg.server||"Claude Code Remote","update_trigger",{trigger_id:trig,enabled:!paused},{cache:false})}catch(e){note="（定時の切り替えはできませんでした）"}}
+  toast((paused?`${AG[role].l}を止めました`:`${AG[role].l}を再開しました`)+note);
+  if(!paused){const waiting=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).reverse();for(const j of waiting.slice(0,3)){await fire(role,j._id)}}
 }
-// ページを開いたとき、2分以上たっても起動されていない依頼を1回だけ起動する（30分以内に起動したものは除く）
+// 自動運用：オフで全役割を止め（by:"auto"）、オンで自動運用が止めた役割だけを戻す。運営者が個別に止めた役割（by:"owner"）はそのまま
+const autoOn=()=>ROLES.some(r=>!S.pause[r]);
+function renderAuto(){
+  const b=$("#autoBtn");if(!b)return;
+  if(!S.ready||!S.db){b.hidden=true;return}
+  const on=autoOn();b.hidden=false;b.setAttribute("aria-pressed",String(on));b.querySelector("b").textContent=on?"ON":"OFF";
+  b.disabled=!S.canWrite;
+}
+async function setAuto(on){
+  const roles={};
+  for(const r of ROLES){const cur=S.pauseRaw[r]||{paused:false};
+    if(on) roles[r]=cur.paused&&cur.by!=="auto"?cur:{paused:false,at:iso(),by:"auto"};
+    else roles[r]=cur.paused?cur:{paused:true,at:iso(),by:"auto"};}
+  try{await S.db.doc("settings/agentPause").set({roles,auto:on,updatedAt:iso()})}catch(e){toast("保存できませんでした："+(e.message||e.code));return}
+  let ng=0;
+  if(S.mcp) for(const r of ROLES){const trig=S.bg[AG[r].trig];if(!trig)continue;const want=!roles[r].paused;if(want===!S.pause[r])continue;
+    try{await S.mcp.callTool(S.bg.server||"Claude Code Remote","update_trigger",{trigger_id:trig,enabled:want},{cache:false})}catch(_){ng++}}
+  const kept=ROLES.filter(r=>roles[r].paused&&roles[r].by!=="auto").map(r=>AG[r].l);
+  toast(on?`自動運用をオンにしました${kept.length?"（"+kept.join("・")+"は止めたまま）":""}${ng?"・定時の切り替えに失敗"+ng+"件":""}`:`自動運用をオフにしました（全員停止）${ng?"・定時の切り替えに失敗"+ng+"件":""}`);
+}
+
+// ページを開いたとき、2分以上たっても起動されていない依頼を起動する（30分以内に起動したもの・止まっている役割は除く）。
+// Routine どうしは起こし合えないことがあるため、受け渡しの依頼はここで拾う
 function kickQueued(){
   if(!S.mcp||!S.canWrite||!S.db) return;
   const now=Date.now();
   S.jobs.filter(j=>j.status==="queued"&&!S.kicked.has(j._id)&&now-new Date(j.createdAt||0)>12e4&&(!j.kickedAt||now-new Date(j.kickedAt)>18e5)&&!S.pause[roleOf(j.kind)])
     .slice(0,3).forEach(j=>{S.kicked.add(j._id);fire(roleOf(j.kind),j._id)});
 }
+const jobTitle=j=>{const a=S.articles.find(x=>x._id===j.articleId);return a?a.title:(j.title||KIND_L[j.kind]||j._id)};
 function renderIsland(){
   const el=$("#island");if(!el)return;
-  const run=S.jobs.filter(j=>j.status==="running");
-  if(!run.length){el.hidden=true;return}
-  const j=run[0],a=S.articles.find(x=>x._id===j.articleId);
-  el.hidden=false;el.innerHTML=`<i></i>${esc(AG[roleOf(j.kind)].l)}：${esc(j.message||"作業中")}${run.length>1?` ほか${run.length-1}件`:""}`;
-  el.title=a?a.title:"";
-  el.onclick=()=>go("agents");
+  const run=S.jobs.filter(j=>j.status==="running"),q=S.jobs.filter(j=>j.status==="queued").length;
+  if(!run.length&&!q){el.hidden=true;closeIslandPanel();return}
+  const t=new Date();
+  el.hidden=false;el.innerHTML=run.length?`<i></i><span class="isl-l"><span class="num">${pad(t.getHours())}:${pad(t.getMinutes())}</span>・作業中 ${run.length}${q?`・待ち ${q}`:""}</span><span class="isl-s num">${run.length}${q?"+"+q:""}</span>`:`<i class="idle"></i><span class="isl-l">順番待ち ${q}</span><span class="isl-s num">${q}</span>`;
+  el.setAttribute("aria-expanded",String(!!$("#islandPanel")));
+  el.onclick=e=>{e.stopPropagation();$("#islandPanel")?closeIslandPanel():openIslandPanel()};
+  if($("#islandPanel")) fillIslandPanel();
 }
+function fillIslandPanel(){
+  const p=$("#islandPanel");if(!p)return;
+  const list=[...S.jobs.filter(j=>j.status==="running"),...S.jobs.filter(j=>j.status==="queued")];
+  p.innerHTML=`<div class="ip-head"><b>動いている依頼</b><button type="button" class="text-btn" data-ip-close>閉じる</button></div>
+    <div class="ip-scroll"><div class="d-group">${list.length?list.map(jobRow).join(""):`<div class="d-empty">いま動いている依頼はありません。</div>`}</div></div>`;
+  p.querySelector("[data-ip-close]").onclick=closeIslandPanel;
+  bindJobButtons(p);
+}
+function openIslandPanel(){
+  if($("#islandPanel"))return;
+  document.body.insertAdjacentHTML("beforeend",`<div class="ipanel glass" id="islandPanel" role="dialog" aria-label="動いている依頼"></div>`);
+  fillIslandPanel();$("#island").setAttribute("aria-expanded","true");updBack();
+  setTimeout(()=>addEventListener("click",islandOutside),0);
+}
+function islandOutside(e){if(!e.target.closest("#islandPanel"))closeIslandPanel()}
+function closeIslandPanel(){const p=$("#islandPanel");if(p)p.remove();setTimeout(updBack);removeEventListener("click",islandOutside);const el=$("#island");if(el)el.setAttribute("aria-expanded","false")}
+
 function draftGroup(){
-  const list=S.articles.filter(a=>a.draft&&a.loop&&(a.loop.state==="passed"||a.loop.state==="failed")&&a.status!=="公開済み");
+  const list=S.articles.filter(a=>a.draft&&a.loop&&(a.loop.state==="passed"||a.loop.state==="failed")&&ast(a)!=="公開済み"&&ast(a)!=="要更新");
   if(!list.length) return "";
   return `<div><div class="d-group-title"><span>エージェントの稿（あなたの確認待ち）</span><span class="num">${list.length}件</span></div>
   <div class="d-group">${list.map(a=>`<button type="button" class="d-row" data-draft="${esc(a._id)}">${picto(a.pillar)}
@@ -639,64 +927,253 @@ function draftGroup(){
     <div class="d-when">${a.review&&a.review.at?ago(a.review.at):""}</div></button>`).join("")}</div></div>`;
 }
 function jobRow(j){
-  const a=S.articles.find(x=>x._id===j.articleId),st=JOB_ST[j.status]||["?","mute"];
-  return `<div class="d-row"><span class="d-picto pc-${AG[roleOf(j.kind)].pc}">${ic(AG[roleOf(j.kind)].ic,"")}</span>
-    <div class="d-main"><div class="d-t">${esc(a?a.title:(j.title||j.articleId||j._id))}</div>
-    <div class="d-sub">${esc(AG[roleOf(j.kind)].l)}・${esc(j.round||1)}回目・${esc(j.message||"")}</div>
-    <div class="pills" style="margin-top:4px"><span class="d-pill ${st[1]}">${st[0]}</span>${j.status==="error"&&S.canWrite?`<button type="button" class="d-btn small secondary" data-ag-retry="${esc(j._id)}">もう一度</button>`:""}${a&&a.draft?`<button type="button" class="d-btn small secondary" data-draft="${esc(a._id)}">稿を見る</button>`:""}</div></div>
+  const a=S.articles.find(x=>x._id===j.articleId),st=JOB_ST[j.status]||["?","mute"],A=AG[roleOf(j.kind)];
+  return `<div class="d-row"><span class="d-picto pc-${A.pc}">${ic(A.ic,"")}</span>
+    <div class="d-main"><div class="d-t">${esc(jobTitle(j))}</div>
+    <div class="d-sub">${esc(A.l)}・${esc(jobLabel(j))}・${esc(j.message||"")}</div>
+    <div class="pills" style="margin-top:4px"><span class="d-pill ${st[1]}">${st[0]}</span>${j.by&&j.by!=="app"?`<span class="d-pill mute">${esc({loop:"受け渡し",schedule:"定時"}[j.by]||(AG[j.by]?AG[j.by].l+"から":j.by))}</span>`:""}${j.status==="error"&&S.canWrite?`<button type="button" class="d-btn small secondary" data-ag-retry="${esc(j._id)}">もう一度</button>`:""}${a&&a.draft&&(j.kind==="article"||j.kind==="review")?`<button type="button" class="d-btn small secondary" data-draft="${esc(a._id)}">稿を見る</button>`:""}${j.inboxId?`<button type="button" class="d-btn small secondary" data-go="inbox">受信箱へ</button>`:""}</div></div>
     <div class="d-when">${ago(j.updatedAt||j.createdAt)}</div></div>`;
 }
+function bindJobButtons(root){
+  root.querySelectorAll("[data-draft]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();closeIslandPanel();openDraft(b.dataset.draft)}));
+  root.querySelectorAll("[data-ag-retry]").forEach(b=>b.onclick=e=>{e.stopPropagation();const j=S.jobs.find(x=>x._id===b.dataset.agRetry);if(j)retryJob(j)});
+  root.querySelectorAll("[data-go]").forEach(b=>b.onclick=e=>{e.stopPropagation();go(b.dataset.go)});
+}
+function roleState(role){
+  const run=S.jobs.find(j=>j.status==="running"&&roleOf(j.kind)===role),last=S.jobs.find(j=>roleOf(j.kind)===role);
+  if(S.pause[role]) return {k:(S.pauseRaw[role]||{}).by==="auto"?"自動運用オフ":"停止中",c:"warn",run,last};
+  if(run) return {k:"作業中",c:"good",run,last};
+  if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
+  return {k:"待機",c:"mute",run,last};
+}
+const AG_SCOPE={all:["planner","writer","reviewer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer"],archive:["watch","writer","reviewer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview"]};
+const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
+const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
+function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
+const dur=(a,b)=>{const ta=new Date(a).getTime(),tb=new Date(b).getTime(),lim=Date.now()+6e4;if(!isFinite(ta)||!isFinite(tb)||ta>lim||tb>lim||tb<ta-6e4)return "";const s=Math.max(0,Math.round((tb-ta)/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`};
+function jobScope(j){const r=roleOf(j.kind);if(j.kind==="update"||(j.kind==="review"&&(j.mode==="update"||j.mode==="recheck")))return "archive";return r==="watch"||r==="eventfetch"?"events":r==="sns"||r==="snsreview"?"sns":r==="audit"?"archive":"article"}
+function roleDetail(r){
+  const A=AG[r],cur=S.jobs.filter(j=>roleOf(j.kind)===r&&(j.status==="running"||j.status==="queued"));
+  const last=S.jobs.filter(j=>roleOf(j.kind)===r&&(j.status==="done"||j.status==="error"||j.status==="waiting")).sort((a,b)=>(b.finishedAt||b.updatedAt||"").localeCompare(a.finishedAt||a.updatedAt||""))[0];
+  const pr=S.pauseRaw[r]||{},trig=S.bg[A.trig];
+  return `<div class="ag-detail" role="region" aria-label="${esc(A.l)}の作業内容">
+    <div class="ag-dhead">${agIc(r)}<b>${esc(A.l)}エージェント</b><button type="button" class="text-btn" data-ag-role="${r}" aria-label="閉じる" style="font-size:14px">閉じる</button></div>
+    <dl><dt>動くとき</dt><dd>${esc(A.when)}</dd><dt>手順書</dt><dd class="mono">ops/${esc(A.manual)}</dd></dl>
+    <div class="ag-dsub">主な作業</div><ul>${A.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    <p class="ag-never">${ic("check")}<span>${esc(A.never)}</span></p>
+    ${S.pause[r]?`<p class="ag-paused">${pr.by==="auto"?"自動運用がオフのため止まっています。":"停止中です。"}${pr.at?`（${esc(ago(pr.at))}）`:""}新しい作業は始めず、依頼は順番待ちのまま残ります。</p>`:""}
+    ${S.canWrite?`<div class="d-actions"><button type="button" class="d-btn small" data-ag-run="${r}" ${!S.pause[r]&&!cur.length&&(trig||!["writer","reviewer"].includes(r))?"":"disabled"}>${cur.length?"動いています":"今すぐ動かす"}</button>
+      <button type="button" class="d-btn small ${S.pause[r]?"":"secondary"}" data-ag-pause="${r}">${S.pause[r]?"再開する":"停止する"}</button></div>`:""}
+    ${cur.length?`<div class="ag-dsub">いまの作業</div>${cur.map(j=>`<p class="ag-now">${j.status==="running"?"動作中":"順番待ち"}：${esc(jobTitle(j))}${j.message?" — "+esc(j.message):""}</p>`).join("")}`
+      :last?`<div class="ag-dsub">前回の作業（${esc(ago(last.finishedAt||last.updatedAt||last.createdAt))}）</div><p class="ag-now">${esc(jobTitle(last))} — ${esc(last.message||(last.status==="done"?"完了":"失敗"))}</p>`:""}
+    ${trig?"":`<p class="ag-paused">Routine の ID が未設定です（編集部タブの「設定」）。</p>`}
+  </div>`;
+}
+// 受け渡しの流れ（記事ごとに 企画 → 作成 → 査読 → 書き直し → … → 公開 を一列に）
+function flowChains(scope){
+  const recent=Date.now()-72*36e5,g=new Map();
+  for(const j of S.jobs){if(!j.articleId)continue;if(scope!=="all"&&jobScope(j)!==scope)continue;
+    const live=j.status==="queued"||j.status==="running";if(!live&&new Date(j.updatedAt||j.createdAt).getTime()<recent)continue;
+    if(!g.has(j.articleId))g.set(j.articleId,[]);g.get(j.articleId).push(j)}
+  return [...g.entries()].map(([aid,jobs])=>({aid,a:S.articles.find(x=>x._id===aid),jobs:jobs.sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),
+    live:jobs.some(j=>j.status==="queued"||j.status==="running"),last:jobs.reduce((m,j)=>(j.updatedAt||j.createdAt||"")>m?(j.updatedAt||j.createdAt):m,"")}))
+    .sort((a,b)=>a.live!==b.live?(a.live?-1:1):b.last.localeCompare(a.last)).slice(0,scope==="all"?5:4);
+}
+function gradeOf(j,a){
+  if((j.kind!=="review"&&j.kind!=="snsreview")||j.status!=="done")return "";
+  if(j.grade)return j.grade;
+  if(a&&(!j.mode||j.mode==="draft")){const h=(a.reviewHistory||[]).find(h=>String(h.round)===String(j.round));if(h)return h.grade}
+  if(a&&j.mode==="update"&&a.updateDraft&&a.updateDraft.review)return a.updateDraft.review.grade;
+  if(a&&j.mode==="recheck"&&a.recheck)return a.recheck.grade;
+  const m=(j.message||"").match(/\b([ABCD])\b/);return m?m[1]:"";
+}
+function flowNode(j,a){
+  const r=roleOf(j.kind),st=j.status,label=j.kind==="article"?(j.round>1?"書き直し":"作成"):j.kind==="update"?"直し":j.kind==="review"?(j.mode==="recheck"?"点検":j.mode==="update"?"直しの査読":"査読"):j.kind==="sns"?"告知文":j.kind==="snsreview"?"審査":AG[r].l;
+  const time=st==="running"&&j.startedAt?`<span class="fl-time">${elapsed(j.startedAt)}</span>`:st==="done"&&j.startedAt&&j.finishedAt?`<span class="fl-time">${dur(j.startedAt,j.finishedAt)}</span>`:st==="queued"?`<span class="fl-time">待機中</span>`:st==="error"?`<span class="fl-time">失敗</span>`:st==="waiting"?`<span class="fl-time">判断待ち</span>`:"";
+  const g=gradeOf(j,a);
+  return `<button type="button" class="fl-node st-${esc(st)}${S.chainSel===j._id?" sel":""}" data-chain="${esc(j._id)}" title="${esc([AG[r].l,j.round?j.round+"回目":"",j.message||""].filter(Boolean).join(" · "))}">${agIc(r)}<b>${label}${j.round&&(j.kind==="article"||(j.kind==="review"&&(!j.mode||j.mode==="draft")))?`<small>${esc(j.round)}</small>`:""}</b>${g?`<span class="fl-grade g-${esc(g)}">${esc(g)}</span>`:""}${time}</button>`;
+}
+function flowArrow(prev,next){
+  const from=prev.finishedAt,to=next.startedAt||null,wait=from&&to?dur(from,to):"",live=!to&&from&&next.status==="queued";
+  return `<span class="fl-arrow ${live?"is-wait":""}" aria-hidden="true"><i></i>${wait?`<span>${wait}</span>`:live?`<span>${elapsed(from)}</span>`:""}</span>`;
+}
+function flowSection(scope){
+  const ch=flowChains(scope);if(!ch.length)return "";
+  const sel=S.chainSel&&S.jobs.find(j=>j._id===S.chainSel);
+  return `<div class="fl"><div class="d-group-title" style="margin:2px 2px 0"><span><span class="en-l" style="display:inline-block;margin:0 8px 0 0">HANDOFF</span>受け渡しの流れ</span></div>
+    ${ch.map(c=>{const nodes=[];c.jobs.forEach((j,i)=>{if(i)nodes.push(flowArrow(c.jobs[i-1],j));nodes.push(flowNode(j,c.a))});
+      const a=c.a,st=a&&ast(a),lp=a&&a.loop;
+      const end=a&&(st==="公開済み"?["公開","published"]:st==="公開待ち"?["公開待ち","ready"]:lp&&lp.state==="failed"?["上限・要判断","failed"]:null);
+      if(end&&!c.live)nodes.push(`<span class="fl-arrow" aria-hidden="true"><i></i></span><span class="fl-node st-end is-${end[1]}"><b>${end[0]}</b></span>`);
+      const first=c.jobs[0],lastJ=c.jobs[c.jobs.length-1],t0=first&&(first.startedAt||first.createdAt);
+      const total=t0?(c.live?elapsed(t0):lastJ.finishedAt?dur(t0,lastJ.finishedAt):""):"";
+      return `<div class="fl-chain ${c.live?"is-live":""}"><div class="fl-head"><span class="fl-t">${esc(a?a.title:c.aid)}</span>${total?`<span class="fl-total">合計 ${total}</span>`:""}</div><div class="fl-row">${nodes.join("")}</div></div>`}).join("")}
+    ${sel&&ch.some(c=>c.jobs.includes(sel))?`<div class="ag-detail"><div class="ag-dhead">${agIc(roleOf(sel.kind))}<b>${esc(AG[roleOf(sel.kind)].l)}・${esc(jobLabel(sel))}</b><button type="button" class="text-btn" data-chain="${esc(sel._id)}" style="font-size:14px">閉じる</button></div>
+      <p class="ag-now">${esc((JOB_ST[sel.status]||[""])[0])}${sel.message?" — "+esc(sel.message):""}</p>${sel.note?`<p class="ag-now d-sub">指示：${esc(sel.note.slice(0,300))}</p>`:""}
+      <p class="ag-now d-sub">${sel.createdAt?"依頼 "+esc(ago(sel.createdAt)):""}${sel.finishedAt?"・完了 "+esc(ago(sel.finishedAt)):""}</p>
+      <div class="d-actions">${sel.status==="error"&&S.canWrite?`<button type="button" class="d-btn small secondary" data-ag-retry="${esc(sel._id)}">もう一度</button>`:""}${(()=>{const a=S.articles.find(x=>x._id===sel.articleId);return a&&(a.draft||a.updateDraft)?`<button type="button" class="d-btn small secondary" data-draft="${esc(a._id)}">稿を見る</button>`:""})()}</div></div>`:""}
+  </div>`;
+}
+function agentsCard(scope){
+  const roles=AG_SCOPE[scope]||AG_SCOPE.all,inScope=j=>scope==="all"||(roles.includes(roleOf(j.kind))&&(scope!=="archive"||jobScope(j)==="archive"||["watch","audit"].includes(roleOf(j.kind))));
+  const active=S.jobs.filter(j=>(j.status==="queued"||j.status==="running")&&inScope(j)).sort((a,b)=>a.status===b.status?(a.startedAt||a.createdAt||"").localeCompare(b.startedAt||b.createdAt||""):a.status==="running"?-1:1);
+  const tiles=roles.map(r=>{const n=active.filter(j=>roleOf(j.kind)===r),run=n.find(j=>j.status==="running"),open=S.agRole===r;
+    const lj=run||n[0]||S.jobs.find(j=>roleOf(j.kind)===r),w=`<span class="ag-w">${lj?esc(lj.message||jobTitle(lj))+" · "+esc(ago(lj.updatedAt||lj.createdAt)):"まだ動いていません"}</span>`;
+    if(S.pause[r])return `<button type="button" class="ag-tile is-paused ${open?"is-open":""}" data-ag-role="${r}" aria-expanded="${open}">${agIc(r)}<div><b>${esc(AG[r].l)}</b><span class="ag-st">${(S.pauseRaw[r]||{}).by==="auto"?"自動運用オフ":"停止中"}${n.length?`・待ち ${n.length}`:""}</span></div><i class="ag-dot"></i>${w}</button>`;
+    const err=!n.length&&(()=>{const l=S.jobs.find(j=>roleOf(j.kind)===r);return l&&l.status==="error"})();
+    return `<button type="button" class="ag-tile ${run?"is-run":n.length?"is-queue":err?"is-err":""} ${open?"is-open":""}" data-ag-role="${r}" aria-expanded="${open}">${agIc(r)}<div><b>${esc(AG[r].l)}</b><span class="ag-st">${run?`動作中 ${elapsed(run.startedAt||run.createdAt)}`:n.length?`順番待ち ${n.length}`:err?"前回は失敗":"待機中"}</span></div><i class="ag-dot"></i>${w}</button>`}).join("");
+  const row=j=>{const r=roleOf(j.kind),since=j.startedAt||j.createdAt,stale=j.status==="running"&&j.updatedAt&&Date.now()-new Date(j.updatedAt)>15*6e4;
+    return `<div class="ag-row" data-state="${esc(j.status)}">${agIc(r)}<div class="ag-main"><div class="ag-t"><b>${esc(AG[r].l)}</b><span class="ag-round">${esc(jobLabel(j))}</span></div><div class="ag-tgt">${esc(jobTitle(j))}</div>
+      <div class="ag-msg">${j.status==="queued"?"順番待ち":""}${j.status==="queued"&&j.message?" · ":""}${esc(j.message||"")}${stale?` <span class="d-pill warn">${esc(ago(j.updatedAt))}から更新なし</span>`:""}</div></div>
+      <div class="ag-side"><span class="ag-el">${since?elapsed(since):""}</span><i class="ag-dot"></i></div></div>`};
+  const hist=S.jobs.filter(j=>(j.status==="done"||j.status==="error"||j.status==="waiting")&&inScope(j)).sort((a,b)=>(b.finishedAt||b.updatedAt||"").localeCompare(a.finishedAt||a.updatedAt||"")).slice(0,4);
+  return `<div class="d-card ag-card"><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">AGENTS</span>${AG_TITLE[scope]||AG_TITLE.all}</h2>${scope!=="all"?`<button type="button" class="text-btn" data-go="agents" style="font-size:14px">編集部へ</button>`:""}</div>
+    <div class="ag-tiles n${roles.length}">${tiles}</div>
+    ${S.agRole&&roles.includes(S.agRole)?roleDetail(S.agRole):""}
+    ${flowSection(scope)}
+    ${active.length?`<div class="ag-list">${active.map(row).join("")}</div>`
+      :`${scope==="all"&&hist.length?`<div class="ag-hist">${hist.map(j=>{const r=roleOf(j.kind),st=JOB_ST[j.status]||["?","mute"];return `<div class="ag-hrow">${agIc(r)}<div class="ag-main"><div class="ag-t"><b>${esc(AG[r].l)}</b><span class="ag-tgt">${esc(jobTitle(j))}</span></div>${j.message?`<div class="ag-msg">${esc(j.message)}</div>`:""}</div><div class="ag-side"><span class="d-pill ${st[1]}">${st[0]}</span><span class="d-sub">${esc(ago(j.finishedAt||j.updatedAt||j.createdAt))}</span></div></div>`}).join("")}</div>`:""}`}
+  </div>`;
+}
 function viewAgents(){
-  const card=role=>{const A=AG[role],paused=!!S.pause[role],trig=S.bg[A.trig],r=S.jobs.find(j=>j.status==="running"&&roleOf(j.kind)===role),q=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===role).length;
-    return `<div class="d-card ag-card"><div class="ag-head"><span class="d-picto pc-${A.pc}">${ic(A.ic,"")}</span>
-      <div class="d-main"><div class="d-t">${A.l}エージェント</div><div class="d-sub">${A.desc}</div></div>
-      ${paused?'<span class="d-pill warn">停止中</span>':r?'<span class="d-pill good">作業中</span>':'<span class="d-pill mute">待機中</span>'}</div>
-      ${r?`<div class="ag-box"><div class="d-t">${esc(r.title||r.articleId)}（${esc(r.round||1)}回目）</div><div class="d-sub">${esc(r.message||"")}・${ago(r.updatedAt||r.startedAt||r.createdAt)}</div></div>`:""}
-      <div class="d-sub">順番待ち ${q}件</div>
-      <div class="d-actions"><button type="button" class="d-btn small secondary" data-ag-pause="${role}" ${S.canWrite?"":"disabled"}>${paused?"再開する":"止める"}</button>
-      <button type="button" class="d-btn small secondary" data-ag-patrol="${role}" ${S.canWrite&&trig?"":"disabled"}>見回りを今すぐ</button></div>
-      ${trig?"":`<p class="note">Routine の ID が未設定です（下の「設定」）。</p>`}</div>`};
-  const jobs=S.jobs.slice(0,30);
-  const lc=S.loopConf;
-  return `${S.mcp?"":`<p class="note">このページではコネクタ（Claude Code Remote）が使えないため、エージェントを直接起動できません。依頼は順番待ちとして残り、1時間ごとの見回りで処理されます。</p>`}
-  <div class="ag-grid">${card("writer")}${card("reviewer")}</div>
+  const jobs=S.jobs.slice(0,30),lc=S.loopConf;
+  const month=new Date().toISOString().slice(0,7),doneM=S.jobs.filter(j=>j.status==="done"&&(j.finishedAt||j.updatedAt||"").startsWith(month));
+  const cost=ROLES.map(r=>[r,doneM.filter(j=>roleOf(j.kind)===r).length]);
+  const yen=cost.reduce((s,[r,n])=>s+n*AG[r].yen,0);
+  return `${S.mcp?"":`<p class="note">コネクタが使えないため、依頼は定時の見回りで処理されます。</p>`}
+  ${agentsCard("all")}
   <div class="d-grid2">
     <div><div class="d-group-title"><span>依頼の履歴</span><span class="num">${S.jobs.length}件</span></div>
-      <div class="d-group">${jobs.length?jobs.map(jobRow).join(""):`<div class="d-empty">まだ依頼はありません。記事ボードのカードを開いて「エージェントに書かせる」を押すと始まります。</div>`}</div></div>
+      <div class="d-group">${jobs.length?jobs.map(jobRow).join(""):`<div class="d-empty">まだ依頼はありません。</div>`}</div></div>
     <div class="stack">
+      <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">今月の実行</h2></div>
+        <dl class="kv">${cost.map(([r,n])=>`<dt>${AG[r].l}</dt><dd class="num">${n}回</dd>`).join("")}</dl>
+        <div class="d-sub">費用の目安 <b class="num">${yen.toLocaleString()}円</b>（完了した依頼の数から計算）</div></div>
       <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">査読ループ</h2><p>合格は ${esc(lc.pass||"A")} だけ</p></div>
         <label class="chkline"><input type="checkbox" id="lpOn" ${lc.enabled!==false?"checked":""} ${S.canWrite?"":"disabled"}>書いたら自動で査読に回す</label>
         <label class="d-fld">書き直しの上限（回）<select id="lpMax" ${S.canWrite?"":"disabled"}>${[1,2,3,4,5].map(n=>`<option ${(lc.maxRounds||3)===n?"selected":""}>${n}</option>`).join("")}</select></label>
         <div class="d-actions"><button type="button" class="d-btn small" id="lpSave" ${S.canWrite?"":"disabled"}>保存</button></div></div>
-      <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">作成エージェントへの教訓</h2><p>${S.lessons.length}件（査読から自動で追加）</p></div>
+      <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">作成エージェントへの教訓</h2><p class="num">${S.lessons.length}件</p></div>
         ${S.lessons.length?`<div class="d-group" style="background:none;border:0;box-shadow:none">${S.lessons.map((l,i)=>`<div class="d-row" style="padding:8px 0"><span class="d-sub num">${i+1}</span><div class="d-main"><div class="d-t" style="font-weight:500;font-size:14px">${esc(l.text)}</div><div class="d-sub">${esc(l.from||"")}</div></div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-lesson-del="${i}">外す</button>`:""}</div>`).join("")}</div>`:`<div class="d-sub">まだありません。</div>`}</div>
       <details class="d-card"><summary style="cursor:pointer;font-weight:600">設定（Routine の ID）</summary>
         <div class="d-form" style="margin-top:12px">
-          <label class="d-fld">記事作成の Routine ID<input id="bgW" value="${esc(S.bg.writerTriggerId||"")}" placeholder="trig_…" ${S.canWrite?"":"readonly"}></label>
-          <label class="d-fld">査読の Routine ID<input id="bgR" value="${esc(S.bg.reviewerTriggerId||"")}" placeholder="trig_…" ${S.canWrite?"":"readonly"}></label>
+          ${ROLES.map(r=>`<label class="d-fld">${AG[r].l}の Routine ID<input data-bg="${AG[r].trig}" value="${esc(S.bg[AG[r].trig]||"")}" placeholder="trig_…" ${S.canWrite?"":"readonly"}></label>`).join("")}
           <div class="d-actions"><button type="button" class="d-btn small" id="bgSave" ${S.canWrite?"":"disabled"}>保存</button></div>
-          <p class="d-sub" style="margin:0">手順書：ops/agent-jobs.md・ops/article-manual.md・ops/review-manual.md（このアプリと一緒に公開）</p></div></details>
+</div></details>
     </div></div>`;
 }
 function bindAgents(pg){
-  pg.querySelectorAll("[data-draft]").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();openDraft(b.dataset.draft)}));
+  bindJobButtons(pg);
   pg.querySelectorAll("[data-ag-pause]").forEach(b=>b.onclick=()=>setPause(b.dataset.agPause,!S.pause[b.dataset.agPause]));
-  pg.querySelectorAll("[data-ag-patrol]").forEach(b=>b.onclick=async()=>{const r=await fire(b.dataset.agPatrol);toast(r.ok?"見回りを起動しました":r.why)});
-  pg.querySelectorAll("[data-ag-retry]").forEach(b=>b.onclick=()=>{const j=S.jobs.find(x=>x._id===b.dataset.agRetry);if(j)retryJob(j)});
+  pg.querySelectorAll("[data-ag-run]").forEach(b=>b.onclick=async()=>{const role=b.dataset.agRun;
+    if(role==="writer"||role==="reviewer"){const r=await fire(role);toast(r.ok?`${AG[role].l}の見回りを起動しました`:r.why)}
+    else requestJob(AG[role].kinds[0])});
+  pg.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>requestJob(b.dataset.job));
+  pg.querySelectorAll("[data-chain]").forEach(b=>b.onclick=()=>{S.chainSel=S.chainSel===b.dataset.chain?null:b.dataset.chain;render()});
+  pg.querySelectorAll("[data-ag-role]").forEach(b=>b.onclick=()=>{S.agRole=S.agRole===b.dataset.agRole?null:b.dataset.agRole;render()});
   pg.querySelectorAll("[data-lesson-del]").forEach(b=>b.onclick=async()=>{
     const i=+b.dataset.lessonDel,items=S.lessons.filter((_,k)=>k!==i);
     try{await S.db.doc("settings/writerLessons").set({items,updatedAt:iso()});toast("教訓を外しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}});
   const ls=$("#lpSave");if(ls) ls.onclick=async()=>{
     try{await S.db.doc("settings/reviewLoop").set({enabled:$("#lpOn").checked,maxRounds:+$("#lpMax").value,pass:"A",updatedAt:iso()});toast("査読ループの設定を保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
   const bs=$("#bgSave");if(bs) bs.onclick=async()=>{
-    const w=$("#bgW").value.trim(),r=$("#bgR").value.trim();
-    if((w&&!/^trig_\w+$/.test(w))||(r&&!/^trig_\w+$/.test(r))){toast("Routine の ID は trig_ で始まります");return}
-    try{await S.db.doc("settings/background").set({...S.bg,writerTriggerId:w,reviewerTriggerId:r,server:S.bg.server||"Claude Code Remote",updatedAt:iso()});toast("設定を保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+    const v={};for(const el of pg.querySelectorAll("[data-bg]")){const x=el.value.trim();if(x&&!/^trig_\w+$/.test(x)){toast("Routine の ID は trig_ で始まります");return}v[el.dataset.bg]=x}
+    try{await S.db.doc("settings/background").set({...S.bg,...v,server:S.bg.server||"Claude Code Remote",updatedAt:iso()});toast("設定を保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+}
+
+/* ---------- 受信箱（運営者の判断が要るもの） ---------- */
+const IB_KIND={change:["公式の変化","bad","eye"],loopFailed:["査読で止まった記事","bad","check"],recheck:["公開済みの点検","warn","scan"],question:["エージェントからの質問","warn","doc"],idea:["記事の企画案","info","idea"],audit:["点検の結果","warn","scan"],other:["そのほか","mute","inbox"]};
+const IB_EN={change:"OFFICIAL UPDATE",loopFailed:"NEEDS DECISION",recheck:"RECHECK",question:"QUESTION",idea:"IDEAS",audit:"AUDIT",other:"OTHER"};
+const IB_ORDER=["change","loopFailed","recheck","question","idea","audit","other"];
+const openInbox=()=>S.inbox.filter(i=>!i.status||i.status==="open").sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+const inVal=id=>S.inputs[id]||"";
+function inboxPeek(){
+  const list=openInbox();if(!list.length) return "";
+  return `<div><div class="d-group-title"><span>受信箱（あなたの判断待ち）</span><span class="num">${list.length}件</span></div>
+  <div class="d-group">${list.slice(0,5).map(it=>{const K=IB_KIND[it.kind]||IB_KIND.other;return `<button type="button" class="d-row" data-go="inbox"><span class="d-picto pc-${K[1]==="bad"?"launch":K[1]==="info"?"sky":"gear"}">${ic(K[2],"")}</span>
+    <div class="d-main"><div class="d-t">${esc(it.title||"（無題）")}</div><div class="d-sub">${esc(K[0])}・${esc(AG[it.by]?AG[it.by].l:"")}</div></div><div class="d-when">${it.createdAt?ago(it.createdAt):""}</div></button>`}).join("")}</div></div>`;
+}
+function ibActions(it){
+  if(!S.canWrite) return "";
+  const id=it._id,a=S.articles.find(x=>x._id===it.articleId),B=(act,l,cls="secondary")=>`<button type="button" class="d-btn small ${cls}" data-ib="${esc(id)}" data-act="${act}">${l}</button>`;
+  const note=(ph,l="メモ（なくてもよい）")=>`<label class="d-fld wide">${l}<textarea id="ibn-${esc(id)}" data-keep rows="2" placeholder="${esc(ph)}">${esc(inVal("ibn-"+id))}</textarea></label>`;
+  switch(it.kind){
+    case "idea": return note("見送る理由や、書くときの指示（企画エージェントが次から参考にします）","理由・指示")+`<div class="d-actions">${B("adopt","採用する","")}${B("adoptWrite","採用してすぐ書かせる")}${B("dismiss","見送る")}</div>`;
+    case "change": return `<div class="d-actions">${B("done","対応した","")}${it.eventId?B("event","イベントを開く"):""}${a&&a.updateDraft?B("upd","直しの案を見る"):""}${B("dismiss","対応しない")}</div>`;
+    case "loopFailed": return note("書き直すときの指示")+`<div class="d-actions">${B("rewrite","もう一度書かせる","")}${a&&a.draft?B("draft","稿を見る"):""}${B("ready","この稿で公開待ちにする")}${B("shelve","見送る（企画中に戻す）")}</div>`;
+    case "question": return note("答え","答え")+`<div class="d-actions">${a?B("answerWrite","答えて書き直しを頼む",""):""}${B("answer","答えを保存",a?"secondary":"")}${B("dismiss","見送る")}</div>`;
+    default: return (a?note("作成エージェントへの指示（なくてもよい）"):"")+`<div class="d-actions">${B("done","対応した","")}${a?B("fix","直しの案を作成に頼む"):""}${B("dismiss","見送る")}</div>`;
+  }
+}
+function inboxCard(it){
+  const K=IB_KIND[it.kind]||IB_KIND.other,a=S.articles.find(x=>x._id===it.articleId),long=(it.body||"").length>280;
+  return `<article class="d-card ib-card" id="ib-${esc(it._id)}"><div class="ag-head"><span class="d-picto pc-${K[1]==="bad"?"launch":K[1]==="info"?"sky":"gear"}">${ic(K[2],"")}</span>
+      <div class="d-main"><div class="d-t">${esc(it.title||"（無題）")}</div><div class="pills" style="margin-top:2px"><span class="d-pill ${K[1]}">${esc(K[0])}</span>${AG[it.by]?`<span class="d-pill mute">${esc(AG[it.by].l)}</span>`:""}${a?`<span class="d-sub">${esc(a.title)}</span>`:""}</div></div>
+      <span class="d-when">${it.createdAt?ago(it.createdAt):""}</span></div>
+    ${it.reason?`<div class="d-sub"><b>判断が要る理由：</b>${esc(it.reason)}</div>`:""}
+    ${it.body?(long?`<details class="ib-more" ${it.kind==="change"||it.kind==="loopFailed"?"open":""}><summary>中身を見る</summary><div class="md">${mdHtml(it.body)}</div></details>`:`<div class="md">${mdHtml(it.body)}</div>`):""}
+    ${it.kind==="idea"&&it.proposal?`<dl class="kv">${[["柱",PILLAR[it.proposal.pillar]||it.proposal.pillar],["URL",it.proposal.path],["キーワード",it.proposal.keyword],["イベント日",it.proposal.eventDate],["公開期限",it.proposal.publishBy],["収益化",it.proposal.monetize],["タグ",(it.proposal.tags||[]).map(t=>TAGS[t]||t).join("・")]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
+    <div class="d-form">${ibActions(it)}</div></article>`;
+}
+function viewInbox(){
+  const open=openInbox(),closed=S.inbox.filter(i=>i.status&&i.status!=="open").sort((a,b)=>(b.answeredAt||"").localeCompare(a.answeredAt||"")).slice(0,20);
+  const groups=IB_ORDER.map(k=>[k,open.filter(i=>(IB_KIND[i.kind]?i.kind:"other")===k)]).filter(([,l])=>l.length);
+  return `${groups.length?groups.map(([k,l])=>`<section><div class="d-sec"><h2><span class="en-l">${esc(IB_EN[k])}</span>${esc(IB_KIND[k][0])}</h2><p class="num">${l.length}件</p></div><div class="ib-list">${l.map(inboxCard).join("")}</div></section>`).join("")
+    :`<div class="d-card d-empty">判断が要るものはありません。</div>`}
+  ${closed.length?`<details class="d-card"><summary style="cursor:pointer;font-weight:600">対応済み・見送り（直近${closed.length}件）</summary><div class="d-group" style="margin-top:10px">${closed.map(i=>`<div class="d-row"><span class="d-pill ${i.status==="done"?"good":"mute"}">${i.status==="done"?"対応済み":"見送り"}</span><div class="d-main"><div class="d-t" style="font-size:14px">${esc(i.title||"")}</div>${i.answer?`<div class="d-sub">${esc(i.answer)}</div>`:""}</div><div class="d-when">${i.answeredAt?ago(i.answeredAt):""}</div></div>`).join("")}</div></details>`:""}`;
+}
+async function markInbox(it,status,answer){
+  try{await S.db.doc("inbox/"+it._id).update({status,answer:answer||"",answeredAt:iso()});delete S.inputs["ibn-"+it._id];return true}
+  catch(e){toast("保存できませんでした："+(e.message||e.code));return false}
+}
+async function logPlanner(title,decision,reason){
+  const items=[...S.plannerLog,{title,decision,reason:reason||"",at:iso()}].slice(-50);
+  try{await S.db.doc("settings/plannerLog").set({items,updatedAt:iso()})}catch(_){}
+}
+function nextArticleId(){let n=0;for(const a of S.articles){const m=/^a(\d+)$/.exec(a._id);if(m)n=Math.max(n,+m[1])}return "a"+String(n+1).padStart(2,"0")}
+async function ibAct(id,act){
+  const it=S.inbox.find(x=>x._id===id);if(!it)return;
+  const txt=(inVal("ibn-"+id)||"").trim(),a=S.articles.find(x=>x._id===it.articleId);
+  if(act==="event"){openSheet("event",it.eventId);return}
+  if(act==="upd"||act==="draft"){openDraft(it.articleId,act==="upd"?"update":"body");return}
+  if(act==="adopt"||act==="adoptWrite"){
+    const p=it.proposal||{},aid=nextArticleId(),pri=Math.max(0,...S.articles.map(x=>+x.priority||0))+1;
+    const card={title:p.title||it.title||"",pillar:p.pillar||"other",tags:p.tags||[],path:p.path||"",template:p.template||"",keyword:p.keyword||"",intent:p.intent||"",
+      eventDate:p.eventDate||"",publishBy:p.publishBy||"",monetize:p.monetize||"",priority:p.priority&&!S.articles.some(x=>+x.priority===+p.priority)?+p.priority:pri,
+      status:"企画中",note:[txt,"企画エージェントの案（受信箱から採用）"].filter(Boolean).join("\n"),createdAt:iso(),updatedAt:iso()};
+    try{await S.db.doc("articles/"+aid).set(card)}catch(e){toast("カードを作れませんでした："+(e.message||e.code));return}
+    await logPlanner(card.title,"採用",txt);await markInbox(it,"done","採用 → "+aid);
+    toast("記事ボードの「企画中」に入れました");
+    if(act==="adoptWrite") await requestWrite({...card,_id:aid},{note:txt});
+    return;
+  }
+  if(act==="dismiss"){if(it.kind==="idea")await logPlanner(it.title,"見送り",txt);if(await markInbox(it,"dismissed",txt))toast("見送りました");return}
+  if(act==="done"){if(await markInbox(it,"done",txt))toast("対応済みにしました");return}
+  if(act==="answer"){if(!txt){toast("答えを入れてください");return}if(await markInbox(it,"done",txt))toast("答えを保存しました");return}
+  if(act==="answerWrite"||act==="rewrite"){
+    if(act==="answerWrite"&&!txt){toast("答えを入れてください");return}
+    if(!a){toast("記事が見つかりません");return}
+    if(busy("article","articleId",a._id)){toast("この記事の依頼がもう進んでいます");return}
+    await requestWrite(a,{withExperience:!!a.withExperience,note:act==="answerWrite"?"運営者の答え："+txt:txt});
+    await markInbox(it,"done",txt||"もう一度書かせた");return;
+  }
+  if(act==="ready"&&a){try{await S.db.doc("articles/"+a._id).update({status:"公開待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}})}catch(e){toast("保存できませんでした");return}await markInbox(it,"done","この稿で公開待ち");toast("公開待ちにしました");return}
+  if(act==="shelve"&&a){try{await S.db.doc("articles/"+a._id).update({status:"企画中",loop:{...(a.loop||{}),state:"failed",updatedAt:iso(),byOwner:true}})}catch(e){toast("保存できませんでした");return}await markInbox(it,"dismissed",txt||"見送り");toast("企画中に戻しました");return}
+  if(act==="fix"&&a){await requestJob("update",{articleId:a._id,title:a.title,note:[txt,`受信箱「${it.title}」より`,(it.body||"").slice(0,1500)].filter(Boolean).join("\n")});await markInbox(it,"done","直しを依頼");return}
+}
+function bindInbox(pg){
+  pg.querySelectorAll("[data-ib]").forEach(b=>b.onclick=async()=>{b.disabled=true;await ibAct(b.dataset.ib,b.dataset.act);b.disabled=false});
 }
 
 /* 記事カードの中の「エージェント」欄 */
 function agentBox(a){
-  const can=S.canWrite,running=S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running"));
+  const can=S.canWrite,running=S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running")),pub=ast(a)==="公開済み"||ast(a)==="要更新";
+  if(pub) return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${a.recheck?gradePill(a.recheck):""}${a.updateDraft&&!a.updateDraft.applied?'<span class="d-pill warn">直しの案あり</span>':""}</div></div>
+    ${a.updateDraft||a.draft?`<div class="d-actions">${a.updateDraft?`<button type="button" class="d-btn small" id="agUpd">直しの案を見る</button>`:""}${a.draft?`<button type="button" class="d-btn small secondary" id="agDraft">元の稿を見る</button>`:""}</div>`:""}
+    <label class="d-fld">直してほしいこと（例：T−3の更新、延期の反映、読者からの指摘）<textarea id="agNote" rows="2" ${can?"":"readonly"}></textarea></label>
+    <div class="d-actions"><button type="button" class="d-btn small secondary" id="agFix" ${can&&!running?"":"disabled"}>直しの案を頼む</button>
+    <button type="button" class="d-btn small secondary" id="agRecheck" ${can&&!running?"":"disabled"}>公開中のページを点検してもらう</button>
+    ${running?'<span class="d-sub">いま依頼が進んでいます</span>':""}</div></div>`;
   return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${loopPill(a)}${gradePill(a.review)}</div></div>
     ${a.draft?`<div class="d-actions"><button type="button" class="d-btn small" id="agDraft">稿を見る</button><span class="d-sub">${a.draft.createdAt?ago(a.draft.createdAt)+"に書いた稿":""}</span></div>`:""}
     <label class="chkline"><input type="checkbox" id="agExp" ${a.withExperience?"checked":""} ${can?"":"disabled"}>あとで自分の体験を書き込む欄を入れる</label>
@@ -705,9 +1182,12 @@ function agentBox(a){
     ${running?'<span class="d-sub">いま依頼が進んでいます</span>':""}</div></div>`;
 }
 function bindAgentBox(a,close){
-  const go=$("#agGo"),d=$("#agDraft");
+  const g=$("#agGo"),d=$("#agDraft"),u=$("#agUpd"),f=$("#agFix"),r=$("#agRecheck");
   if(d) d.onclick=()=>{close();setTimeout(()=>openDraft(a._id),400)};
-  if(go) go.onclick=async()=>{go.disabled=true;await requestWrite(a,{withExperience:$("#agExp").checked,note:$("#agNote").value.trim()});close()};
+  if(u) u.onclick=()=>{close();setTimeout(()=>openDraft(a._id,"update"),400)};
+  if(g) g.onclick=async()=>{g.disabled=true;await requestWrite(a,{withExperience:$("#agExp").checked,note:$("#agNote").value.trim()});close()};
+  if(f) f.onclick=async()=>{const n=$("#agNote").value.trim();if(!n){toast("直してほしいことを書いてください");return}f.disabled=true;await requestJob("update",{articleId:a._id,title:a.title,note:n});close()};
+  if(r) r.onclick=async()=>{r.disabled=true;await requestJob("review",{articleId:a._id,title:a.title,mode:"recheck",note:$("#agNote").value.trim()});close()};
 }
 
 /* 稿の表示（Markdown を読みやすく） */
@@ -746,21 +1226,31 @@ function copyText(txt,label,fallbackEl){
   navigator.clipboard.writeText(txt).then(()=>toast(label+"をコピーしました")).catch(()=>{
     if(fallbackEl){fallbackEl.hidden=false;fallbackEl.value=txt;fallbackEl.focus();fallbackEl.select();toast("選択しました。コピーしてください")}else toast("コピーできませんでした")});
 }
-function openDraft(aid){
-  const a=S.articles.find(x=>x._id===aid);if(!a||!a.draft){toast("まだ稿がありません");return}
-  const d=a.draft,f=d.fields||{},seo=d.seo||{},rv=a.review||{};
-  let tab="body";
+function openDraft(aid,startTab){
+  const a=S.articles.find(x=>x._id===aid);if(!a||(!a.draft&&!a.updateDraft)){toast("まだ稿がありません");return}
+  const d=a.draft||{},f=d.fields||{},seo=d.seo||{},wp=d.wp||{},rv=a.review||{},ud=a.updateDraft;
+  let tab=startTab&&(startTab!=="update"||ud)?startTab:(a.draft?"body":"update");
   const FN={event_date:"イベント日",event_time:"時刻",event_end:"終了日",status:"今の状況",place:"場所",sources:"公式情報のURL",note:"メモ",schema:"構造化データ"};
   const STN={scheduled:"予定どおり",postponed:"延期（日は未定）",rescheduled:"日程変更",cancelled:"中止",ongoing:"開催中・公開中",paused:"休止中・休館中",done:"終了"};
   const panes={
     body:()=>`<div class="md">${mdHtml(d.markdown,f)}</div>`,
-    review:()=>rv.text?`<div class="pills" style="margin-bottom:10px">${gradePill(rv)}<span class="d-sub">${rv.at?ago(rv.at):""}</span></div><div class="md">${mdHtml(rv.text)}</div>`
-      +((a.reviewHistory||[]).length?`<div class="d-group-title" style="margin-top:16px"><span>これまでの査読</span></div><div class="pills">${a.reviewHistory.map(h=>`<span class="d-pill mute">${esc(h.round)}回目 ${esc(h.grade)}（P0 ${esc(h.p0)}・P1 ${esc(h.p1)}）</span>`).join("")}</div>`:"")
-      :`<div class="d-empty">まだ査読されていません。</div>`,
+    review:()=>(rv.text?`<div class="pills" style="margin-bottom:10px">${gradePill(rv)}<span class="d-sub">${rv.at?ago(rv.at):""}</span></div><div class="md">${mdHtml(rv.text)}</div>`:`<div class="d-empty">稿はまだ査読されていません。</div>`)
+      +(a.recheck&&a.recheck.text?`<div class="d-group-title" style="margin-top:16px"><span>公開中のページの点検</span></div><div class="pills" style="margin-bottom:10px">${gradePill(a.recheck)}<span class="d-sub">${a.recheck.at?ago(a.recheck.at):""}</span></div><div class="md">${mdHtml(a.recheck.text)}</div>`:"")
+      +((a.reviewHistory||[]).length?`<div class="d-group-title" style="margin-top:16px"><span>これまでの査読</span></div><div class="pills">${a.reviewHistory.map(h=>`<span class="d-pill mute">${esc(h.round)}${/^\d+$/.test(String(h.round))?"回目":""} ${esc(h.grade)}（P0 ${esc(h.p0)}・P1 ${esc(h.p1)}）</span>`).join("")}</div>`:""),
+    update:()=>ud?`<div class="d-form"><div class="pills">${ud.review?gradePill(ud.review):'<span class="d-pill mute">査読待ち</span>'}${ud.applied?'<span class="d-pill good">反映済み</span>':""}<span class="d-sub">${ud.createdAt?ago(ud.createdAt):""}</span></div>
+      ${ud.reason?`<div><div class="d-group-title"><span>なぜ直すか</span></div><div class="md">${mdHtml(ud.reason)}</div></div>`:""}
+      <div><div class="d-group-title"><span>直すところ</span><span class="num">${(ud.changes||[]).length}か所</span></div>
+      <div class="d-group">${(ud.changes||[]).map((c,i)=>`<div class="d-row" style="grid-template-columns:auto 1fr"><span class="d-sub num">${i+1}</span><div class="d-main"><div class="d-t" style="font-size:14px">${esc(c.where||"")}</div><div class="d-sub"><s>${esc(c.before||"")}</s></div><div style="font-size:14px">${esc(c.after||"")}</div><div class="d-actions" style="margin-top:4px"><button type="button" class="d-btn small secondary" data-cpa="${i}">新しい文をコピー</button></div></div></div>`).join("")||`<div class="d-empty">なし</div>`}</div></div>
+      ${ud.history?`<dl class="kv"><dt>更新履歴に足す行</dt><dd>${esc(ud.history)}</dd>${ud.titleAfter?`<dt>新しいタイトル</dt><dd>${esc(ud.titleAfter)}</dd>`:""}</dl>`:""}
+      ${(ud.alsoFix||[]).length?`<div><div class="d-group-title"><span>ほかに直すところ（ホーム・図鑑など）</span></div><ul class="md">${ud.alsoFix.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+      ${ud.review&&ud.review.text?`<details><summary style="cursor:pointer;font-weight:600">直しの査読を読む</summary><div class="md">${mdHtml(ud.review.text)}</div></details>`:""}</div>`:`<div class="d-empty">直しの案はありません。</div>`,
     report:()=>d.report?`<div class="md">${mdHtml(d.report)}</div>`:`<div class="d-empty">報告はありません。</div>`,
     fields:()=>`<div class="d-form">
-      <div><div class="d-group-title"><span>WordPress の「イベント情報（ミアゲタビ）」欄に写す値</span></div>
-      <dl class="kv">${Object.keys(FN).map(k=>`<dt>${FN[k]}</dt><dd>${k==="sources"?(f.sources||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")||"—":k==="status"?esc(STN[f.status]||f.status||"—"):k==="schema"?(f.schema?"オン":"オフ"):esc(f[k]||"—")}</dd>`).join("")}</dl></div>
+      <div><div class="d-group-title"><span>WordPress で設定する値</span></div>
+      <dl class="kv"><dt>カテゴリー</dt><dd>${esc(PILLAR[wp.category||a.pillar]||wp.category||"—")}</dd><dt>タグ</dt><dd>${esc((wp.tags||a.tags||[]).map(t=>TAGS[t]||t).join("・")||"—")}</dd><dt>スラッグ</dt><dd class="mono">${esc(wp.slug||"—")}</dd>
+      ${wp.eyecatch?`<dt>アイキャッチ</dt><dd>${esc(wp.eyecatch.label||"")}／${esc(wp.eyecatch.text||"")}</dd>`:""}</dl></div>
+      ${d.fields?`<div><div class="d-group-title"><span>イベント情報（古い形式の稿）</span></div>
+      <dl class="kv">${Object.keys(FN).map(k=>`<dt>${FN[k]}</dt><dd>${k==="sources"?(f.sources||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("<br>")||"—":k==="status"?esc(STN[f.status]||f.status||"—"):k==="schema"?(f.schema?"オン":"オフ"):esc(f[k]||"—")}</dd>`).join("")}</dl></div>`:""}
       <div><div class="d-group-title"><span>SEO SIMPLE PACK に入れる値</span></div>
       <dl class="kv"><dt>タイトル</dt><dd>${esc(seo.title||"—")} <span class="d-sub num">${[...(seo.title||"")].length}字</span></dd><dt>説明文</dt><dd>${esc(seo.description||"—")} <span class="d-sub num">${[...(seo.description||"")].length}字</span></dd><dt>URL</dt><dd class="mono">${esc(a.path||"—")}</dd></dl>
       <div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn small secondary" data-cp="title">タイトルをコピー</button><button type="button" class="d-btn small secondary" data-cp="desc">説明文をコピー</button></div></div>
@@ -768,18 +1258,21 @@ function openDraft(aid){
   };
   $("#sheetHost").innerHTML=`<div class="sheet-backdrop" id="sbk"></div>
   <div class="sheet" id="sheet" role="dialog" aria-label="稿">
-    <div class="sheet-bar"><button type="button" class="text-btn" id="scancel">閉じる</button><h2>${esc((d.round||1)+"回目の稿")}</h2><span></span></div>
+    <div class="sheet-bar"><button type="button" class="text-btn" id="scancel">閉じる</button><h2>${a.draft?esc((d.round||1)+"回目の稿"):"直しの案"}</h2><span></span></div>
     <div class="sheet-scroll"><div class="d-form">
-      <div><div class="d-t">${esc(a.title)}</div><div class="pills" style="margin-top:6px">${loopPill(a)}${gradePill(rv)}<span class="d-pill mute num">${d.chars?esc(d.chars)+"字":""}</span></div></div>
-      <div class="d-actions"><button type="button" class="d-btn small" data-cp="blocks" ${d.blocks?"":"disabled"}>WordPress 用にコピー</button><button type="button" class="d-btn small secondary" data-cp="md">Markdown をコピー</button></div>
-      <p class="d-sub" style="margin:0">WordPress の編集画面で右上の「︙」→「コードエディター」を開き、そのまま貼り付けます。</p>
+      <div><div class="d-t">${esc(a.title)}</div><div class="pills" style="margin-top:6px">${loopPill(a)}${gradePill(rv)}${d.chars?`<span class="d-pill mute num">${esc(d.chars)}字</span>`:""}</div></div>
+      ${a.draft?`<div class="d-actions"><button type="button" class="d-btn small" data-cp="blocks" ${d.blocks?"":"disabled"}>WordPress 用にコピー</button><button type="button" class="d-btn small secondary" data-cp="md">Markdown をコピー</button></div>
+      <p class="d-sub" style="margin:0">WordPress の編集画面で右上の「︙」→「コードエディター」を開き、そのまま貼り付けます。公開の前に、日時・場所・料金・予約の要否を公式ページで目で確かめてください。</p>`:""}
       <textarea id="cpFallback" class="mono" rows="4" hidden aria-label="コピー用" style="width:100%;font-size:12px"></textarea>
-      <div class="d-seg" role="group" aria-label="表示">${[["body","本文"],["review","査読"],["report","報告"],["fields","入力欄の値"]].map(([k,l])=>`<button type="button" data-pane="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
+      <div class="d-seg" role="group" aria-label="表示">${[...(a.draft?[["body","本文"]]:[]),...(ud?[["update","直し"]]:[]),["review","査読"],...(a.draft?[["report","報告"],["fields","設定する値"]]:[])].map(([k,l])=>`<button type="button" data-pane="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
       <div id="pane">${panes[tab]()}</div>
-      ${S.canWrite?`<div class="ag-box"><div class="d-t">次にすること</div>
+      ${S.canWrite&&ud&&!ud.applied&&(ast(a)==="公開済み"||ast(a)==="要更新")?`<div class="ag-box"><div class="d-t">直しを WordPress に入れたら</div><div class="d-actions"><button type="button" class="d-btn small" id="udDone">反映した（公開済みに戻す）</button></div></div>`:""}
+      ${S.canWrite&&a.draft&&ast(a)!=="公開済み"&&ast(a)!=="要更新"?`<div class="ag-box"><div class="d-t">次にすること</div>
         <label class="d-fld">書き直しの指示（なくてもよい）<textarea id="rwNote" rows="2"></textarea></label>
         <div class="d-actions"><button type="button" class="d-btn small secondary" id="rwGo" ${S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running"))?"disabled":""}>書き直しを頼む</button>
-        ${a.status!=="公開待ち"&&a.status!=="公開済み"?`<button type="button" class="d-btn small secondary" id="okGo">この稿で公開待ちにする</button>`:""}</div></div>`:""}
+        ${ast(a)!=="公開待ち"?`<button type="button" class="d-btn small secondary" id="okGo">この稿で公開待ちにする</button>`:""}
+        ${ast(a)==="公開待ち"?`<button type="button" class="d-btn small" id="pubGo">公開した</button>`:""}</div>
+        ${ast(a)==="公開待ち"?`<label class="d-fld">公開したURL<input id="pubUrl" type="url" value="${esc(a.url||(a.path?"https://miagetabi.space"+a.path:""))}"></label>`:""}</div>`:""}
     </div></div></div>`;
   requestAnimationFrame(()=>{$("#sbk").classList.add("open");$("#sheet").classList.add("open")});
   const close=()=>{const s=$("#sheet"),b=$("#sbk");if(!s)return;s.classList.remove("open");b.classList.remove("open");setTimeout(()=>{$("#sheetHost").innerHTML=""},380);removeEventListener("keydown",onKey)};
@@ -789,11 +1282,16 @@ function openDraft(aid){
   const bindCp=()=>host.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{const k=b.dataset.cp,fb=$("#cpFallback");
     if(k==="blocks")copyText(d.blocks||"","WordPress 用のブロック",fb);else if(k==="md")copyText(d.markdown||"","Markdown",fb);
     else if(k==="title")copyText(seo.title||"","タイトル",fb);else if(k==="desc")copyText(seo.description||"","説明文",fb)});
-  bindCp();
-  host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp()});
+  const bindCpa=()=>host.querySelectorAll("[data-cpa]").forEach(b=>b.onclick=()=>copyText(((ud&&ud.changes)||[])[+b.dataset.cpa].after||"","新しい文",$("#cpFallback")));
+  bindCp();bindCpa();
+  host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp();bindCpa()});
   const rw=$("#rwGo");if(rw) rw.onclick=async()=>{rw.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#rwNote").value.trim()});close()};
   const ok=$("#okGo");if(ok) ok.onclick=async()=>{
     try{await S.db.doc("articles/"+a._id).update({status:"公開待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}});toast("公開待ちにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+  const pb=$("#pubGo");if(pb) pb.onclick=async()=>{const u=($("#pubUrl").value||"").trim();if(u&&!/^https:\/\//.test(u)){toast("URL は https:// から入れてください");return}
+    try{await S.db.doc("articles/"+a._id).update({status:"公開済み",url:u,lastVerified:new Date().toISOString().slice(0,10),publishedAt:iso()});toast("公開済みにしました（アーカイブに移りました）");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
+  const ux=$("#udDone");if(ux) ux.onclick=async()=>{
+    try{await S.db.doc("articles/"+a._id).update({status:"公開済み",updateDraft:{...ud,applied:true,appliedAt:iso()},lastVerified:new Date().toISOString().slice(0,10)});toast("反映済みにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
 }
 
 /* ---------- 編集シート ---------- */
@@ -804,7 +1302,7 @@ const FORMS={
     ["source","出典URL","url","wide"],["note","メモ","textarea","wide"]]},
   article:{col:"articles",title:"記事",fields:[
     ["title","タイトル案","text","wide"],["priority","優先順位","number"],["pillar","柱","select",Object.keys(PILLAR)],["status","状態","select",AR_STATUS],
-    ["template","テンプレート","select",["A 打ち上げ","B 天体","C 宇宙スポット","常設"]],["path","URL（例：/launch/h3-f10-mmx/）","text","wide"],["keyword","検索キーワード","text","wide"],["intent","検索意図","textarea","wide"],
+    ["template","記事の型","select",["A 打ち上げ","B 天体","C 宇宙スポット","D 機材","常設"]],["path","URL（例：/launch/h3-f10-mmx/）","text","wide"],["tags","タグ（カンマ区切り。h3, tanegashima など決まった名前だけ）","text","wide"],["keyword","検索キーワード","text","wide"],["intent","検索意図","textarea","wide"],
     ["eventDate","イベント日（更新タスクの基準）","date"],["publishBy","公開期限（空なら自動）","date"],["monetize","収益化の導線","text","wide"],
     ["url","公開URL","url","wide"],["lastVerified","最終確認日","date"],["note","メモ","textarea","wide"]]},
   post:{col:"posts",title:"SNS投稿",fields:[
@@ -819,7 +1317,7 @@ function openSheet(kind,id){
   const F=FORMS[kind],cur={...(id?listFor(kind).find(x=>x._id===id)||{}:{})};
   if(kind==="kpi"&&id) cur.month=id;
   const ro=!S.canWrite;
-  const fld=([k,l,t,opt])=>{const v=cur[k]??"",fid=`f-${kind}-${k}`,cls=`d-fld${opt==="wide"||t==="textarea"?" wide":""}`;
+  const fld=([k,l,t,opt])=>{const v=Array.isArray(cur[k])?cur[k].join(", "):(cur[k]??""),fid=`f-${kind}-${k}`,cls=`d-fld${opt==="wide"||t==="textarea"?" wide":""}`;
     if(t==="select") return `<label class="${cls}" for="${fid}">${l}<select id="${fid}" name="${k}" ${ro?"disabled":""}>${opt.map(o=>`<option value="${esc(o)}" ${String(v)===o?"selected":""}>${esc(PILLAR[o]||o)}</option>`).join("")}</select></label>`;
     if(t==="article") return `<label class="${cls}" for="${fid}">${l}<select id="${fid}" name="${k}" ${ro?"disabled":""}><option value="">なし</option>${[...S.articles].sort((a,b)=>(a.priority??999)-(b.priority??999)).map(a=>`<option value="${esc(a._id)}" ${v===a._id?"selected":""}>${esc(a.title)}</option>`).join("")}</select></label>`;
     if(t==="textarea") return `<label class="${cls}" for="${fid}">${l}<textarea id="${fid}" name="${k}" ${ro?"readonly":""}>${esc(v)}</textarea></label>`;
@@ -844,7 +1342,8 @@ function openSheet(kind,id){
   };
   $("#sheet").addEventListener("submit",async e=>{e.preventDefault();if(ro||!S.db)return;
     const fd=new FormData(e.target),data={};
-    for(const [k,,t] of F.fields){let v=fd.get(k);if(v==null)continue;v=String(v).trim();if(t==="number")v=v===""?null:Number(v);data[k]=v}
+    for(const [k,,t] of F.fields){let v=fd.get(k);if(v==null)continue;v=String(v).trim();if(t==="number")v=v===""?null:Number(v);if(k==="tags")v=v.split(/[,、\s]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);data[k]=v}
+    if(data.tags){const bad=data.tags.filter(t=>!TAGS[t]);if(bad.length){toast("決まりにないタグ："+bad.join(", "));return}}
     let docId=id;
     if(kind==="kpi"){if(!/^\d{4}-\d{2}$/.test(data.month||"")){toast("月は 2026-12 の形で入れてください");return}docId=data.month;delete data.month}
     else if(kind!=="post"&&!data.title){toast("名前を入れてください");return}
@@ -861,23 +1360,57 @@ function bind(){
   const pg=$("#page");
   pg.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",e=>{if(e.target.closest("a"))return;openSheet(el.dataset.edit,el.dataset.id)}));
   pg.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openSheet(b.dataset.add,null));
+  pg.querySelectorAll("[data-evmode]").forEach(b=>b.onclick=()=>{S.evMode=b.dataset.evmode;try{localStorage.setItem("mm-evmode",S.evMode)}catch(_){}render()});
+  pg.querySelectorAll("[data-evmonth]").forEach(b=>b.onclick=()=>{const v=+b.dataset.evmonth,t=today();let base=S.evMonth?new Date(S.evMonth+"T00:00:00"):new Date(t.getFullYear(),t.getMonth(),1);
+    base=v===0?new Date(t.getFullYear(),t.getMonth(),1):new Date(base.getFullYear(),base.getMonth()+v,1);S.evMonth=`${base.getFullYear()}-${pad(base.getMonth()+1)}-01`;render()});
+  pg.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{S.snsCh=b.dataset.ch;render()});
   pg.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{S.filter.pillar=b.dataset.filter;render()});
   pg.querySelectorAll("[data-chk]").forEach(b=>b.onclick=async()=>{
     const id=b.dataset.chk,k=b.dataset.k,cur={...(S.checks[id]||{})};cur[k]=b.getAttribute("aria-pressed")!=="true";
     S.checks[id]=cur;render();
     try{await S.db.doc("checks/"+id).set({done:cur})}catch(e){toast("保存できませんでした："+(e.message||e.code))}
   });
-  bindAgents(pg);
-  pg.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{S.promptSel=b.dataset.prompt;render()});
-  pg.querySelectorAll("[data-pv]").forEach(el=>el.addEventListener("input",()=>{S.promptVals[el.dataset.pv]=el.value;$("#pout").textContent=fillPrompt()}));
-  const cp=$("#copyP");
-  if(cp) cp.onclick=()=>{const txt=$("#pout").textContent;
-    navigator.clipboard.writeText(txt).then(()=>toast("コピーしました")).catch(()=>{const r=document.createRange();r.selectNodeContents($("#pout"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("選択しました。コピーしてください")})};
+  bindAgents(pg);bindInbox(pg);
+  pg.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+  pg.querySelectorAll("[data-keep]").forEach(el=>el.addEventListener("input",()=>{S.inputs[el.id]=el.value}));
 }
 
+/* ---------- 戻る（画面の左端からの右スワイプ・Esc） ---------- */
+function canBack(){return !!($("#islandPanel")||$("#scancel")||S.hist.length)}
+function updBack(){const b=$("#backBtn");if(b)b.hidden=!canBack()}
+function back(){
+  if($("#islandPanel")){closeIslandPanel();return true}
+  const sc=$("#scancel");if(sc){sc.click();return true}
+  if(S.hist.length){go(S.hist.pop(),true);return true}
+  return false;
+}
+new MutationObserver(updBack).observe($("#sheetHost"),{childList:true});
+(function swipe(){
+  let x0=null,y0=0;
+  addEventListener("touchstart",e=>{const t=e.touches[0];x0=t.clientX<=24?t.clientX:null;y0=t.clientY},{passive:true});
+  addEventListener("touchend",e=>{if(x0==null)return;const t=e.changedTouches[0];if(t.clientX-x0>70&&Math.abs(t.clientY-y0)<60)back();x0=null},{passive:true});
+})();
+setInterval(()=>{if(S.ready)renderIsland()},30000);
+
 /* ---------- 起動 ---------- */
+try{const v=localStorage.getItem("mm-evmode");if(v==="cal"||v==="list")S.evMode=v}catch(_){}
 try{const t=localStorage.getItem("mm-tab");if(TABS.some(x=>x.id===t))S.tab=t}catch(_){}
-buildTabbar();render();requestAnimationFrame(()=>placeLens(false));
+try{if(localStorage.getItem("mm-tabpos")==="side")document.documentElement.dataset.tabbar="side"}catch(_){}
+buildTabbar();
+$("#inboxBtn").onclick=()=>go("inbox");
+// ダーク／ライトの切り替え（端末ごとに覚える）
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches};
+const paintTheme=()=>{$("#themeBtn").innerHTML=isDark()?'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>':'<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>'};
+try{const t=localStorage.getItem("mm-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(_){}
+paintTheme();
+$("#themeBtn").onclick=()=>{const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;try{localStorage.setItem("mm-theme",t)}catch(_){}paintTheme()};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme);
+$("#backBtn").onclick=()=>{back();setTimeout(updBack,450)};
+$("#autoBtn").onclick=()=>{if(!S.canWrite)return;const b=$("#autoBtn"),on=autoOn();
+  // オフにするときだけ、もう一度押して確かめる（4秒以内）
+  if(on&&b.dataset.armed!=="1"){b.dataset.armed="1";toast("もう一度押すと自動運用をオフにします（全員停止）");setTimeout(()=>{b.dataset.armed=""},4000);return}
+  b.dataset.armed="";setAuto(!on)};
+render();requestAnimationFrame(()=>placeLens(false));
 
 (async function boot(){
   const conn=$("#conn"),setConn=(cls,txt)=>{conn.className="conn "+cls;conn.querySelector(".txt").textContent=txt};
@@ -887,7 +1420,7 @@ buildTabbar();render();requestAnimationFrame(()=>placeLens(false));
   S.db=db;
   try{const user=await api.use("user");if(user){const ed=await user.canEdit();if(ed===false)S.canWrite=false}}catch(_){}
   setConn("on",S.canWrite?"共有データに保存":"閲覧のみ");
-  const pending=new Set(["events","articles","posts","kpi","checks","jobs","settings"]);
+  const pending=new Set(["events","articles","posts","kpi","checks","jobs","settings","inbox"]);
   const done=n=>{pending.delete(n);if(!pending.size){S.ready=true;kickQueued()}render()};
   api.use("mcp").then(m=>{S.mcp=m;if(S.ready)kickQueued();render()}).catch(()=>{});
   const sub=(col,fn)=>db.collection(col).onSnapshot(s=>{fn(s.docs.map(d=>({...d.data(),_id:d.id})));done(col)},()=>setConn("off","接続が切れました。再読み込みしてください"));
@@ -896,9 +1429,10 @@ buildTabbar();render();requestAnimationFrame(()=>placeLens(false));
   sub("posts",l=>S.posts=l);
   sub("kpi",l=>S.kpi=l);
   sub("checks",l=>{S.checks={};for(const c of l)S.checks[c._id]=c.done||{}});
+  sub("inbox",l=>S.inbox=l);
   sub("jobs",l=>{S.jobs=l.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));if(S.ready)kickQueued()});
-  sub("settings",l=>{const m={};for(const d of l)m[d._id]=d;S.bg=m.background||{};S.pause=Object.fromEntries(Object.entries((m.agentPause&&m.agentPause.roles)||{}).map(([k,v])=>[k,!!(v&&v.paused)]));
-    S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.loopConf={enabled:true,maxRounds:3,pass:"A",...(m.reviewLoop||{})}});
+  sub("settings",l=>{const m={};for(const d of l)m[d._id]=d;S.bg=m.background||{};S.pauseRaw=(m.agentPause&&m.agentPause.roles)||{};S.pause=Object.fromEntries(Object.entries(S.pauseRaw).map(([k,v])=>[k,!!(v&&v.paused)]));
+    S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.plannerLog=(m.plannerLog&&m.plannerLog.items)||[];S.loopConf={enabled:true,maxRounds:3,pass:"A",...(m.reviewLoop||{})}});
 })();
 })();
 </script>

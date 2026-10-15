@@ -13,8 +13,19 @@
   - 箇条書き、1. 番号付き（入れ子はしない）
   | 表 | …（1 行目が見出し、2 行目が |---|）
   > 引用
-  [mm_status] のようなショートコードだけの行 → ショートコードのブロック
+  [shortcode] のようなショートコードだけの行 → ショートコードのブロック
   ---（区切り線）
+  「最終確認：…」で始まる段落 → <p class="mg-verified">（サイトの最終確認の一行）
+サイトの部品（運営マニュアル「デザインのルール」。::: で囲む）:
+  :::info H3 F10 / MMX          → 要点ボックス mg-info（見出しの右に QUICK FACTS）
+  今の状況: [go] 予定どおり（…）  ← 「項目: 値」を1行ずつ。値の頭の [go] [delay] [sky] [stop] は状況の札
+  打ち上げ: 2026年10月20日（火）4時41分
+  :::
+  :::point いちばんのおすすめ   → 強調 mg-point（1記事に2つまで）
+  本文
+  :::
+  :::src                        → 出典 mg-src（「- 名前：URL」を1行ずつ）
+  :::history                    → 更新履歴 mg-history（「- 2026-10-16　公開用に作成」）
 先頭の --- で囲まれた frontmatter は読み飛ばす。
 """
 import html
@@ -82,6 +93,49 @@ def quote(lines) -> str:
     return f"<!-- wp:quote -->\n<blockquote class=\"wp-block-quote\">{inner}</blockquote>\n<!-- /wp:quote -->"
 
 
+STATUS_TAG = {"go": ("-go", "GO"), "delay": ("-delay", "DELAY"), "sky": ("", "SKY"), "stop": ("-stop", "STOP"), "done": ("-done", "DONE"), "open": ("-go", "OPEN")}
+
+
+def html_block(markup: str) -> str:
+    return f"<!-- wp:html -->\n{markup}\n<!-- /wp:html -->"
+
+
+def info_box(head: str, lines) -> str:
+    rows = []
+    for ln in lines:
+        if ":" not in ln and "：" not in ln:
+            continue
+        k, v = re.split(r"[:：]", ln, maxsplit=1)
+        v = v.strip()
+        tag = ""
+        m = re.match(r"^\[(go|delay|sky|stop|done|open)\]\s*", v)
+        if m:
+            cls, label = STATUS_TAG[m.group(1)]
+            tag = f'<span class="mg-status {cls}">{label}</span>'
+            v = v[m.end():]
+        rows.append(f"<dt>{html.escape(k.strip(), quote=False)}</dt><dd>{tag}{inline(v)}</dd>")
+    head_html = html.escape(head.strip() or "INFO", quote=False)
+    return html_block(f'<div class="mg-info"><div class="mg-info__head">{head_html}<span>QUICK FACTS</span></div><dl>{"".join(rows)}</dl></div>')
+
+
+def point_box(title: str, lines) -> str:
+    body = "".join(inline(x) for x in lines)
+    return html_block(f'<div class="mg-point"><b>{html.escape(title.strip(), quote=False)}</b>{body}</div>')
+
+
+def list_box(cls: str, title: str, lines) -> str:
+    items = []
+    for ln in lines:
+        t = re.sub(r"^[-*]\s+", "", ln.strip())
+        if not t:
+            continue
+        # 「名前：URL」の URL はリンクにする
+        t = inline(t)
+        t = re.sub(r'(?<!href=")(https?://[^\s<]+)', r'<a href="\1" target="_blank" rel="noopener">\1</a>', t)
+        items.append(f"<li>{t}</li>")
+    return html_block(f'<div class="{cls}"><b>{html.escape(title, quote=False)}</b><ul>{"".join(items)}</ul></div>')
+
+
 def convert(md: str) -> str:
     lines = md.replace("\r\n", "\n").split("\n")
     if lines and lines[0].strip() == "---":  # frontmatter を飛ばす
@@ -94,6 +148,29 @@ def convert(md: str) -> str:
         ln = lines[i].rstrip()
         s = ln.strip()
         if not s:
+            i += 1
+            continue
+        m = re.match(r"^:::(info|point|src|history)\s*(.*)$", s)
+        if m:
+            kind, arg = m.group(1), m.group(2)
+            body = []
+            i += 1
+            while i < len(lines) and lines[i].strip() != ":::":
+                if lines[i].strip():
+                    body.append(lines[i].strip())
+                i += 1
+            i += 1
+            if kind == "info":
+                out.append(info_box(arg, body))
+            elif kind == "point":
+                out.append(point_box(arg, body))
+            elif kind == "src":
+                out.append(list_box("mg-src", arg or "出典（すべて最終確認日に閲覧）", body))
+            else:
+                out.append(list_box("mg-history", arg or "更新履歴", body))
+            continue
+        if s.startswith("最終確認："):
+            out.append(f'<!-- wp:paragraph {{"className":"mg-verified"}} -->\n<p class="mg-verified">{inline(s)}</p>\n<!-- /wp:paragraph -->')
             i += 1
             continue
         m = re.match(r"^(#{1,4})\s+(.*)$", s)
@@ -140,7 +217,7 @@ def convert(md: str) -> str:
             continue
         para = [s]
         i += 1
-        while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,4}\s|[-*]\s|\d+[.)]\s|\||>|\[[a-z_]+)", lines[i].strip()):
+        while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,4}\s|[-*]\s|\d+[.)]\s|\||>|\[[a-z_]+|:::|最終確認：)", lines[i].strip()):
             para.append(lines[i].strip())
             i += 1
         out.append(paragraph("".join(para)))  # 日本語は改行をつなげる
