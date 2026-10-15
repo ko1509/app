@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* レイアウト：KOAlil.com 管理アプリと同じ Liquid Glass。色の流れる背景の上に、ガラスのナビ・カード・下部タブバーが浮かぶ。
-   この題材だけのもの：イベント日からの「T−n」カウントダウンと、打ち上げ／天体／自動運転の3色 */
+   この題材だけのもの：イベント日からの「T−n」カウントダウンと、打ち上げ／天体／宇宙スポット／機材の4色 */
 :root{
   --ambient-1:#7cc4ff; --ambient-2:#ffb38a; --ambient-3:#b9a6ff; --ambient-4:#8ee6c7; --ambient-base:#eef1f6;
   --glass:rgba(255,255,255,.58); --glass-strong:rgba(255,255,255,.78); --glass-solid:rgba(255,255,255,.94);
@@ -14,7 +14,7 @@
   --accent:#0071e3; --on-accent:#ffffff;
   --good:#1a7f37; --warn:#b25000; --bad:#d70015;
   --good-bg:rgba(52,199,89,.16); --warn-bg:rgba(255,149,0,.18); --bad-bg:rgba(255,59,48,.14);
-  --launch:#e8590c; --sky:#5856d6; --ride:#0f9d8a;
+  --launch:#e8590c; --sky:#5856d6; --spot:#0f9d8a; --gear:#8e6b3e;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
   --ease:cubic-bezier(.32,.72,0,1);
@@ -30,7 +30,7 @@
   --accent:#2997ff; --on-accent:#ffffff;
   --good:#30d158; --warn:#ffb340; --bad:#ff6961;
   --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
-  --launch:#ff8a3d; --sky:#8e8cff; --ride:#3ed6bf; color-scheme:dark}}
+  --launch:#ff8a3d; --sky:#8e8cff; --spot:#3ed6bf; --gear:#d1a56b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --ambient-1:#1d4f91; --ambient-2:#7a3a1c; --ambient-3:#43307e; --ambient-4:#16564a; --ambient-base:#05070b;
   --glass:rgba(44,46,54,.5); --glass-strong:rgba(48,50,58,.72); --glass-solid:rgba(28,28,32,.96);
@@ -41,7 +41,7 @@
   --accent:#2997ff; --on-accent:#ffffff;
   --good:#30d158; --warn:#ffb340; --bad:#ff6961;
   --good-bg:rgba(48,209,88,.18); --warn-bg:rgba(255,159,10,.2); --bad-bg:rgba(255,69,58,.2);
-  --launch:#ff8a3d; --sky:#8e8cff; --ride:#3ed6bf; color-scheme:dark}
+  --launch:#ff8a3d; --sky:#8e8cff; --spot:#3ed6bf; --gear:#d1a56b; color-scheme:dark}
 @media (prefers-reduced-transparency: reduce){:root{--glass:var(--glass-solid);--glass-strong:var(--glass-solid);--glass-blur:none}}
 
 *,*::before,*::after{box-sizing:border-box}
@@ -104,7 +104,7 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .tminus .t{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
 .tminus .n{font-weight:600;font-size:15px;overflow-wrap:anywhere}
 .tminus .s{font-size:12px;color:var(--label-3)}
-.tminus[data-p="launch"] .t{color:var(--launch)} .tminus[data-p="sky"] .t{color:var(--sky)} .tminus[data-p="ride"] .t{color:var(--ride)}
+.tminus[data-p="launch"] .t{color:var(--launch)} .tminus[data-p="sky"] .t{color:var(--sky)} .tminus[data-p="spot"] .t{color:var(--spot)} .tminus[data-p="gear"] .t{color:var(--gear)}
 
 /* 数字のタイル */
 .d-stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -135,7 +135,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .d-picto{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(0,0,0,.15)}
 .d-picto::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.45),transparent 50%)}
 .d-picto svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
-.pc-launch{background:var(--launch)} .pc-sky{background:var(--sky)} .pc-ride{background:var(--ride)} .pc-other{background:var(--label-3)}
+.pc-launch{background:var(--launch)} .pc-sky{background:var(--sky)} .pc-spot{background:var(--spot)} .pc-gear{background:var(--gear)} .pc-other{background:var(--label-3)}
 
 /* チェック（丸） */
 .chk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--label-3);display:grid;place-items:center;cursor:pointer;background:transparent;color:#fff;padding:0}
@@ -150,7 +150,8 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .d-pill.info{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
 .d-pill.launch{background:color-mix(in srgb,var(--launch) 16%,transparent);color:var(--launch)}
 .d-pill.sky{background:color-mix(in srgb,var(--sky) 16%,transparent);color:var(--sky)}
-.d-pill.ride{background:color-mix(in srgb,var(--ride) 16%,transparent);color:var(--ride)}
+.d-pill.spot{background:color-mix(in srgb,var(--spot) 16%,transparent);color:var(--spot)}
+.d-pill.gear{background:color-mix(in srgb,var(--gear) 18%,transparent);color:var(--gear)}
 .pills{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 
 /* ボタン・セグメント */
@@ -177,7 +178,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .d-kcard .t{font-weight:600;font-size:14px;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .kc{display:inline-flex;align-items:center;gap:3px;max-width:100%;padding:1px 6px;border-radius:7px;background:var(--fill);color:var(--label-2);font-size:11.5px;font-weight:600;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .kc-bad{background:var(--bad-bg);color:var(--bad)} .kc-warn{background:var(--warn-bg);color:var(--warn)}
-.kc-launch{color:var(--launch)} .kc-sky{color:var(--sky)} .kc-ride{color:var(--ride)}
+.kc-launch{color:var(--launch)} .kc-sky{color:var(--sky)} .kc-spot{color:var(--spot)} .kc-gear{color:var(--gear)}
 
 /* 表 */
 .d-table{overflow-x:auto}
@@ -268,7 +269,8 @@ const IC={
   ai:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
   launch:'<path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/>',
   sky:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3v3M15.5 4.5h3"/>',
-  ride:'<rect x="4" y="4" width="16" height="13" rx="3"/><path d="M4 11h16M8 20v-3M16 20v-3"/><circle cx="8" cy="14" r=".8"/><circle cx="16" cy="14" r=".8"/>',
+  spot:'<path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/>',
+  gear:'<circle cx="7" cy="15" r="3.5"/><circle cx="17" cy="15" r="3.5"/><path d="M10.5 15h3M5 11.5 7 5h3l1 6M19 11.5 17 5h-3l-1 6"/>',
   other:'<circle cx="12" cy="12" r="8"/>',
   check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -277,7 +279,7 @@ const IC={
 const ic=(k,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24">${IC[k]||""}</svg>`;
 
 /* ---------- 定義 ---------- */
-const PILLAR={launch:"打ち上げ",sky:"天体",ride:"自動運転",other:"その他"};
+const PILLAR={launch:"打ち上げ",sky:"天体",spot:"宇宙スポット",gear:"機材",other:"その他"};
 const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","終了":"mute"};
 const AR_STATUS=["未着手","下書き","確認待ち","公開済み"];
 const AR_PILL={"未着手":"mute","下書き":"warn","確認待ち":"info","公開済み":"good"};
@@ -291,7 +293,7 @@ const RULES=[
   {o:1,t:"結果・写真を追記／次のチャンスへの導線"},
   {o:7,t:"振り返り：タイトル調整か次回記事へ誘導"}
 ];
-const PUBLISH_LEAD={sky:30,launch:2,ride:14,other:14};
+const PUBLISH_LEAD={sky:30,launch:2,spot:14,gear:14,other:14};
 const KPI_DEF=[
   {k:"articles",l:"公開記事数",u:"本",pass:20,good:25},
   {k:"pv",l:"月間PV",u:"PV",pass:3000,good:10000},
@@ -304,7 +306,7 @@ const KPI_DEF=[
 ];
 const TABS=[
   {id:"home",l:"今日",ic:"home",eyebrow:"今日やること",title:"編集デスク"},
-  {id:"events",l:"イベント",ic:"cal",eyebrow:"打ち上げ・天体・運行日",title:"イベント"},
+  {id:"events",l:"イベント",ic:"cal",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
   {id:"articles",l:"記事",ic:"doc",eyebrow:"最初の20本",title:"記事ボード"},
   {id:"sns",l:"SNS",ic:"sns",eyebrow:"X・Instagram",title:"告知の予定"},
   {id:"kpi",l:"KPI",ic:"kpi",eyebrow:"3か月後の判断",title:"KPI"},
@@ -421,7 +423,7 @@ function viewEvents(){
     <div class="d-main"><div class="d-t">${esc(e.title)}</div><div class="d-sub">${esc(e.place||"")}${e.note?"・"+esc(e.note):""}</div>
     <div class="pills" style="margin-top:4px">${spill(e.status,EV_STATUS)}${e.source?`<a class="d-pill info" href="${esc(e.source)}" target="_blank" rel="noopener">出典</a>`:""}</div></div>
     <div class="d-when">${d?fmt(d):esc(e.dateText||"未定")}<br>${d?`<b class="mono">${tlabel(diff(d))}</b>`:""}${e.time?"<br>"+esc(e.time):""}</div></button>`}).join("")
-    :`<div class="d-empty">イベントはまだありません。打ち上げ・天体イベント・自動運転の運行日を追加してください。</div>`}</div>`;
+    :`<div class="d-empty">イベントはまだありません。打ち上げ・天体イベント・宇宙スポットの公開日を追加してください。</div>`}</div>`;
 }
 function seg(){return `<div class="d-seg" role="group" aria-label="柱で絞り込む">${[["all","すべて"],...Object.entries(PILLAR).filter(([k])=>k!=="other")].map(([k,l])=>`<button type="button" data-filter="${k}" aria-pressed="${S.filter.pillar===k}">${l}</button>`).join("")}</div>`}
 
@@ -437,7 +439,7 @@ function viewArticles(){
         <div class="pills"><span class="kc kc-${esc(a.pillar)}">${PILLAR[a.pillar]||"その他"}</span>
         ${pub&&s!=="公開済み"?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
         ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}</div>
-        ${a.keyword?`<div class="kc" title="${esc(a.keyword)}">${esc(a.keyword)}</div>`:""}</button>`}).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`}).join("")}</div>`;
+        ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`}).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`}).join("")}</div>`;
 }
 
 function viewSns(){
@@ -502,7 +504,7 @@ URL：{URL}`}
 ];
 const TEMPLATES={"A 打ち上げ観覧":"冒頭ボックス（日時・今の状況・見やすい場所・到着時刻・延期を知る方法）／まず結論／基本情報／見える場所（公式と推測を分ける）／到着時刻とタイムライン／アクセス[AFF:交通]／泊まる場所[AFF:宿]／持ち物[AFF:機材]／スマホで撮るコツ／延期・中止になったら（情報源2つ以上）／ライブ中継／FAQ／更新履歴",
  "B 天体イベント":"冒頭ボックス（いつ・方角・見える数・スマホ難易度・天気の確認先）／まず結論／いつ何時に／どこで見る[AFF:宿]／スマホで撮る方法（iPhone・Android）[AFF:三脚]／持ち物と寒さ対策／天気が悪いとき・見逃したとき／FAQ／更新履歴",
- "C 乗車レポート":"冒頭ボックス（誰でも乗れる？・いつ・乗り場・運転席に人は？・最終確認日）／どんな乗り物？／乗り方（予約〜乗車）／実際に乗ってみた／アクセス[AFF:交通]／周辺スポット・泊まるなら[AFF:宿]／運休・変更の情報源／FAQ／更新履歴"};
+ "C 宇宙スポット見学":"冒頭ボックス（どこ？・予約は要る？・料金・所要時間・最終確認日）／どんな場所？／見どころ／見学ツアー・予約のしかた／実際に行ってみた／行き方[AFF:交通]／あわせて行きたい宇宙スポット・泊まるなら[AFF:宿]／休館・変更を確かめる方法／FAQ／更新履歴"};
 const fillPrompt=()=>{const p=PROMPTS.find(x=>x.id===S.promptSel);return p.t.replace(/\{([^}]+)\}/g,(m,k)=>S.promptVals[k]||m)};
 function viewPrompts(){
   const p=PROMPTS.find(x=>x.id===S.promptSel),vals=S.promptVals;
@@ -511,7 +513,7 @@ function viewPrompts(){
     <div class="d-card d-form">${p.vars.map(k=>k==="テンプレート"
       ?`<label class="d-fld">${k}<select id="pv-tpl" data-pv="${k}"><option value="">選ぶ</option>${Object.entries(TEMPLATES).map(([n,v])=>`<option value="${esc(v)}" ${vals[k]===v?"selected":""}>${n}</option>`).join("")}</select></label>`
       :`<label class="d-fld">${k}<textarea id="pv-${esc(k)}" data-pv="${k}" rows="3">${esc(vals[k]||"")}</textarea></label>`).join("")}
-      <p class="note">AIの出力はそのまま公開しない。日時・料金・予約の要否・誰が乗れるかの4点は、公式ページで目で確かめる。</p></div>
+      <p class="note">AIの出力はそのまま公開しない。日時・料金・予約の要否・見学できるか（立入禁止・休館）の4点は、公式ページで目で確かめる。</p></div>
     <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">できあがったプロンプト</h2><button type="button" class="d-btn small" id="copyP">${ic("copy")}コピー</button></div>
       <pre class="prompt" id="pout">${esc(fillPrompt())}</pre></div>
   </div>`;
@@ -525,7 +527,7 @@ const FORMS={
     ["source","出典URL","url","wide"],["note","メモ","textarea","wide"]]},
   article:{col:"articles",title:"記事",fields:[
     ["title","タイトル案","text","wide"],["priority","優先順位","number"],["pillar","柱","select",Object.keys(PILLAR)],["status","状態","select",AR_STATUS],
-    ["template","テンプレート","select",["A 打ち上げ","B 天体","C 乗車","常設"]],["keyword","検索キーワード","text","wide"],["intent","検索意図","textarea","wide"],
+    ["template","テンプレート","select",["A 打ち上げ","B 天体","C 宇宙スポット","常設"]],["path","URL（例：/launch/h3-f10-mmx/）","text","wide"],["keyword","検索キーワード","text","wide"],["intent","検索意図","textarea","wide"],
     ["eventDate","イベント日（更新タスクの基準）","date"],["publishBy","公開期限（空なら自動）","date"],["monetize","収益化の導線","text","wide"],
     ["url","公開URL","url","wide"],["lastVerified","最終確認日","date"],["note","メモ","textarea","wide"]]},
   post:{col:"posts",title:"SNS投稿",fields:[
