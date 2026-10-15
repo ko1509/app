@@ -17,7 +17,7 @@
 | 構築 | [../site/README.md](../site/README.md) | WordPress＋SWELLの構築手順・自作プラグイン・初期設定スクリプト・固定ページの文面 |
 | 公開版 | https://claude.ai/artifact/GfvPCFr2Cvigike2XgLeDF | この計画書を1ページにまとめたもの（`index.html`。`build_html.py` で作り直せる） |
 | アプリ | [../app/index.html](../app/index.html) | サイト管理アプリ（公開先：https://claude.ai/artifact/CFkmjQnXk8beWmPEPwscjP ）。初期データは `../app/seed/`。エージェントの手順書と道具は `../app/ops/` |
-| エージェント | 記事作成 `trig_019wvFL2AJwKjhoQQnozFSv8`・査読 `trig_01J6vdgPcBtvsQTksvFUqSzD` | クラウドの定期実行タスク。アプリから依頼するとすぐ起動し、3時間ごとにも見回る |
+| エージェント | 記事作成 `trig_019wvFL2AJwKjhoQQnozFSv8`・査読 `trig_01J6vdgPcBtvsQTksvFUqSzD` | クラウドの定期実行タスク。アプリから依頼するとすぐ起動し、1時間ごとにも見回る（エージェント同士の受け渡しはこの見回りで拾う） |
 
 ## いちばん大事な3点
 1. **H3ロケット10号機（MMX）の打ち上げが 10/20(火) 4:41。** 記事#1は10/17までに出す。サイトが間に合わなければ、まずXで動く。

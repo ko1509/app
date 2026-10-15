@@ -658,7 +658,7 @@ function viewAgents(){
       ${trig?"":`<p class="note">Routine の ID が未設定です（下の「設定」）。</p>`}</div>`};
   const jobs=S.jobs.slice(0,30);
   const lc=S.loopConf;
-  return `${S.mcp?"":`<p class="note">このページではコネクタ（Claude Code Remote）が使えないため、エージェントを直接起動できません。依頼は順番待ちとして残り、3時間ごとの見回りで処理されます。</p>`}
+  return `${S.mcp?"":`<p class="note">このページではコネクタ（Claude Code Remote）が使えないため、エージェントを直接起動できません。依頼は順番待ちとして残り、1時間ごとの見回りで処理されます。</p>`}
   <div class="ag-grid">${card("writer")}${card("reviewer")}</div>
   <div class="d-grid2">
     <div><div class="d-group-title"><span>依頼の履歴</span><span class="num">${S.jobs.length}件</span></div>
