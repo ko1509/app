@@ -1,0 +1,136 @@
+<title>宇宙ガイドサイト 立ち上げ計画</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* レイアウト：左に章の目次（スマホでは上に折りたたみ）、右に本文。冒頭は「打ち上げまであと何日」の要点カード */
+:root{
+  --bg:#F5F6FA; --paper:#FFFFFF; --ink:#151A2D; --muted:#5A6178; --line:#DDE1EA; --soft:#EEF0F6;
+  --accent:#2B3FBF; --launch:#C84B11; --sky:#4B47B5; --spot:#0B7F6E; --ok:#1E7B3A; --warn:#9A5B00;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1120; --paper:#151A2C; --ink:#E7EAF3; --muted:#9AA2BA; --line:#2A314A; --soft:#1C2238;
+  --accent:#8EA0FF; --launch:#FF8F57; --sky:#A7A3FF; --spot:#4FD1BC; --ok:#62D486; --warn:#F2C14E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1120; --paper:#151A2C; --ink:#E7EAF3; --muted:#9AA2BA; --line:#2A314A; --soft:#1C2238;
+  --accent:#8EA0FF; --launch:#FF8F57; --sky:#A7A3FF; --spot:#4FD1BC; --ok:#62D486; --warn:#F2C14E; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:16px}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.8;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+a{color:var(--accent);overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+h1,h2,h3,h4,h5{font-family:var(--f-display);text-wrap:balance;line-height:1.35;margin:0}
+.wrap{max-width:1200px;margin:0 auto;display:grid;gap:28px}
+
+/* 冒頭 */
+.hero{display:grid;gap:12px;padding-bottom:8px}
+.hero .kicker{margin:0;font-weight:700;color:var(--muted);letter-spacing:.08em;font-size:.8rem}
+.hero h1{font-size:clamp(1.7rem,4vw,2.5rem);font-weight:900;letter-spacing:.01em}
+.hero p.lead{margin:0;max-width:62ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;background:var(--soft);font-size:.8rem;font-weight:700;color:var(--muted)}
+.tag b{color:var(--ink)}
+
+.keys{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.key{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0}
+.key .when{font-family:var(--f-mono);font-weight:700;font-size:1.15rem;letter-spacing:-.01em}
+.key.launch .when{color:var(--launch)} .key.sky .when{color:var(--sky)} .key.spot .when{color:var(--spot)}
+.key h3{font-size:1rem}
+.key p{margin:0;font-size:.9rem;color:var(--muted)}
+
+/* 本体：目次＋本文 */
+.layout{display:grid;gap:28px;grid-template-columns:1fr}
+@media (min-width:1000px){.layout{grid-template-columns:230px minmax(0,1fr)}}
+.toc{min-width:0}
+.toc details{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.toc summary{cursor:pointer;font-weight:700;font-family:var(--f-display)}
+.toc ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:2px}
+.toc a{display:flex;gap:10px;padding:5px 8px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:.88rem;line-height:1.45}
+.toc a:hover{background:var(--soft)}
+.toc a.on{background:var(--soft);font-weight:700}
+.toc .n{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);min-width:3.2em;padding-top:.15em}
+@media (min-width:1000px){.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto}
+  .toc details{border:0;background:none;padding:0}.toc summary{list-style:none;pointer-events:none;color:var(--muted);font-size:.8rem;letter-spacing:.08em}
+  .toc summary::-webkit-details-marker{display:none}}
+
+main{display:grid;gap:22px;min-width:0}
+.sec{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:clamp(18px,3vw,32px);min-width:0}
+.sec>.eyebrow{margin:0 0 4px;font-family:var(--f-mono);font-size:.8rem;font-weight:700;color:var(--accent);letter-spacing:.06em}
+.sec>h2{font-size:clamp(1.3rem,2.6vw,1.6rem);font-weight:900;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sec h3{font-size:1.15rem;margin:28px 0 10px}
+.sec h4{font-size:1rem;margin:22px 0 8px}
+.sec h5{font-size:.95rem;margin:18px 0 6px;color:var(--muted)}
+.sec p,.sec li{max-width:72ch}
+.sec p{margin:0 0 .9em}
+.sec ul,.sec ol{padding-left:1.4em;margin:0 0 1em}
+.sec li{margin:.2em 0}
+.sec hr{border:0;border-top:1px dashed var(--line);margin:24px 0}
+.sec blockquote{margin:0 0 1em;padding:8px 14px;border-left:3px solid var(--accent);background:var(--soft);border-radius:0 8px 8px 0;color:var(--muted)}
+.sec blockquote p{margin:0}
+.sec strong{color:var(--ink)}
+code{font-family:var(--f-mono);font-size:.85em;background:var(--soft);padding:.1em .35em;border-radius:5px;overflow-wrap:anywhere}
+pre{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;margin:0 0 1em;line-height:1.6}
+pre code{background:none;padding:0;font-size:.8rem;white-space:pre}
+.tbl{overflow-x:auto;margin:0 0 1.2em;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;line-height:1.6}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:6em}
+th{background:var(--soft);font-weight:700;white-space:nowrap;font-size:.78rem;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-variant-numeric:tabular-nums}
+.foot{color:var(--muted);font-size:.85rem;text-align:center}
+@media (prefers-reduced-motion:no-preference){.toc a{transition:background .15s}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="kicker">宇宙を見に行くガイドサイト</p>
+    <h1>宇宙ガイドサイト 立ち上げ計画</h1>
+    <p class="lead">ロケットの打ち上げ・天体イベント・宇宙スポットを、初めての人でも「いつ・どこへ・何を持って」行けばいいかわかるように案内するサイトの計画です。自動運転は別サイトで運営します。</p>
+    <div class="meta">
+      <span class="tag">作成 <b>2026年10月15日</b></span>
+      <span class="tag">サイト名 <b>未決定（本命：ミアゲタビ）</b></span>
+      <span class="tag">構成 <b>WordPress＋SWELL</b></span>
+      <span class="tag">「推測」＝公式情報で確かめられなかったこと</span>
+    </div>
+  </header>
+
+  <section class="keys" aria-label="いちばん大事な3点">
+    <div class="key launch"><span class="when">10/20(火) 4:41</span><h3>H3ロケット10号機（火星探査機MMX）</h3><p>記事#1は10/17までに公開。サイトが間に合わなければ、まずXで動く。</p></div>
+    <div class="key sky"><span class="when">12/14(月) 23時ごろ</span><h3>ふたご座流星群（この90日の山場）</h3><p>月が早く沈む絶好の条件。記事は11/14に公開し、直前に厚く更新する。</p></div>
+    <div class="key spot"><span class="when">発表から48時間</span><h3>常設ページを先に作る</h3><p>打ち上げ予定まとめと射場ガイドがあれば、HTV-X2・イプシロンS・カイロスの日付が出たときにすぐ記事を出せる。</p></div>
+  </section>
+
+  <div class="layout">
+    <nav class="toc" aria-label="目次">
+      <details open id="tocBox"><summary>目次</summary>
+        <ol>
+{{TOC}}
+        </ol>
+      </details>
+    </nav>
+    <main>
+{{SECTIONS}}
+      <p class="foot">元の資料はリポジトリの plan/ と site/ にあります（ブランチ claude/youthful-thompson-g7jg5n）。</p>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var links=[].slice.call(document.querySelectorAll('.toc a'));
+  var box=document.getElementById('tocBox');
+  // スマホでは目次を閉じた状態で始める
+  if(window.matchMedia('(max-width:999px)').matches) box.removeAttribute('open');
+  links.forEach(function(a){a.addEventListener('click',function(){if(window.matchMedia('(max-width:999px)').matches)box.removeAttribute('open')})});
+  if(!('IntersectionObserver' in window))return;
+  var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on')}})},{rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('.sec').forEach(function(s){io.observe(s)});
+})();
+</script>

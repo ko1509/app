@@ -86,7 +86,7 @@
 - 国立天文台 ほしぞら情報 https://www.nao.ac.jp/astro/sky/ ／ 暦計算室 https://eco.mtk.nao.ac.jp/koyomi/
 - アストロアーツ https://www.astroarts.co.jp/
 - NASA 日食・月食 https://eclipse.gsfc.nasa.gov/
-- #きぼうを見よう https://lookup.kibo.space/ ／ Heavens-Above https://www.heavens-above.com/
+- 「#きぼうを見よう」 https://lookup.kibo.space/ ／ Heavens-Above https://www.heavens-above.com/
 - ウェザーニュース https://weathernews.jp/
 
 ---
