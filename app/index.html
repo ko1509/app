@@ -195,7 +195,18 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .d-kcard[class*="cat-"]{border-left:5px solid var(--cat);padding-left:10px}
 .cat-col{border-top:3px solid var(--cat)}
 .d-board.cats{grid-template-columns:repeat(var(--n,4),minmax(0,1fr))}
-.plan-wrap{min-width:0} .d-board.cats.scroll{contain:inline-size}
+.plan-wrap{min-width:0}
+.ar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ar-card{display:flex;flex-direction:column;text-align:left;padding:0;border:0;border-radius:20px;overflow:hidden;background:var(--glass-strong,#fff);box-shadow:0 0 0 1px var(--glass-edge,rgba(0,0,0,.06)),0 6px 20px rgba(0,0,0,.06);color:inherit;font:inherit;cursor:pointer;border-top:3px solid var(--cat);min-width:0}
+.ar-img{position:relative;aspect-ratio:1200/630;background:#0B0B10;display:grid;place-items:center;overflow:hidden} .ar-img img{width:100%;height:100%;object-fit:cover;display:block}
+.ar-ph{width:44px;height:44px;color:color-mix(in srgb,var(--cat) 80%,#fff);opacity:.8} .ar-ph svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6}
+.ar-badge{position:absolute;top:10px;left:10px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--bad,#d33);color:#fff}
+.ar-body{padding:12px 14px 14px;display:grid;gap:8px} .ar-t{font-weight:700;font-size:15.5px;line-height:1.45}
+.ar-foot{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--label-2)} .ar-foot a{color:var(--brand);text-decoration:none;font-weight:600} .ar-foot .late{color:var(--bad,#d33);font-weight:600}
+.kc-act{margin-top:8px;display:flex;justify-content:flex-end} .kc-act .d-btn{padding:4px 12px;font-size:13px}
+.sel-step{display:inline-flex;align-items:center;gap:2px;border-radius:999px;background:var(--fill);padding:3px}
+.sel-step button{width:36px;height:36px;border-radius:50%;border:0;background:var(--glass-strong,#fff);color:var(--label);font-size:20px;line-height:1;cursor:pointer;box-shadow:0 0 0 1px var(--glass-edge,rgba(0,0,0,.08))} .sel-step button:disabled{opacity:.35;cursor:default}
+.sel-step b{min-width:52px;text-align:center;font-size:20px;color:var(--label)} .sel-step small{font-size:12px;margin-left:2px;color:var(--label-2)} .d-board.cats.scroll{contain:inline-size}
 .plan-more{display:block;width:100%;margin-top:4px;padding:8px;font-size:14px;text-align:center}
 @media (max-width:860px){.d-board.cats.scroll{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(240px,78%);overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:2px 16px 8px;scroll-padding:0 16px;scrollbar-width:none} .d-board.cats.scroll::-webkit-scrollbar{display:none} .d-board.cats.scroll>.d-col{scroll-snap-align:start}}
 .cat-name{display:inline-flex;align-items:center;gap:6px;color:var(--cat)} .cat-name i,.cat-legend i{width:9px;height:9px;border-radius:50%;background:var(--cat);display:inline-block}
@@ -340,8 +351,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .fl-t{font-weight:600;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fl-total{flex:none;font-size:12px;color:var(--label-2)}
 .fl-row{display:flex;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;row-gap:8px;padding:2px 1px 4px;min-width:0}
-.fl-row::-webkit-scrollbar{display:none} .fl-row>*{flex:none}
-@media (min-width:768px){.fl-row{flex-wrap:wrap;overflow-x:visible}}
+.fl-row.cut{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)} .fl-row::-webkit-scrollbar{display:none} .fl-row>*{flex:none}
 .fl-node{display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 4px;border-radius:999px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);font-size:12.5px;white-space:nowrap;border:0;font-family:inherit;color:inherit;cursor:pointer}
 .fl-node .ag-ic{width:24px;height:24px;border-radius:50%} .fl-node .ag-ic svg{width:14px;height:14px;stroke-width:2.3}
 .fl-node b{font-weight:700} .fl-node b small{font-size:10px;font-weight:600;color:var(--label-2);margin-left:2px}
@@ -746,22 +756,30 @@ function kcard(a,s){
   const pub=pubDate(a),ev=parse(a.eventDate),late=pub&&diff(pub)<0,near=pub&&!late&&diff(pub)<=3,cat=PILLAR[a.pillar]&&a.pillar!=="other"?a.pillar:"other";
   return `<button type="button" class="d-kcard cat-${cat}" data-edit="article" data-id="${esc(a._id)}">
     <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
-    <div class="pills"><span class="kc kc-${esc(cat)}">${PILLAR[a.pillar]||"その他"}</span>
+    <div class="pills">
     ${pub?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
     ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${s==="企画中"?planKc(a):loopKc(a)}</div>
-    ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`;
+    ${s==="企画中"&&S.canWrite?`<div class="kc-act"><span role="button" tabindex="0" class="d-btn small ${S.toDraftArm===a._id?"":"secondary"}" data-todraft="${esc(a._id)}">${S.toDraftArm===a._id?"もう一度押すと下書きへ":"下書きへ →"}</span></div>`:""}</button>`;
 }
 // 記事選定：期間と本数を決めて、企画から下書きに回す（記事選定エージェントに頼む）
+const selV=()=>({days:+(S.selDraft&&S.selDraft.days)||+(S.selConf||{}).days||14,count:+(S.selDraft&&S.selDraft.count)||+(S.selConf||{}).count||3});
 function selForm(){const c=S.selConf||{},can=S.canWrite,stock=CATS.map(k=>[k,S.articles.filter(a=>ast(a)==="企画中"&&a.pillar===k&&!(a.assess&&a.assess.grade==="NG")).length]);
   return `<div class="d-card sel-card"><div class="sel-row"><span class="en" style="margin-right:2px">SELECT</span><b>記事選定</b>
-    <label class="sel-f">期間<select id="selDays" ${can?"":"disabled"}>${[[7,"1週間"],[14,"2週間"],[30,"1か月"],[60,"2か月"]].map(([v,l])=>`<option value="${v}" ${+c.days===v?"selected":""}>今日から${l}</option>`).join("")}</select></label>
-    <label class="sel-f">本数<input id="selCount" type="number" min="1" max="10" value="${esc(c.count||3)}" ${can?"":"disabled"}></label>
+    <div class="sel-f"><span>今日から</span><div class="d-seg" role="group" aria-label="期間">${[[7,"1週間"],[14,"2週間"],[30,"1か月"],[60,"2か月"]].map(([v,l])=>`<button type="button" data-seldays="${v}" aria-pressed="${+selV().days===v}" ${can?"":"disabled"}>${l}</button>`).join("")}</div></div>
+    <div class="sel-f"><span>本数</span><div class="sel-step"><button type="button" data-selstep="-1" aria-label="1本減らす" ${can&&selV().count>1?"":"disabled"}>−</button><b class="num">${selV().count}<small>本</small></b><button type="button" data-selstep="1" aria-label="1本増やす" ${can&&selV().count<10?"":"disabled"}>＋</button></div></div>
     <label class="sel-f sel-chk"><input id="selAuto" type="checkbox" ${c.auto?"checked":""} ${can?"":"disabled"}>毎日この条件で選ぶ</label>
     <span style="flex:1"></span>${can?`<button type="button" class="d-btn small" id="selGo">選定を頼む</button>`:""}</div>
     <div class="sel-stock">${stock.map(([k,n])=>`<span class="cat-${k} ${n<(c.minStock||3)?"low":""}"><i></i>${PILLAR[k]} ${n}</span>`).join("")}<span class="d-sub">企画の残り（${c.minStock||3}件を切ると、記事選定が企画を頼みます）</span></div></div>`}
-function bindSel(pg){pg.querySelectorAll("[data-plan-more]").forEach(b=>b.onclick=()=>{const k=b.dataset.planMore;S.planOpen={...(S.planOpen||{}),[k]:!(S.planOpen||{})[k]};render()});
+function bindToDraft(pg){pg.querySelectorAll("[data-todraft]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const id=b.dataset.todraft,a=S.articles.find(x=>x._id===id);if(!a)return;
+    if(S.toDraftArm!==id){S.toDraftArm=id;render();setTimeout(()=>{if(S.toDraftArm===id){S.toDraftArm=null;render()}},4000);return}
+    S.toDraftArm=null;if(busy("article","articleId",id)){toast("この記事の依頼がもう進んでいます");return}
+    await requestWrite(a,{note:"運営者が企画から下書きに回しました"});toast("下書きに移して、作成に頼みました")};
+  b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}})}
+function bindSel(pg){bindToDraft(pg);pg.querySelectorAll("[data-plan-more]").forEach(b=>b.onclick=()=>{const k=b.dataset.planMore;S.planOpen={...(S.planOpen||{}),[k]:!(S.planOpen||{})[k]};render()});
   const go=pg.querySelector("#selGo");if(!go)return;
-  const val=()=>({days:+$("#selDays").value||14,count:Math.max(1,Math.min(10,+$("#selCount").value||3)),auto:$("#selAuto").checked});
+  pg.querySelectorAll("[data-seldays]").forEach(b=>b.onclick=()=>{S.selDraft={...selV(),days:+b.dataset.seldays};render()});
+  pg.querySelectorAll("[data-selstep]").forEach(b=>b.onclick=()=>{const v=selV();S.selDraft={...v,count:Math.max(1,Math.min(10,v.count+(+b.dataset.selstep)))};render()});
+  const val=()=>({...selV(),auto:$("#selAuto").checked});
   const save=async()=>{const v=val();try{await S.db.doc("settings/selection").set({...S.selConf,...v,updatedAt:iso()})}catch(_){}return v};
   pg.querySelector("#selAuto").onchange=async()=>{await save();toast($("#selAuto").checked?"毎日この条件で選びます":"毎日の選定を止めました")};
   go.onclick=async()=>{go.disabled=true;const v=await save();const from=ymd(today()),to=ymd(addDays(today(),v.days));
@@ -788,15 +806,16 @@ function viewArchive(){
   const need=list.filter(a=>ast(a)==="要更新"||(a.updateDraft&&!a.updateDraft.applied)).sort((x,y)=>key(y).localeCompare(key(x)));
   const rest=list.filter(a=>!need.includes(a)).sort((x,y)=>key(y).localeCompare(key(x)));
   const row=a=>{const lv=parse(a.lastVerified),ev=parse(a.eventDate),u=a.url||(a.path?"https://miagetabi.space"+a.path:"");
-    const stale=lv&&diff(lv)<-90,soon=ev&&diff(ev)>=0&&diff(ev)<=7;
-    return `<button type="button" class="d-row" data-edit="article" data-id="${esc(a._id)}">${picto(a.pillar)}
-    <div class="d-main"><div class="d-t">${esc(a.title)}</div>${a.path?`<div class="d-sub mono">${esc(a.path)}</div>`:""}
-    <div class="pills" style="margin-top:4px">${spill(ast(a),AR_PILL)}${a.recheck?gradePill(a.recheck):""}${a.loop&&a.loop.replace?`<span class="d-pill ${a.loop.state==="passed"?"good":a.loop.state==="failed"?"bad":"info"}">差し替え稿 ${a.loop.state==="passed"?"査読A":a.loop.state==="failed"?"判断待ち":(a.loop.round||1)+"回目"}</span>`:""}${a.updateDraft&&!a.updateDraft.applied?`<span class="d-pill warn">直しの案${a.updateDraft.review?"・査読"+esc(a.updateDraft.review.grade):""}</span>`:""}${soon?`<span class="d-pill bad">本番 ${fmt(ev)}・直前更新</span>`:ev&&diff(ev)>=0?`<span class="d-pill mute">本番 ${fmt(ev)}</span>`:""}${u?`<a class="d-pill info" href="${esc(u)}" target="_blank" rel="noopener">ページを開く</a>`:""}</div></div>
-    <div class="d-when">${lv?`最終確認<br><span class="${stale?"late":""}">${fmt(lv)}</span>`:"最終確認<br>—"}</div></button>`};
+    const stale=lv&&diff(lv)<-90,soon=ev&&diff(ev)>=0&&diff(ev)<=7,cat=PILLAR[a.pillar]&&a.pillar!=="other"?a.pillar:"other",img=dbImg(a._id+"-eyecatch");
+    return `<button type="button" class="ar-card cat-${cat}" data-edit="article" data-id="${esc(a._id)}">
+    <div class="ar-img">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:`<span class="ar-ph">${ic(PILLAR[a.pillar]?a.pillar:"other","")}</span>`}${ast(a)==="要更新"?`<span class="ar-badge bad">要更新</span>`:""}</div>
+    <div class="ar-body"><div class="ar-t">${esc(a.title)}</div>
+    <div class="pills">${a.recheck?gradePill(a.recheck):""}${a.loop&&a.loop.replace?`<span class="d-pill ${a.loop.state==="passed"?"good":a.loop.state==="failed"?"bad":"info"}">差し替え稿 ${a.loop.state==="passed"?"査読A":a.loop.state==="failed"?"判断待ち":(a.loop.round||1)+"回目"}</span>`:""}${a.updateDraft&&!a.updateDraft.applied?`<span class="d-pill warn">直しの案${a.updateDraft.review?"・査読"+esc(a.updateDraft.review.grade):""}</span>`:""}${soon?`<span class="d-pill bad">本番 ${fmt(ev)}・直前更新</span>`:ev&&diff(ev)>=0?`<span class="d-pill mute">本番 ${fmt(ev)}</span>`:""}</div>
+    <div class="ar-foot"><span class="${stale?"late":""}">最終確認 ${lv?fmt(lv):"—"}</span>${u?`<a href="${esc(u)}" target="_blank" rel="noopener">ページを開く ↗</a>`:""}</div></div></button>`};
   return `${agentsCard("archive")}<div class="d-actions">${seg()}<span style="flex:1"></span><span class="d-pill good num">${S.articles.filter(isPub).length}本</span></div>
-  ${need.length?`<div><div class="d-group-title"><span><span class="en" style="margin-right:8px">TO UPDATE</span>直すところがある記事</span><span class="num">${need.length}本</span></div><div class="d-group">${need.map(row).join("")}</div></div>`:""}
+  ${need.length?`<div><div class="d-group-title"><span><span class="en" style="margin-right:8px">TO UPDATE</span>直すところがある記事</span><span class="num">${need.length}本</span></div><div class="ar-grid">${need.map(row).join("")}</div></div>`:""}
   <div><div class="d-group-title"><span><span class="en" style="margin-right:8px">PUBLISHED</span>公開済み</span><span class="num">${rest.length}本</span></div>
-  <div class="d-group">${rest.length?rest.map(row).join(""):`<div class="d-empty">${need.length?"ほかの公開済みの記事はありません。":"公開済みの記事はまだありません。記事の稿を開いて「公開した」を押すと、ここに移ります。"}</div>`}</div></div>
+  <div class="${rest.length?"ar-grid":"d-group"}">${rest.length?rest.map(row).join(""):`<div class="d-empty">${need.length?"ほかの公開済みの記事はありません。":"公開済みの記事はまだありません。記事の稿を開いて「公開した」を押すと、ここに移ります。"}</div>`}</div></div>
 `;
 }
 
@@ -811,6 +830,9 @@ function postMeta(p){const a=S.articles.find(x=>x._id===p.articleId);
   return `${mcAction(p)}<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.topic&&p.topic!=="記事"?`<span class="d-pill info">${esc(TOPIC_L[p.topic]||p.topic)}</span>`:""}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
 const TOPIC_L={"記事":"記事","イベント":"イベント","今夜の空":"今夜の空","コラム":"コラム"};
 // 画像担当が作った投稿画像（images/sns-<投稿ID>）。一度読んだら覚えておく
+// db の画像（images/<ID>）を一度だけ読んで覚えておく
+function dbImg(k){if(!k||!S.db)return "";S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
+  (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
 function postImg(p){if(/^https:\/\//.test(p.imageUrl||""))return p.imageUrl;const k=p.imageId;if(!k)return "";
   S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
@@ -1175,7 +1197,7 @@ function flowSection(scope){
     ${ch.map(c=>{const nodes=[];c.jobs.forEach((j,i)=>{if(i)nodes.push(flowArrow(c.jobs[i-1],j));nodes.push(flowNode(j,c.a))});
       const a=c.a,st=a&&ast(a),lp=a&&a.loop;
       const end=a&&(st==="公開済み"?["公開","published"]:st==="公開待ち"?["公開待ち","ready"]:lp&&lp.state==="failed"?["上限・要判断","failed"]:null);
-      if(end&&!c.live)nodes.push(`<span class="fl-arrow" aria-hidden="true"><i></i></span><span class="fl-node st-end is-${end[1]}"><b>${end[0]}</b></span>`);
+      if(end&&!c.live)nodes.push(`<span class="fl-arrow" aria-hidden="true"><i></i></span>`,`<span class="fl-node st-end is-${end[1]}"><b>${end[0]}</b></span>`);
       const first=c.jobs[0],lastJ=c.jobs[c.jobs.length-1],t0=first&&(first.startedAt||first.createdAt);
       const total=t0?(c.live?elapsed(t0):lastJ.finishedAt?dur(t0,lastJ.finishedAt):""):"";
       return `<div class="fl-chain ${c.live?"is-live":""}"><div class="fl-head"><span class="fl-t">${esc(a?a.title:c.aid)}</span>${total?`<span class="fl-total">合計 ${total}</span>`:""}</div><div class="fl-row">${nodes.join("")}</div></div>`}).join("")}
@@ -1241,6 +1263,8 @@ function bindAgents(pg){
     else requestJob(AG[role].kinds[0])});
   pg.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>requestJob(b.dataset.job));
   bindSel(pg);
+  // 受け渡しの流れは、いちばん右（最新）が見えるように
+  pg.querySelectorAll(".fl-row").forEach(r=>{r.scrollLeft=r.scrollWidth;const f=()=>r.classList.toggle("cut",r.scrollLeft>2);f();r.onscroll=f});
   pg.querySelectorAll("[data-chain]").forEach(b=>b.onclick=()=>{S.chainSel=S.chainSel===b.dataset.chain?null:b.dataset.chain;render()});
   pg.querySelectorAll("[data-ag-role]").forEach(b=>b.onclick=()=>{S.agRole=S.agRole===b.dataset.agRole?null:b.dataset.agRole;render()});
   pg.querySelectorAll("[data-lesson-del]").forEach(b=>b.onclick=async()=>{
