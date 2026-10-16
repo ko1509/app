@@ -6,7 +6,8 @@
 
 | 役割（role） | 名前 | 起動 | 手順書 | 受け持つ依頼（job の kind） |
 |---|---|---|---|---|
-| `planner` | 企画 | 月・木の朝＋依頼 | `ops/planner-manual.md` | `plan` |
+| `planner` | 企画 | 月・木の朝＋依頼 | `ops/planner-manual.md` | `plan`（企画を優先度つきで「企画中」のカードにする） |
+| `selector` | 記事選定 | 毎日の朝＋依頼 | `ops/selector-manual.md` | `select`（企画の査定・期間と本数での選定・企画の補充の依頼） |
 | `writer` | 記事作成 | 6〜23時の毎時＋依頼 | `ops/article-manual.md` | `article`（新しい稿）・`update`（公開済み記事の直し） |
 | `reviewer` | 査読 | 6〜23時の毎時＋依頼 | `ops/review-manual.md` | `review`（`mode`: `draft` 稿／`update` 直し／`recheck` 公開済みの点検） |
 | `designer` | 画像 | 依頼（査読 A・SNS 審査 OK のとき）＋6〜23時の毎時 | `ops/eyecatch-manual.md` | `eyecatch`（**査読で A になった稿だけ**にアイキャッチ）・`snsimage`（**SNS 審査を通った投稿**の画像） |
@@ -75,8 +76,8 @@
 
 ### `jobs/<ID>`（依頼）
 ```json
-{"kind": "article|update|eyecatch|snsimage|review|plan|watch|sns|snsreview|audit", "mode": "draft|update|recheck（review のとき）",
- "articleId": "a01", "eventId": "", "postIds": ["（snsimage のとき）"], "round": 1, "title": "対象の名前",
+{"kind": "article|update|eyecatch|snsimage|review|plan|select|watch|sns|snsreview|audit", "mode": "draft|update|recheck（review のとき）",
+ "articleId": "a01", "eventId": "", "pillar": "（plan の補充のとき）", "from": "", "to": "", "count": 0, "postIds": ["（snsimage のとき）"], "round": 1, "title": "対象の名前",
  "withExperience": false, "note": "運営者や前のエージェントからの指示", "rewrite": false,
  "status": "queued|running|done|waiting|error", "message": "", "step": "", "agent": "", "session": "",
  "inboxId": "", "createdAt": "", "startedAt": "", "finishedAt": "", "updatedAt": "", "kickedAt": "",
@@ -85,7 +86,8 @@
 
 ### `articles/<articleId>`（記事のカード）
 - 運営者が入れる項目（読むだけ）：`title`・`pillar`（`launch|sky|spot|gear|news`）・`tags`・`keyword`・`intent`・`eventDate`・`publishBy`・`monetize`・`template`・`path`・`priority`・`note`・`url`（公開URL）・`lastVerified`
-- `status`：`企画中` → `下書き` → `査読中` → `公開待ち` → `公開済み` → `要更新`（`ops/site-rules.md` の 10）
+- `status`：`企画中` → `下書き` → `査読中` → `公開待ち` → `公開済み` → `要更新`（`ops/site-rules.md` の 10）。企画の査定で落ちたものは `保留`（受信箱で判断待ち）、運営者が見送ったものは `見送り`
+- 企画が書く：`plan`（優先度・理由など。カードを作るときだけ）。記事選定が書く：`assess`（査定）・`selection`（選んだ記録）
 - 作成が書く：`draft`（稿）・`draftPrev`（1つ前の稿）・`updateDraft`（公開済み記事の直し）
 - 査読が書く：`review`・`reviewHistory`・`recheck`（公開済みの点検結果）
 - 作成と査読が書く：`loop`：`{"state": "writing|reviewing|passed|failed", "round": 1, "max": 5, "updatedAt": ""}`
@@ -95,7 +97,7 @@
 
 ### `inbox/<ID>`（受信箱。運営者の判断が要るもの）
 ```json
-{"kind": "idea|change|loopFailed|question|audit|recheck|other",
+{"kind": "idea|planReview|change|loopFailed|question|audit|recheck|other",
  "title": "一言で（40字まで）", "body": "Markdown。判断に要ることを全部。根拠のURLつき",
  "reason": "なぜ運営者の判断が要るか（1文）",
  "articleId": "", "eventId": "", "jobId": "",
@@ -111,10 +113,11 @@
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム`）・`text`・`articleId`・`eventId`・`kind`・`imageBrief`（SNS が書く画像の指示）・`imageId`（画像担当が書く）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
-- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
+- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
 - `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）
+- `settings/selection`：`{"days": 14, "count": 3, "auto": false, "minStock": 3}`（アプリが書く。記事選定が読む。今日から `days` 日に公開する分を `count` 本。`auto` が `true` なら毎朝この条件で選ぶ。カテゴリの企画が `minStock` を切ったら補充を頼む）
 - `settings/plannerLog`：`{"items": [{"title", "decision": "採用|見送り", "reason", "at"}]}`（アプリが書く。企画が読む）
 
 ## 6. 次のエージェントへの受け渡し
@@ -128,6 +131,8 @@
   - 点検 → 査読（公開済みの点検）：`recheck-<articleId>-<YYYYMMDD>`
   - SNS 審査（OK のとき）→ 画像：`snsimage-<YYYYMMDDHHMM>`（`postIds` に投稿の ID）
   - SNS → SNS 審査：`snsreview-<YYYYMMDDHHMM>`、SNS 審査 → SNS（書き直し）：`sns-<articleId>-r<YYYYMMDDHHMM>`
+  - 記事選定 → 作成（選んだとき）：`article-<articleId>-1`
+  - 記事選定 → 企画（カテゴリの補充）：`plan-<pillar>-<YYYYMMDD>`
   - 企画 → 作成（運営者が「すぐ書かせる」を選んだとき、アプリが書く）：`article-<articleId>-1`
 - 書いたら起動を試す：ToolSearch で `select:mcp__claude-code-remote__fire_trigger` を読み込み、`settings/background` の相手の trigger ID を `text: "job:<ID>"` で `fire_trigger` する。読み込めない・失敗したときは、依頼を `queued` のまま残してよい（相手の定時の見回りか、運営者がアプリを開いたときに起動される）。そのことを報告に 1 行書く。
 - 相手の役割が停止中（`settings/agentPause`）なら、起動しない（依頼は書いてよい）。

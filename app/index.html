@@ -281,6 +281,8 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .ag-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .ag-tiles.n1{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ag-tiles.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sel-card{padding:12px 14px;margin:0 0 12px} .sel-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px} .sel-f{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--label-2)} .sel-f select,.sel-f input[type=number]{font:inherit;padding:5px 8px;border-radius:10px;border:1px solid var(--sep,rgba(0,0,0,.15));background:transparent;color:var(--label)} .sel-f input[type=number]{width:64px} .sel-chk input{accent-color:var(--brand)}
+.sel-stock{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:8px;font-size:13px} .sel-stock>span[class^=cat-]{display:inline-flex;align-items:center;gap:5px;font-weight:600} .sel-stock i{width:8px;height:8px;border-radius:50%;background:var(--cat,#888)} .sel-stock .low{color:var(--bad,#d33)}
 .sv-ximg{margin:8px 0 0;border-radius:14px;overflow:hidden;border:1px solid var(--sep,rgba(0,0,0,.1))} .sv-ximg img{display:block;width:100%;height:auto}
 @media (max-width:760px){.ag-tiles,.ag-tiles.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ag-tile{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;align-items:center;padding:12px;border-radius:18px;
@@ -526,6 +528,7 @@ const IC={
   plus:'<path d="M12 5v14M5 12h14"/>',
   archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',
   inbox:'<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>',
   image:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M4 17l5-5 4 4 2.5-2.5L20 17"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
@@ -586,6 +589,7 @@ const pad=n=>String(n).padStart(2,"0");
 const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
 const parse=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]):null};
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const diff=d=>Math.round((d-today())/864e5);
 const WD="日月火水木金土";
 const fmt=d=>d?`${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})`:"—";
@@ -730,22 +734,41 @@ function seg(){return `<div class="d-seg" role="group" aria-label="柱で絞り�
 
 const CATS=["launch","sky","spot","gear"];
 const catLegend=()=>`<div class="cat-legend">${CATS.map(k=>`<span class="cat-${k}"><i></i>${PILLAR[k]}</span>`).join("")}</div>`;
+const PRI_RANK={"高":0,"中":1,"低":2};
+function planKc(a){const pl=a.plan||{},as=a.assess;
+  return `${pl.priority?`<span class="kc ${pl.priority==="高"?"kc-bad":pl.priority==="中"?"kc-warn":""}" title="${esc(pl.reason||"")}">優先 ${esc(pl.priority)}</span>`:""}${as&&as.score!=null?`<span class="kc ${as.grade==="OK"?"":"kc-bad"}" title="${esc((as.notes||[]).join(" / "))}">査定 ${esc(as.score)}</span>`:pl.priority?`<span class="kc">査定待ち</span>`:""}`}
+const planSort=(x,y)=>((PRI_RANK[(x.plan||{}).priority]??3)-(PRI_RANK[(y.plan||{}).priority]??3))||(((y.assess||{}).score??-1)-((x.assess||{}).score??-1))||((x.priority??999)-(y.priority??999));
 function kcard(a,s){
   const pub=pubDate(a),ev=parse(a.eventDate),late=pub&&diff(pub)<0,near=pub&&!late&&diff(pub)<=3,cat=PILLAR[a.pillar]&&a.pillar!=="other"?a.pillar:"other";
   return `<button type="button" class="d-kcard cat-${cat}" data-edit="article" data-id="${esc(a._id)}">
     <div class="t">${a.priority!=null?`<span class="num" style="color:var(--label-3)">#${esc(a.priority)} </span>`:""}${esc(a.title)}</div>
     <div class="pills"><span class="kc kc-${esc(cat)}">${PILLAR[a.pillar]||"その他"}</span>
     ${pub?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
-    ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${s==="企画中"?"":loopKc(a)}</div>
+    ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${s==="企画中"?planKc(a):loopKc(a)}</div>
     ${a.path?`<div class="kc mono" title="${esc(a.path)}">${esc(a.path)}</div>`:""}</button>`;
 }
+// 記事選定：期間と本数を決めて、企画から下書きに回す（記事選定エージェントに頼む）
+function selForm(){const c=S.selConf||{},can=S.canWrite,stock=CATS.map(k=>[k,S.articles.filter(a=>ast(a)==="企画中"&&a.pillar===k&&!(a.assess&&a.assess.grade==="NG")).length]);
+  return `<div class="d-card sel-card"><div class="sel-row"><span class="en" style="margin-right:2px">SELECT</span><b>記事選定</b>
+    <label class="sel-f">期間<select id="selDays" ${can?"":"disabled"}>${[[7,"1週間"],[14,"2週間"],[30,"1か月"],[60,"2か月"]].map(([v,l])=>`<option value="${v}" ${+c.days===v?"selected":""}>今日から${l}</option>`).join("")}</select></label>
+    <label class="sel-f">本数<input id="selCount" type="number" min="1" max="10" value="${esc(c.count||3)}" ${can?"":"disabled"}></label>
+    <label class="sel-f sel-chk"><input id="selAuto" type="checkbox" ${c.auto?"checked":""} ${can?"":"disabled"}>毎日この条件で選ぶ</label>
+    <span style="flex:1"></span>${can?`<button type="button" class="d-btn small" id="selGo">選定を頼む</button>`:""}</div>
+    <div class="sel-stock">${stock.map(([k,n])=>`<span class="cat-${k} ${n<(c.minStock||3)?"low":""}"><i></i>${PILLAR[k]} ${n}</span>`).join("")}<span class="d-sub">企画の残り（${c.minStock||3}件を切ると、記事選定が企画を頼みます）</span></div></div>`}
+function bindSel(pg){const go=pg.querySelector("#selGo");if(!go)return;
+  const val=()=>({days:+$("#selDays").value||14,count:Math.max(1,Math.min(10,+$("#selCount").value||3)),auto:$("#selAuto").checked});
+  const save=async()=>{const v=val();try{await S.db.doc("settings/selection").set({...S.selConf,...v,updatedAt:iso()})}catch(_){}return v};
+  pg.querySelector("#selAuto").onchange=async()=>{await save();toast($("#selAuto").checked?"毎日この条件で選びます":"毎日の選定を止めました")};
+  go.onclick=async()=>{go.disabled=true;const v=await save();const from=ymd(today()),to=ymd(addDays(today(),v.days));
+    await requestJob("select",{title:`記事選定（${from}〜${to}・${v.count}本）`,from,to,days:v.days,count:v.count,note:`${from}〜${to}に公開する記事を${v.count}本選ぶ`});go.disabled=false}}
 function viewArticles(){
   const f=S.filter.pillar,list=S.articles.filter(a=>f==="all"||a.pillar===f).sort((a,b)=>(a.priority??999)-(b.priority??999));
-  const plan=list.filter(a=>ast(a)==="企画中"),cats=[...CATS,...(plan.some(a=>!CATS.includes(a.pillar))?["other"]:[])].filter(k=>f==="all"||k===f);
+  const plan=list.filter(a=>ast(a)==="企画中").sort(planSort),held=S.articles.filter(a=>a.status==="保留").length,cats=[...CATS,...(plan.some(a=>!CATS.includes(a.pillar))?["other"]:[])].filter(k=>f==="all"||k===f);
   const col=(title,items,cls="")=>`<section class="d-col ${cls}"><h3>${title}<span class="num">${items.length}</span></h3>${items.length?items.map(a=>kcard(a,ast(a))).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`;
   return `${agentsCard("article")}<div class="d-actions">${seg()}<span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="plan">${ic("idea")}企画を頼む</button>`:""}${addBtn("article","記事を追加")}</div>
   ${catLegend()}
-  <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">PLANNING</span>企画</h2></div>
+  <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">PLANNING</span>企画</h2>${held?`<button type="button" class="text-btn" data-go="inbox" style="font-size:14px">保留 ${held}件（受信箱）</button>`:""}</div>
+    ${selForm()}
     <div class="d-board cats n${cats.length}">${cats.map(k=>col(`<span class="cat-name cat-${k}"><i></i>${PILLAR[k]}</span>`,plan.filter(a=>(CATS.includes(a.pillar)?a.pillar:"other")===k),"cat-col cat-"+k)).join("")}</div></div>
   <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">IN PROGRESS</span>進行中</h2></div>
     <div class="d-board n3">${["下書き","査読中","公開待ち"].map(st=>col(st,list.filter(a=>ast(a)===st))).join("")}</div></div>`;
@@ -913,7 +936,8 @@ function viewKpi(){
 /* ---------- エージェント（AI編集部） ---------- */
 // 役割ごとの Routine。手順書は ops/<manual>（このアプリと一緒に公開）
 const AG={
-  planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った記事案を受信箱に出す",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","運営マニュアルの3つの問いで絞り、受信箱に3件まで出す","採用・見送りの理由を次の提案に生かす"],never:"記事カードは作らない（決めるのは運営者）"},
+  planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った企画を優先度つきでカードにする",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","3つの問いで絞り、優先度（高・中・低）と理由をつけて企画中のカードにする","記事選定から頼まれたカテゴリを優先して補充する"],never:"記事は書かない・企画中より先に進めない（選ぶのは記事選定）"},
+  selector:{l:"記事選定",kinds:["select"],trig:"selectorTriggerId",desc:"企画を査定し、期間と本数に合わせて選んで下書きに回す",when:"毎日 7:43＋依頼",pc:"launch",ic:"target",manual:"selector-manual.md",yen:60,tasks:["新しい企画を査定し、質の低いものは理由つきで受信箱へ","指定の期間と本数に合わせて企画を選び、下書きに回して作成に頼む","カテゴリの企画が少なくなったら、企画エージェントに依頼する"],never:"記事を書かない・企画を自分で作らない・公開済みの記事は触らない"},
   writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","記事に入れる図（タイムライン・方角・距離）を作る","査読の指摘で書き直す（最大5回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
   reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
   designer:{l:"画像",kinds:["eyecatch","snsimage"],trig:"designerTriggerId",desc:"査読でAになった記事のアイキャッチと、審査を通ったSNS投稿の画像を作る",when:"依頼（査読A・SNS審査OK）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、アイキャッチ（見出し・英語の一文・背景）を作る","審査を通ったSNS投稿に、X（横長）・Instagram（縦長）の画像を作る","直近と背景がかぶらないよう描き分け、できた画像を自分で確かめる"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
@@ -925,7 +949,7 @@ const AG={
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
+const KIND_L={select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -997,7 +1021,7 @@ async function setPause(role,paused){
 }
 // 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
 // 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
-const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","writer","reviewer","designer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
 function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
 const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
 function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
@@ -1084,7 +1108,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview","designer"]};
+const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview","designer"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
@@ -1207,6 +1231,7 @@ function bindAgents(pg){
     if(role==="writer"||role==="reviewer"){const r=await fire(role);toast(r.ok?`${AG[role].l}の見回りを起動しました`:r.why)}
     else requestJob(AG[role].kinds[0])});
   pg.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>requestJob(b.dataset.job));
+  bindSel(pg);
   pg.querySelectorAll("[data-chain]").forEach(b=>b.onclick=()=>{S.chainSel=S.chainSel===b.dataset.chain?null:b.dataset.chain;render()});
   pg.querySelectorAll("[data-ag-role]").forEach(b=>b.onclick=()=>{S.agRole=S.agRole===b.dataset.agRole?null:b.dataset.agRole;render()});
   pg.querySelectorAll("[data-lesson-del]").forEach(b=>b.onclick=async()=>{
@@ -1220,9 +1245,9 @@ function bindAgents(pg){
 }
 
 /* ---------- 受信箱（運営者の判断が要るもの） ---------- */
-const IB_KIND={change:["公式の変化","bad","eye"],loopFailed:["査読で止まった記事","bad","check"],recheck:["公開済みの点検","warn","scan"],question:["エージェントからの質問","warn","doc"],idea:["記事の企画案","info","idea"],audit:["点検の結果","warn","scan"],other:["そのほか","mute","inbox"]};
-const IB_EN={change:"OFFICIAL UPDATE",loopFailed:"NEEDS DECISION",recheck:"RECHECK",question:"QUESTION",idea:"IDEAS",audit:"AUDIT",other:"OTHER"};
-const IB_ORDER=["change","loopFailed","recheck","question","idea","audit","other"];
+const IB_KIND={planReview:["企画の見直し","warn","idea"],change:["公式の変化","bad","eye"],loopFailed:["査読で止まった記事","bad","check"],recheck:["公開済みの点検","warn","scan"],question:["エージェントからの質問","warn","doc"],idea:["記事の企画案","info","idea"],audit:["点検の結果","warn","scan"],other:["そのほか","mute","inbox"]};
+const IB_EN={planReview:"PLAN REVIEW",change:"OFFICIAL UPDATE",loopFailed:"NEEDS DECISION",recheck:"RECHECK",question:"QUESTION",idea:"IDEAS",audit:"AUDIT",other:"OTHER"};
+const IB_ORDER=["change","loopFailed","recheck","question","planReview","idea","audit","other"];
 const openInbox=()=>S.inbox.filter(i=>!i.status||i.status==="open").sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
 const inVal=id=>S.inputs[id]||"";
 function inboxPeek(){
@@ -1237,6 +1262,7 @@ function ibActions(it){
   const note=(ph,l="メモ（なくてもよい）")=>`<label class="d-fld wide">${l}<textarea id="ibn-${esc(id)}" data-keep rows="2" placeholder="${esc(ph)}">${esc(inVal("ibn-"+id))}</textarea></label>`;
   switch(it.kind){
     case "idea": return note("見送る理由や、書くときの指示（企画エージェントが次から参考にします）","理由・指示")+`<div class="d-actions">${B("adopt","採用する","")}${B("adoptWrite","採用してすぐ書かせる")}${B("dismiss","見送る")}</div>`;
+    case "planReview": return note("直す点や、企画エージェントへの指示")+`<div class="d-actions">${a?B("planBack","企画に戻す",""):""}${B("replan","企画を作り直させる")}${a?B("planDrop","見送る"):B("dismiss","見送る")}</div>`;
     case "change": return `<div class="d-actions">${B("done","対応した","")}${it.eventId?B("event","イベントを開く"):""}${a&&a.updateDraft?B("upd","直しの案を見る"):""}${B("dismiss","対応しない")}</div>`;
     case "loopFailed": return note("書き直すときの指示")+`<div class="d-actions">${B("rewrite","もう一度書かせる","")}${a&&a.draft?B("draft","稿を見る"):""}${B("ready","この稿で公開待ちにする")}${B("shelve","見送る（企画中に戻す）")}</div>`;
     case "question": return note("答え","答え")+`<div class="d-actions">${a?B("answerWrite","答えて書き直しを頼む",""):""}${B("answer","答えを保存",a?"secondary":"")}${B("dismiss","見送る")}</div>`;
@@ -1285,6 +1311,12 @@ async function ibAct(id,act){
     if(act==="adoptWrite") await requestWrite({...card,_id:aid},{note:txt});
     return;
   }
+  if(act==="planBack"&&a){try{await S.db.doc("articles/"+a._id).update({status:"企画中",assess:{...(a.assess||{}),grade:"OK",override:true,ownerNote:txt,at:iso()},updatedAt:iso()})}catch(e){toast("保存できませんでした");return}await markInbox(it,"done",txt||"企画に戻す");toast("企画中に戻しました");return}
+  if(act==="planDrop"&&a){try{await S.db.doc("articles/"+a._id).update({status:"見送り",updatedAt:iso()})}catch(e){toast("保存できませんでした");return}await logPlanner(a.title,"見送り",txt||(it.body||"").slice(0,200));await markInbox(it,"dismissed",txt||"見送り");toast("見送りました");return}
+  if(act==="replan"){if(a){try{await S.db.doc("articles/"+a._id).update({status:"見送り",updatedAt:iso()})}catch(_){}}
+    await logPlanner(a?a.title:it.title,"見送り",(txt?txt+"／":"")+(it.body||"").slice(0,200));
+    await requestJob("plan",{pillar:a&&a.pillar||"",title:"企画の作り直し",note:[`「${a?a.title:it.title}」の代わりの企画を出す（記事選定の査定で不可）`,txt,(it.body||"").slice(0,800)].filter(Boolean).join("\n")});
+    await markInbox(it,"done",txt||"作り直しを依頼");return}
   if(act==="dismiss"){if(it.kind==="idea")await logPlanner(it.title,"見送り",txt);if(await markInbox(it,"dismissed",txt))toast("見送りました");return}
   if(act==="done"){if(await markInbox(it,"done",txt))toast("対応済みにしました");return}
   if(act==="answer"){if(!txt){toast("答えを入れてください");return}if(await markInbox(it,"done",txt))toast("答えを保存しました");return}
@@ -1602,7 +1634,7 @@ render();requestAnimationFrame(()=>placeLens(false));
   sub("inbox",l=>S.inbox=l);
   sub("jobs",l=>{S.jobs=l.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));if(S.ready)kickQueued()});
   sub("settings",l=>{const m={};for(const d of l)m[d._id]=d;S.bg=m.background||{};S.pauseRaw=(m.agentPause&&m.agentPause.roles)||{};S.pause=Object.fromEntries(Object.entries(S.pauseRaw).map(([k,v])=>[k,!!(v&&v.paused)]));
-    S.snsConf=m.sns||{};S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.plannerLog=(m.plannerLog&&m.plannerLog.items)||[];S.loopConf={enabled:true,maxRounds:5,pass:"A",...(m.reviewLoop||{})}});
+    S.snsConf=m.sns||{};S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.plannerLog=(m.plannerLog&&m.plannerLog.items)||[];S.loopConf={enabled:true,maxRounds:5,pass:"A",...(m.reviewLoop||{})};S.selConf={days:14,count:3,auto:false,minStock:3,...(m.selection||{})}});
 })();
 })();
 </script>
