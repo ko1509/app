@@ -18,7 +18,7 @@ spec.json の例:
 - date / time: 入れると下に出る（延期の多い打ち上げは、日付が変わったら作り直す）
 文節の切れ目で改行するため、先に pip install budoux を実行しておく（無くても動くが、改行が1文字単位になる）。
 背景はすべてプログラムで描いた CG（写真ではない）なので、右下に「CG ILLUSTRATION」と入れる。
-実在のロケットの形や、ロゴ・人物は描かない。
+実在のロケットの形や、ロゴ・特定の人物は描かない（人は顔の無い影だけ）。ロケットの光跡は1本、流星は1〜3本まで。
 """
 import json, os, re, sys, urllib.request
 import numpy as np
@@ -302,33 +302,53 @@ class Scene:
         pts = self.bez((x, hzp), (x + side * W * .02, hzp - H * height * .40), (x + side * W * .10, hzp - H * height * .80), (x + side * W * .33, hzp - H * height))
         return self.streak(img, pts, width=width, ramp=ramp, strength=strength)
 
-    def m_meteors(self, img, rx=.70, ry=.18, n=7):
-        rx, ry = W * rx, H * ry
-        for _ in range(n):
-            ang = self.rng.uniform(0, 2 * np.pi); r0 = self.rng.uniform(120, 420); ln = self.rng.uniform(160, 420)
-            p0 = (rx + np.cos(ang) * r0, ry + np.sin(ang) * r0); p1 = (rx + np.cos(ang) * (r0 + ln), ry + np.sin(ang) * (r0 + ln))
-            pts = [(p0[0] + (p1[0] - p0[0]) * k / 40, p0[1] + (p1[1] - p0[1]) * k / 40) for k in range(41)]
-            img = self.streak(img, pts, core=(.95, .98, 1), halo=(.45, .6, 1), width=3, glow=14, strength=self.rng.uniform(.5, .95), ramp=0.9)
-        return img
+    def m_meteors(self, img, rx=.70, ry=.18, n=2, hz=.78):
+        """流れ星（写真のように）：放射点から外へ向かう細い線。尾は淡く、頭に向かって明るくなり、ふっと消える。
+        1枚の写真に写るのはふつう1〜2本。いちばん明るい1本以外は暗くする"""
+        rxp, ryp = W * rx, H * ry; lay = np.zeros((H, W, 3), np.float32)
+        for i in range(n):
+            for _ in range(80):
+                ang = self.rng.uniform(0, 2 * np.pi); r0 = W * self.rng.uniform(.14, .36)
+                ln = r0 * self.rng.uniform(.45, .70) * (1.5 if i == 0 else .7)
+                p0 = np.array([rxp + np.cos(ang) * r0, ryp + np.sin(ang) * r0]); p1 = p0 + np.array([np.cos(ang), np.sin(ang)]) * ln
+                if all(W * .04 < p[0] < W * .96 and H * .04 < p[1] < H * (hz - .08) for p in (p0, p1)): break
+            amp = 1.0 if i == 0 else self.rng.uniform(.22, .45)
+            m = int(ln * 3); t = np.linspace(0, 1, m)
+            b = t ** 1.4 * (1 - np.clip((t - .80) / .20, 0, 1) ** 1.6)
+            b = b * (1 + .35 * np.exp(-((t - self.rng.uniform(.55, .8)) / .03) ** 2))  # 途中で一瞬明るくなる
+            col = np.where((t > .55)[:, None], np.array([.72, 1, .80]), np.where((t < .30)[:, None], np.array([1, .72, .78]), np.array([.95, .97, 1])))
+            xs = np.clip((p0[0] + (p1[0] - p0[0]) * t).astype(int), 0, W - 1); ys = np.clip((p0[1] + (p1[1] - p0[1]) * t).astype(int), 0, H - 1)
+            np.add.at(lay, (ys, xs), (b * amp)[:, None] * col / 3)
+        mx = max(lay.max(), 1e-6); a = lay / mx
+        g1 = np.stack([self.blur(a[..., k], .9) for k in range(3)], -1); g2 = np.stack([self.blur(a[..., k], 3.5) for k in range(3)], -1)
+        g3 = np.stack([self.blur(a[..., k], 10) for k in range(3)], -1)
+        return img + (g1 * 3.2 + g2 * 1.4 + g3 * .5) * min(mx, 1.0) * 1.8
 
-    def m_constellation(self, img, name, cx=.70, cy=.30, scale=1.0, radiant=None):
-        """星座の形（模式図。実際の位置関係を簡略化）"""
-        shapes = {"orion": ([(-1.0, -1.3), (.9, -1.1), (-.35, -.05), (0, 0), (.35, .05), (-.9, 1.3), (1.0, 1.2)], [(0, 2), (1, 4), (2, 3), (3, 4), (2, 5), (4, 6)]),
-                  "gemini": ([(-.4, -1.3), (.4, -1.2), (-.6, -.2), (.3, -.1), (-.8, .9), (.2, 1.1)], [(0, 2), (2, 4), (1, 3), (3, 5), (0, 1)]),
-                  "leo": ([(-1.1, -.6), (-.7, -1.1), (-.1, -1.0), (.1, -.5), (-.2, 0), (1.1, .3), (.3, .6)], [(0, 1), (1, 2), (2, 3), (3, 4), (4, 6), (6, 5), (3, 5)])}
-        pts, lines = shapes.get(name, shapes["orion"]); u = 150 * scale
-        P = [(W * cx + x * u, H * cy + y * u) for x, y in pts]
-        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
-        for a, b in lines: d.line([P[a], P[b]], fill=70, width=2)
-        a = np.asarray(m).astype(np.float32) / 255
-        img = img + a[..., None] * np.array([.7, .8, 1.0])
-        lay = np.zeros((H, W), np.float32)
-        for x, y in P: lay[int(y), int(x)] = 1
-        img = img + (self.blur(lay, 3) * 40 + self.blur(lay, 10) * 25)[..., None] * np.array([1, .97, .9])
-        if radiant:
-            rxp, ryp = W * radiant[0], H * radiant[1]
-            m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).ellipse((rxp - 26, ryp - 26, rxp + 26, ryp + 26), outline=255, width=4)
-            img = img + (np.asarray(m).astype(np.float32) / 255)[..., None] * np.array([.91, .28, .11]) * 1.4
+    # 星座の明るい星（相対位置はおおよそ。等級と色つき）
+    CONS = {"orion": [(-.95, -1.05, .5, (1, .68, .45)), (.70, -.95, 1.6, (.82, .88, 1)), (.05, -1.55, 3.4, (.85, .9, 1)),
+                      (-.30, .15, 1.8, (.82, .88, 1)), (0, .03, 1.7, (.82, .88, 1)), (.28, -.08, 2.2, (.82, .88, 1)),
+                      (-.70, 1.25, 2.1, (.82, .88, 1)), (.85, 1.15, .1, (.78, .86, 1))],
+            "gemini": [(-.30, -1.20, 1.6, (.9, .94, 1)), (-.75, -.95, 1.1, (1, .82, .6)), (.10, -.20, 2.9, (1, .95, .85)),
+                       (-.40, .10, 3.5, (1, .95, .9)), (.55, .55, 1.9, (.9, .94, 1)), (.20, .95, 3.0, (1, .9, .8))],
+            "leo": [(.60, .55, 1.4, (.8, .87, 1)), (.45, -.30, 2.0, (1, .8, .55)), (.55, -.75, 3.4, (1, .95, .9)),
+                    (.20, -1.00, 3.0, (1, .95, .9)), (-.15, -.95, 3.4, (1, .9, .8)), (-1.30, .20, 2.1, (.9, .94, 1)), (-.70, .00, 2.6, (.9, .94, 1))]}
+
+    def m_constellation(self, img, name, cx=.70, cy=.30, scale=1.0, radiant=None, lines=False):
+        """星座の星（写真に線は写らないので、ふつうは線を描かない）"""
+        u = 150 * scale; lay = np.zeros((H, W, 3), np.float32); pts = []
+        for x, y, mag, col in self.CONS.get(name, self.CONS["orion"]):
+            px, py = int(W * cx + x * u), int(H * cy + y * u); pts.append((px, py))
+            lay[py, px] = np.array(col) * 10 ** (-.4 * (mag - .5))
+        g = [np.stack([self.blur(lay[..., k], r) for k in range(3)], -1) for r in (1.2, 3.2, 9)]
+        img = img + lay * 1.5 + g[0] * 70 + g[1] * 40 + g[2] * 14
+        if name == "orion":  # オリオン大星雲（ぼんやり）
+            y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+            neb = np.exp(-(((x - W * cx - .04 * u) / (u * .07)) ** 2 + ((y - H * cy - .55 * u) / (u * .10)) ** 2))
+            img = img + neb[..., None] * np.array([.25, .12, .2]) * .6
+        if lines:
+            m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+            for a, b in zip(pts, pts[1:]): d.line([a, b], fill=50, width=2)
+            img = img + (np.asarray(m).astype(np.float32) / 255)[..., None] * np.array([.7, .8, 1.0])
         return img
 
     def m_moon(self, img, cx=.72, cy=.28, r=110, warm=False):
@@ -484,6 +504,171 @@ class Scene:
         tex = self.noise((60, 24, 10), (1, .6, .4))
         return img + (a * (.5 + .7 * tex))[..., None] * np.array(col) * .9
 
+    # ---------- 施設・持ち物（手前の物は、空の明かりと赤いライトで縁が光る） ----------
+    def _mask(self, draw_fn, soften=.8):
+        m = Image.new("L", (W, H), 0); draw_fn(ImageDraw.Draw(m))
+        return np.asarray(m.filter(ImageFilter.GaussianBlur(soften))).astype(np.float32) / 255
+
+    def put(self, img, a, base=(.006, .007, .012), lamp=None, sky=(.10, .13, .20), rim=5):
+        up = np.zeros_like(a); up[rim:] = a[:-rim]
+        out = np.array(base) + (self.blur(np.clip(a - up, 0, 1), 1.2) * 1.4)[..., None] * np.array(sky)
+        if lamp:
+            lx, ly, col, st = lamp; y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+            fall = np.exp(-np.sqrt((x - lx) ** 2 + (y - ly) ** 2) / (W * .10)) * st
+            edge = np.clip(a - self.blur(a, 4), 0, 1) * 2.5
+            out = out + (fall * (.18 + edge))[..., None] * np.array(col)
+        return img * (1 - a[..., None]) + a[..., None] * out
+
+    def lamp_glow(self, img, lx, ly, col=(1, .12, .06), st=1.0, hz=.78):
+        y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+        pt = np.exp(-((x - lx) ** 2 + (y - ly) ** 2) / (2 * 6 ** 2)) * 3 + np.exp(-np.sqrt((x - lx) ** 2 + (y - ly) ** 2) / 40) * .5
+        pool = np.exp(-(((x - lx) / (W * .16)) ** 2 + ((y - ly - 10) / (H * .06)) ** 2)) * (y > H * hz) * .45
+        return img + ((pt + pool) * st)[..., None] * np.array(col)
+
+    def m_pad(self, img, hz, x=.66, scale=1.0, sea=True):
+        """遠くの射点：照明に照らされて立つロケット（実在の形ではない、一般的な形）"""
+        cx = W * x; by = H * hz + 3; k = scale * S / 2
+        rh, rw, tw = 165 * k, 13 * k, 26 * k
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        beams = self._mask(lambda d: [d.polygon([(cx + dx * k, by), (cx - rw * .8, by - rh * .95), (cx + rw * .8, by - rh * .95)], fill=40) for dx in (-120, 110)], 10)
+        img = img + beams[..., None] * np.array([.75, .82, 1]) * 1.2
+        halo = np.exp(-np.sqrt(((xx - cx) / (W * .06)) ** 2 + ((y - by + rh * .4) / (H * .10)) ** 2)) * .35
+        img = img + halo[..., None] * np.array([1, .86, .66])
+        def tower(d):
+            d.rectangle((cx + rw * .9, by - rh * 1.08, cx + rw * .9 + tw, by), fill=255)
+            d.rectangle((cx + rw * .5, by - rh * .80, cx + rw * .9, by - rh * .76), fill=255)
+            for mx in (-150, 170):
+                d.line([(cx + mx * k, by), (cx + mx * k, by - rh * 1.30)], fill=255, width=max(2, int(3 * k)))
+            d.rectangle((cx - 260 * k, by - 6 * k, cx + 280 * k, by + 3), fill=255)
+        img = self.put(img, self._mask(tower, .6), (.012, .013, .02), sky=(.05, .06, .09))
+        body = self._mask(lambda d: (d.rectangle((cx - rw / 2, by - rh * .92, cx + rw / 2, by - 8 * k), fill=255),
+                                     d.polygon([(cx - rw / 2, by - rh * .92), (cx, by - rh), (cx + rw / 2, by - rh * .92)], fill=255),
+                                     [d.rectangle((cx + sx * (rw / 2 + 3 * k) - 3 * k, by - rh * .38, cx + sx * (rw / 2 + 3 * k) + 3 * k, by - 6 * k), fill=255) for sx in (-1, 1)]), .7)
+        shade = np.clip(.65 + .35 * (cx - xx) / rw, .4, 1)
+        img = img * (1 - body[..., None]) + (body * shade)[..., None] * np.array([.95, .92, .86])
+        lights = np.zeros((H, W), np.float32)
+        for j in range(9): lights[int(by - rh * (.1 + j * .11)), int(cx + rw * .9 + tw * (.2 if j % 2 else .8))] = 1
+        img = img + self.blur(lights, 1.4)[..., None] * 30 * np.array([1, .82, .55])
+        red = np.zeros((H, W), np.float32)
+        for mx in (-150, 170): red[int(by - rh * 1.30), int(cx + mx * k)] = 1
+        img = img + self.blur(red, 1.6)[..., None] * 40 * np.array([1, .1, .05])
+        if sea:
+            rows = np.arange(H)[:, None] - by; wav = self.lowres_noise(50, 12, sx=1, sy=.1, octaves=3)
+            col = np.exp(-((xx - cx - (wav - .5) * 30) / (W * .012)) ** 2) * (rows > 0) * np.exp(-np.clip(rows, 0, None) / (H * .10)) * (wav > .42)
+            img = img + col[..., None] * np.array([1, .9, .75]) * .5
+        return img
+
+    def m_observatory(self, img, hz, x=.72, size=1.0, lamp=None):
+        """天文台：スリットが開き、中の赤い明かりと望遠鏡が見える"""
+        cx = W * x; by = H * hz + 8; r = 150 * size * S / 2 * 1.4; bh = r * .9
+        a = self._mask(lambda d: (d.rectangle((cx - r * 1.05, by - bh, cx + r * 1.05, H), fill=255), d.pieslice((cx - r, by - bh - r, cx + r, by - bh + r), 180, 360, fill=255)))
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        shade = np.clip(.5 + .5 * (xx - cx) / r, 0, 1) * (y < by - bh) * a
+        img = self.put(img, a, (.02, .022, .03), sky=(.14, .16, .22))
+        img = img + (shade * .05)[..., None] * np.array([.7, .8, 1])
+        slit = self._mask(lambda d: d.rectangle((cx - r * .12, by - bh - r * .96, cx + r * .12, by - bh - r * .05), fill=255), .5)
+        inside = np.clip(1 - (y - (by - bh - r)) / r, 0, 1) * .2 + .25
+        img = img * (1 - slit[..., None]) + slit[..., None] * (inside[..., None] * np.array([.55, .05, .03]))
+        tube = self._mask(lambda d: d.line([(cx - r * .05, by - bh - r * .25), (cx + r * .25, by - bh - r * 1.05)], fill=255, width=int(r * .14)), .6)
+        img = img * (1 - (tube * slit)[..., None] * .9)
+        door = self._mask(lambda d: d.rectangle((cx - r * .55, by - bh * .55, cx - r * .30, by), fill=255), .6)
+        img = img + door[..., None] * np.array([.45, .05, .03]) + self.blur(door, 22)[..., None] * np.array([.25, .03, .02])
+        return img
+
+    def m_planetarium(self, img, hz, x=.68, size=1.0):
+        """科学館・プラネタリウム：ドームのある建物、窓の明かり、街灯"""
+        cx = W * x; by = H * hz + 6; bw = W * .22 * size; bh = H * .10 * size; r = bw * .38
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        body = self._mask(lambda d: (d.rectangle((cx - bw, by - bh, cx + bw, H), fill=255), d.pieslice((cx - r, by - bh - r * .9, cx + r, by - bh + r * .9), 180, 360, fill=255)))
+        dome = self._mask(lambda d: d.pieslice((cx - r, by - bh - r * .9, cx + r, by - bh + r * .9), 180, 360, fill=255)) * (y < by - bh)
+        img = self.put(img, body, (.02, .024, .036), sky=(.16, .2, .3))
+        img = img + (dome * np.clip(.35 - (y - (by - bh - r * .9)) / (r * 3), 0, .35))[..., None] * np.array([.6, .7, .9])
+        win = self._mask(lambda d: [d.rectangle((cx - bw + 40 + i * (2 * bw - 80) / 14, by - bh * .62, cx - bw + 40 + i * (2 * bw - 80) / 14 + (2 * bw - 80) / 22, by - bh * .30), fill=255) for i in range(15)], .7)
+        img = img + win[..., None] * np.array([1, .72, .38]) * .9 + self.blur(win, 20)[..., None] * np.array([1, .6, .3]) * .5
+        ent = self._mask(lambda d: d.rectangle((cx - bw * .12, by - bh * .25, cx + bw * .12, by), fill=255), .6)
+        img = img + ent[..., None] * np.array([1, .8, .5]) + self.blur(ent, 40)[..., None] * np.array([1, .6, .3]) * .6
+        for px in (cx - bw * 1.4, cx + bw * 1.35):
+            pole = self._mask(lambda d: d.line([(px, by + 40), (px, by - bh * .9)], fill=255, width=6), .6)
+            img = self.put(img, pole)
+            l = np.exp(-((xx - px) ** 2 + (y - by + bh * .9) ** 2) / (2 * 7 ** 2)) * 2 + np.exp(-np.sqrt((xx - px) ** 2 + (y - by + bh * .9) ** 2) / 60) * .4
+            img = img + l[..., None] * np.array([1, .75, .45])
+        return img
+
+    def m_deck(self, img, hz, people=3):
+        """展望デッキ：手前に手すり、海を見る人の影（特定の人ではない）"""
+        fy = H * .84
+        def rail(d):
+            for xx in np.arange(W * .52, W + 1, W * .095): d.rectangle((xx, H * .70, xx + 10, H), fill=255)
+            d.rectangle((W * .50, H * .690, W, H * .708), fill=255); d.rectangle((W * .50, H * .80, W, H * .808), fill=255)
+        def ppl(d):
+            spots = [(.62, .80, 0), (.69, .58, 0), (.82, .86, 1), (.90, .80, 0)][:people]
+            for px, sc, point in spots:
+                X = W * px; hh = H * .36 * sc; u = hh / 8; top = fy - hh  # 8頭身くらい
+                d.ellipse((X - u * .45, top, X + u * .45, top + u * 1.05), fill=255)
+                d.rectangle((X - u * .18, top + u * .9, X + u * .18, top + u * 1.3), fill=255)
+                d.ellipse((X - u * .92, top + u * 1.15, X + u * .92, top + u * 1.95), fill=255)
+                d.polygon([(X - u * .90, top + u * 1.55), (X + u * .90, top + u * 1.55), (X + u * .62, top + u * 4.0), (X - u * .62, top + u * 4.0)], fill=255)
+                d.polygon([(X - u * .66, top + u * 3.9), (X + u * .66, top + u * 3.9), (X + u * .55, fy), (X + u * .12, fy), (X, top + u * 4.9), (X - u * .12, fy), (X - u * .55, fy)], fill=255)
+                for sx in (-1, 1):
+                    if point and sx == 1: d.line([(X + u * .75, top + u * 1.6), (X + u * 2.4, top - u * .1)], fill=255, width=int(u * .30))
+                    else: d.line([(X + sx * u * .80, top + u * 1.55), (X + sx * u * .98, top + u * 4.0)], fill=255, width=int(u * .30))
+        img = self.put(img, self._mask(ppl, .8), (.008, .009, .014), sky=(.30, .22, .22), rim=4)
+        return self.put(img, self._mask(rail, .6), (.006, .007, .011), sky=(.35, .26, .24), rim=3)
+
+    def m_gear(self, img, items, hz, lamp=None):
+        """持ち物を手前に置く（chair・backpack・thermos・mug・binoculars・bench・headlamp）。x は横の位置、size は大きさ"""
+        fy = H * .99
+        for it in items:
+            k = it["type"]; X = W * it.get("x", .75); sz = it.get("size", 1.0) * H; base = H * it.get("y", .99)
+            def shp(d, k=k, X=X, sz=sz, base=base):
+                if k == "chair":
+                    h = sz * .42; w = h * .62; seat = base - h * .45
+                    d.line([(X - w * .5, base), (X + w * .5, seat)], fill=255, width=10); d.line([(X + w * .5, base), (X - w * .5, seat)], fill=255, width=10)
+                    d.polygon([(X - w * .55, seat - 8), (X + w * .55, seat - 8), (X + w * .5, seat + 14), (X - w * .5, seat + 14)], fill=255)
+                    d.polygon([(X + w * .30, seat), (X + w * .55, seat), (X + w * .78, base - h), (X + w * .48, base - h)], fill=255)
+                    d.line([(X - w * .55, seat - h * .12), (X + w * .35, seat - h * .12)], fill=255, width=8)
+                elif k == "backpack":
+                    h = sz * .26; w = h * .72
+                    d.rounded_rectangle((X - w / 2, base - h, X + w / 2, base), radius=int(w * .3), fill=255)
+                    d.rounded_rectangle((X - w * .56, base - h * 1.04, X + w * .56, base - h * .72), radius=int(w * .3), fill=255)
+                    d.arc((X - w * .2, base - h * 1.25, X + w * .2, base - h * .95), 180, 360, fill=255, width=8)
+                elif k == "thermos":
+                    h = sz * .24; w = h * .30
+                    d.rounded_rectangle((X - w / 2, base - h, X + w / 2, base), radius=int(w * .25), fill=255)
+                    d.rounded_rectangle((X - w * .42, base - h * 1.12, X + w * .42, base - h * .96), radius=6, fill=255)
+                elif k == "mug":
+                    h = sz * .09; w = h * 1.0
+                    d.polygon([(X - w / 2, base - h), (X + w / 2, base - h), (X + w * .44, base), (X - w * .44, base)], fill=255)
+                    d.arc((X + w * .28, base - h * .85, X + w * .82, base - h * .25), 270, 90, fill=255, width=9)
+                elif k == "binoculars":  # こちらを向いて置いた双眼鏡（対物レンズが2つ見える）
+                    r = sz * .075
+                    d.rounded_rectangle((X - r * 2.25, base - r * 2.3, X + r * 2.25, base), radius=int(r * .9), fill=255)
+                    d.rounded_rectangle((X - r * .5, base - r * 2.75, X + r * .5, base - r * 1.6), radius=int(r * .3), fill=255)
+                elif k == "bench":
+                    top = base; d.rectangle((W * it.get("x0", .40), top, W * 1.02, top + 26), fill=255)
+                    d.rectangle((W * it.get("x0", .40), top + 34, W * 1.02, top + 50), fill=255)
+                    for lx in (W * (it.get("x0", .40) + .05), W * .92): d.rectangle((lx, top, lx + 22, H), fill=255)
+                elif k == "headlamp":
+                    d.rounded_rectangle((X - 34, base - 30, X + 34, base), radius=10, fill=255)
+                    d.arc((X - 90, base - 60, X + 90, base + 30), 160, 20, fill=255, width=10)
+            a = self._mask(shp, .8)
+            img = self.put(img, a, lamp=lamp, sky=(.22, .26, .36) if k != "bench" else (.34, .38, .48))
+            if k == "binoculars":
+                r = sz * .075; y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+                for cxl in (X - r * 1.12, X + r * 1.12):
+                    dd = np.sqrt((xx - cxl) ** 2 + (y - (base - r * 1.15)) ** 2); lens = np.clip(r * .88 - dd, 0, 1)
+                    glass = np.clip(.10 + .25 * (base - r * 1.15 - y) / r, 0, .4)[..., None] * np.array([.45, .55, .9])
+                    ring = np.exp(-((dd - r * .9) / 3) ** 2) * .5
+                    hl = np.exp(-(((xx - cxl + r * .35) / (r * .16)) ** 2 + ((y - base + r * 1.55) / (r * .10)) ** 2)) * .9
+                    img = img * (1 - lens[..., None]) + lens[..., None] * glass + (ring + hl * lens)[..., None] * np.array([.9, .85, 1])
+            if k == "mug" and it.get("steam", True):
+                st = self.lowres_noise(18, 6, sx=.4, sy=1, octaves=4); y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+                h = sz * .09; env = np.exp(-((xx - X - np.sin(y / 60) * 18) / (h * .35)) ** 2) * np.clip((base - h - y) / (h * 3.2), 0, 1) * np.clip(1 - (base - h - y) / (h * 3.2), 0, 1) * (y < base - h)
+                img = img + (env * np.clip(st * 1.6 - .5, 0, 1) * .55)[..., None] * np.array([.75, .78, .85])
+            if k == "headlamp":
+                img = self.lamp_glow(img, X + 34, base - 15, tuple(it.get("color", (1, .12, .06))), 1.0, hz)
+        return img
+
     def compose(self, c):
         hz = c.get("horizon", .76); tone = c.get("tone", "night"); motifs = [m if isinstance(m, dict) else {"type": m} for m in c.get("motifs", [])]
         types = [m["type"] for m in motifs]
@@ -513,8 +698,8 @@ class Scene:
         # 空のモチーフ
         for mo in motifs:
             k = mo["type"]
-            if k == "meteors": img = self.m_meteors(img, mo.get("rx", .70), mo.get("ry", .18), mo.get("n", 7))
-            elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"))
+            if k == "meteors": img = self.m_meteors(img, mo.get("rx", .70), mo.get("ry", .18), min(mo.get("n", 2), 3), hz)
+            elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"), mo.get("lines", False))
             elif k in ("moon", "bigmoon"): img = self.m_moon(img, mo.get("cx", .72), mo.get("cy", .28 if k == "moon" else hz - .12), mo.get("r", 110 if k == "moon" else 260), k == "bigmoon")
             elif k == "planets": img = self.m_planets(img, mo.get("cx", .68), mo.get("cy", .42))
             elif k == "iss": img = self.m_straight(img, (mo.get("x0", .30), mo.get("y0", .62)), (mo.get("x1", .95), mo.get("y1", .12)))
@@ -525,9 +710,7 @@ class Scene:
                 img, tip = self.trail_real(img, hz, mo.get("x", .60), mo.get("side", 1), mo.get("height", .74), mo.get("strength", 1.0), mo.get("curve", .33))
                 trail_x = W * mo.get("x", .60)
                 if mo.get("plume"): img = self.jellyfish(img, tip[0], tip[1], mo.get("plumeSize", 320))
-            elif mo["type"] == "trails":
-                for x, h, st in ((.40, .52, .5), (.57, .70, .85), (.74, .60, .65)):
-                    img, _ = self.trail_real(img, hz, x, 1, h, st, .25)
+            # 何本ものロケットが同時に上がる絵は描かない（ありえないため）。軌跡は1本だけ
         if c.get("clouds"):
             cl = c["clouds"]; img = self.clouds(img, cl.get("y0", hz - .16), cl.get("y1", hz - .02), tuple(cl.get("lit", (.9, .6, .45) if tone in ("dawn", "dusk") else (.35, .4, .5))), cl.get("density", .55))
         # 地上
@@ -554,8 +737,17 @@ class Scene:
             img = self.mountains(img, hz, 3, c.get("rough", 170), trees=(g == "forest"))
         else:
             img = self.mountains(img, hz, 2, 60)
+        lamp = next(((W * m.get("x", .7) + 34, H * m.get("y", .99) - 15, tuple(m.get("color", (1, .12, .06))), m.get("strength", 1.0))
+                     for m in motifs if m["type"] == "headlamp"), None)
+        gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp")]
         for mo in motifs:
-            if mo["type"] in ("dome", "tripod", "phone"): img = self.m_object(img, mo["type"], hz, mo.get("x", .72))
+            k = mo["type"]
+            if k in ("dome", "tripod", "phone"): img = self.m_object(img, k, hz, mo.get("x", .72))
+            elif k == "pad": img = self.m_pad(img, hz, mo.get("x", .66), mo.get("scale", 1.0), g in ("sea", "island", "lake"))
+            elif k == "observatory": img = self.m_observatory(img, hz, mo.get("x", .72), mo.get("size", 1.0))
+            elif k == "planetarium": img = self.m_planetarium(img, hz, mo.get("x", .68), mo.get("size", 1.0))
+            elif k == "deck": img = self.m_deck(img, hz, mo.get("people", 3))
+        if gear: img = self.m_gear(img, sorted(gear, key=lambda m: m["type"] != "bench"), hz, lamp)
         return img
 
     def startrail_sky(self):

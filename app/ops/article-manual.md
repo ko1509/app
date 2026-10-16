@@ -122,7 +122,7 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 **アイキャッチ**（`ops/eyecatch.py`。写真風の CG の背景に、記事の見出しを組む。1200×630）
 - 先に `pip install budoux`（文節で改行するため）。書体とロゴは初回に自動で取ってくる。
 - 文字とレイアウトは標準の型（`layout: "cinema"`：左上に英字のカテゴリ、下に大きな見出しと副題、右下にロゴ）。背景はフィルム調（自動）。
-- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`（リポジトリ）と同じ形。
+- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`・`site/eyecatch/v4/*.json`（リポジトリ。流星・施設・持ち物は v4 が新しい）と同じ形。
   ```json
   {"title": "<記事のタイトル>", "category": "launch",
    "headline": "H3ロケット10号機を見る", "sub": "家の近くの空・中継・種子島", "kicker": "H3 F10 / MMX",
@@ -136,7 +136,9 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
     - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）
     - `ground`：`sea`（海辺）・`island`（島と町の灯り）・`lake`（湖と山と木）・`mountains`（重なる山。`rough` で険しさ）・`forest`（山と木）・`city`（街）・`hills`（低い丘）
     - `clouds`：薄い雲（`y0`〜`y1` の高さ、`density`）。`glow`：街明かりのドームの横位置（0〜1）。`milkyway`：天の川の位置と傾き（`cx`・`cy`・`angle`・`width`）。`milky: false` で天の川を消す
-    - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side`（1 右へ／-1 左へ）・`curve`。明け方の打ち上げは `plume: true` で日が当たった噴煙）、`trails`（何本もの光跡）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点）、`constellation`（`name`：`orion`・`gemini`・`leo`、`radiant` に放射点）、`moon`・`bigmoon`（`cx`・`cy`・`r`）、`planets`（接近する2つの惑星）、`iss`（光の線）、`starlink`（並んだ光点）、`dome`（天文台）、`tripod`・`phone`（三脚とカメラ／スマホ）
+    - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side`（1 右へ／-1 左へ）・`curve`。明け方の打ち上げは `plume: true` で日が当たった噴煙。**ロケットの光跡は1本だけ**。何本も同時に上がる絵はありえないので描かない）、`pad`（照明に照らされて射点に立つロケット。打ち上げ前・予定の記事に。`x`・`scale`）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点、`n` は**1〜3本**。写真のように細く、尾から頭へ明るくなって消える。たくさん降る絵にしない）、`constellation`（`name`：`orion`・`gemini`・`leo`。写真に線は写らないので星だけ。線や放射点の丸は描かない）、`moon`・`bigmoon`（`cx`・`cy`・`r`）、`planets`（接近する2つの惑星）、`iss`（光の線）、`starlink`（並んだ光点）、`dome`（天文台の影）、`tripod`・`phone`（三脚とカメラ／スマホ）
+    - 施設紹介（`category: "spot"`）：`observatory`（スリットが開いて中が赤く灯る天文台。`x`・`size`）、`planetarium`（ドームのある科学館。窓と街灯の明かり）、`deck`（展望デッキの手すりと、海を見る人の影。`people`：1〜4）。見学場なら `deck` と遠くの `pad` を合わせる
+    - 持ち物紹介（`category: "gear"`）：手前に物を置く。`chair`（折りたたみ椅子）・`backpack`・`thermos`（水筒）・`mug`（湯気の立つカップ）・`binoculars`（こちらを向いた双眼鏡）・`bench`（`x0` から右へのベンチ。物を上に置くときは同じ `y`）・`headlamp`（赤いライト。まわりの物の縁を赤く照らす。`color` で色）。それぞれ `x`・`y`（置く高さ）・`size`。**物は右半分（`x` 0.55〜0.92）に置き、`y` は 0.72〜0.86**（下は見出しと重なるため）。`horizon` は 0.62〜0.66 に上げる
   - `bignum`：号機・年など大きく見せたい数字（無くてもよい）。`date`・`time` は日時が公式に確定しているイベントだけ。
   - 背景は「雰囲気の絵」で、実際の空の再現ではない。実在のロケットの形・ロゴ・人物は描かない。右下に「CG ILLUSTRATION」が入る。
 - `python3 eyecatch.py spec.json eyecatch.jpg` で作り、7 章の形で db に保存する。作ったら画像を開いて確かめる：モチーフが見出しと重なって読みにくい・画面の端で切れている・シルエットが暗くて見えない、のどれかなら `x`・`height`・`horizon` を変えて作り直す。
