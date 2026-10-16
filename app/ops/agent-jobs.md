@@ -40,7 +40,7 @@
 ## 1. ジョブ
 
 1. 追加テキストに `job:<ID>` があれば、その `jobs/<ID>` だけを処理する。無ければ（定時の見回り）、`jobs` を `query`（`where: [["status","==","queued"]]`）して、自分の受け持つ `kind` のものを `createdAt` の古い順に **1 件だけ**選ぶ。
-   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・点検）は手順書の「定時の仕事」をする。作成・査読・アイキャッチは、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。
+   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・点検）は手順書の「定時の仕事」をする。査読・画像は、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。作成は、`status` が `執筆中`（旧名 `下書き`）で `draft` が無く、`article` の依頼が `queued`・`running` でないカードがあれば、いちばん古いもの1件に `jobs/article-<articleId>-1`（`by: "schedule"`, `note`: 「執筆中に入った企画」）を作って、それを処理する。それも無ければ「仕事なし」と書いてすぐ終わる。
 2. `status` が `"queued"` でなければ何もしないで終わる（二重起動の防止）。
 3. 始めたら `update` で `status: "running"`・`agent`（自分の役割）・`session`（環境変数 `CLAUDE_CODE_REMOTE_SESSION_ID`。無ければ省く）・`startedAt`・`updatedAt`・`message: "取りかかりました"`。
 4. 進んだら `message`（日本語で短く。アプリにそのまま出る）・`step`・`updatedAt` を更新する。10 分に 1 回以上。
@@ -86,7 +86,7 @@
 
 ### `articles/<articleId>`（記事のカード）
 - 運営者が入れる項目（読むだけ）：`title`・`pillar`（`launch|sky|spot|gear|news`）・`tags`・`keyword`・`intent`・`eventDate`・`publishBy`・`monetize`・`template`・`path`・`priority`・`note`・`url`（公開URL）・`lastVerified`
-- `status`：`企画中` → `下書き` → `査読中` → `公開待ち` → `公開済み` → `要更新`（`ops/site-rules.md` の 10）。企画の査定で落ちたものは `保留`（受信箱で判断待ち）、運営者が見送ったものは `見送り`
+- `status`：`企画中` → `執筆中`（旧名「下書き」。読むときは同じものとして扱う）→ `査読中` → `公開待ち` → `公開済み` → `要更新`（`ops/site-rules.md` の 10）。企画の査定で落ちたものは `保留`（受信箱で判断待ち）、運営者が見送ったものは `見送り`
 - 企画が書く：`plan`（優先度・理由など。カードを作るときだけ）。記事選定が書く：`assess`（査定）・`selection`（選んだ記録）
 - 作成が書く：`draft`（稿）・`draftPrev`（1つ前の稿）・`updateDraft`（公開済み記事の直し）
 - 査読が書く：`review`・`reviewHistory`・`recheck`（公開済みの点検結果）

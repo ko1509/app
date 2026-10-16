@@ -129,7 +129,7 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 7. ブロックに変換：Markdown をファイルに保存し `python3 md2blocks.py article.md > article.blocks.html`（図は SVG がそのままブロックに入る）。
 8. 自己点検：`ops/review-manual.md` の P0・P1 の観点で頭から読み直して直す。とくに曜日・日付・時刻をもう一度コードで、状況をもう一度公式ページで。相対日付・同じ数字の重複・表の列数・「最終確認」・出典・更新履歴。
 9. 保存（7 章の形で `articles/<articleId>` を `update`）：`status` を `"査読中"`、`loop` を `{"state": "reviewing", "round", "max", "updatedAt"}`。
-   - `settings/reviewLoop.enabled` が `false` なら、`status: "下書き"`・`loop.state: "passed"` にして査読に回さない。
+   - `settings/reviewLoop.enabled` が `false` なら、`status: "執筆中"`・`loop.state: "passed"` にして査読に回さない。
 10. 査読に回す：`jobs/review-<articleId>-<round>`（`kind: "review"`, `mode: "draft"`）を `queued` で書き、査読を起動（`ops/agent-jobs.md` の 6）。
 11. 依頼を `done` にし、報告する（3行以内）。
 

@@ -555,11 +555,11 @@ const ic=(k,cls="i")=>`<svg class="${cls}" viewBox="0 0 24 24">${IC[k]||""}</svg
 const PILLAR={launch:"打ち上げ",sky:"天体",spot:"宇宙スポット",gear:"機材",news:"お知らせ",other:"その他"};
 const EV_STATUS={"確定":"good","予定":"warn","推測":"mute","延期":"bad","中止":"bad","終了":"mute"};
 // 記事の状態（運営マニュアル「記事ができるまでの流れ」。確認待ち＝公開待ち）
-const AR_STATUS=["企画中","下書き","査読中","公開待ち","公開済み","要更新"];
-const AR_PILL={"企画中":"mute","下書き":"warn","査読中":"info","公開待ち":"info","公開済み":"good","要更新":"bad"};
-const ast=a=>!a.status||a.status==="未着手"?"企画中":a.status;
+const AR_STATUS=["企画中","執筆中","査読中","公開待ち","公開済み","要更新"];
+const AR_PILL={"企画中":"mute","執筆中":"warn","査読中":"info","公開待ち":"info","公開済み":"good","要更新":"bad"};
+const ast=a=>!a.status||a.status==="未着手"?"企画中":a.status==="下書き"?"執筆中":a.status;  // 「下書き」は旧名
 // 記事ボードに出すのは公開前の4段階。公開済み・要更新は自動でアーカイブタブへ
-const BOARD=["企画中","下書き","査読中","公開待ち"];
+const BOARD=["企画中","執筆中","査読中","公開待ち"];
 const isPub=a=>ast(a)==="公開済み"||ast(a)==="要更新";
 const TAGS={h3:"H3","h-iia":"H-IIA","epsilon-s":"イプシロンS",kairos:"カイロス",zero:"ZERO",tanegashima:"種子島",uchinoura:"内之浦",kushimoto:"串本",taiki:"大樹町","meteor-shower":"流星群",photography:"撮影"};
 const POST_STATUS={"下書き":"warn","差し戻し":"bad","審査済み":"info","予約済み":"info","投稿済み":"good"};
@@ -759,9 +759,9 @@ function kcard(a,s){
     <div class="pills">
     ${pub?`<span class="kc ${late?"kc-bad":near?"kc-warn":""}">公開 ${fmt(pub)}</span>`:""}
     ${ev?`<span class="kc">本番 ${fmt(ev)}</span>`:""}${s==="企画中"?planKc(a):loopKc(a)}</div>
-    ${s==="企画中"&&S.canWrite?`<div class="kc-act"><span role="button" tabindex="0" class="d-btn small ${S.toDraftArm===a._id?"":"secondary"}" data-todraft="${esc(a._id)}">${S.toDraftArm===a._id?"もう一度押すと下書きへ":"下書きへ →"}</span></div>`:""}</button>`;
+    ${s==="企画中"&&S.canWrite?`<div class="kc-act"><span role="button" tabindex="0" class="d-btn small ${S.toDraftArm===a._id?"":"secondary"}" data-todraft="${esc(a._id)}">${S.toDraftArm===a._id?"もう一度押すと執筆中へ":"執筆中へ →"}</span></div>`:""}</button>`;
 }
-// 記事選定：期間と本数を決めて、企画から下書きに回す（記事選定エージェントに頼む）
+// 記事選定：期間と本数を決めて、企画から執筆中に回す（記事選定エージェントに頼む）
 const selV=()=>({days:+(S.selDraft&&S.selDraft.days)||+(S.selConf||{}).days||14,count:+(S.selDraft&&S.selDraft.count)||+(S.selConf||{}).count||3});
 function selForm(){const c=S.selConf||{},can=S.canWrite,stock=CATS.map(k=>[k,S.articles.filter(a=>ast(a)==="企画中"&&a.pillar===k&&!(a.assess&&a.assess.grade==="NG")).length]);
   return `<div class="d-card sel-card"><div class="sel-row"><span class="en" style="margin-right:2px">SELECT</span><b>記事選定</b>
@@ -770,10 +770,20 @@ function selForm(){const c=S.selConf||{},can=S.canWrite,stock=CATS.map(k=>[k,S.a
     <label class="sel-f sel-chk"><input id="selAuto" type="checkbox" ${c.auto?"checked":""} ${can?"":"disabled"}>毎日この条件で選ぶ</label>
     <span style="flex:1"></span>${can?`<button type="button" class="d-btn small" id="selGo">選定を頼む</button>`:""}</div>
     <div class="sel-stock">${stock.map(([k,n])=>`<span class="cat-${k} ${n<(c.minStock||3)?"low":""}"><i></i>${PILLAR[k]} ${n}</span>`).join("")}<span class="d-sub">企画の残り（${c.minStock||3}件を切ると、記事選定が企画を頼みます）</span></div></div>`}
+// 執筆中に移す。記事作成が自動運転（停止していない）なら、そのまま書く依頼も出す
+async function toWriting(a,note){
+  if(S.pause.writer){try{await S.db.doc("articles/"+a._id).update({status:"執筆中",updatedAt:iso()});toast("執筆中に移しました（記事作成が止まっているので、書く依頼はオンにしたときに出します）")}catch(e){toast("保存できませんでした")}return}
+  if(busy("article","articleId",a._id)){try{await S.db.doc("articles/"+a._id).update({status:"執筆中",updatedAt:iso()})}catch(_){}toast("執筆中に移しました（書く依頼はもう出ています）");return}
+  await requestWrite(a,{note});toast("執筆中に移して、記事作成に頼みました")}
+// 執筆中なのに書く依頼も稿も無いカード（手で移したもの・自動運転をオンにしたとき）に、書く依頼を出す
+async function kickWriting(force){
+  if(!S.canWrite||!S.db||(!force&&S.pause.writer)||S.kickBusy)return;S.kickBusy=true;
+  try{for(const a of S.articles.filter(x=>ast(x)==="執筆中"&&!x.draft&&!(x.loop&&x.loop.state&&x.loop.state!=="writing")))
+    if(!S.jobs.some(j=>j.articleId===a._id&&j.kind==="article"&&(j.status==="queued"||j.status==="running")))await requestWrite(a,{note:"執筆中に入った企画（自動運転）"})}
+  finally{S.kickBusy=false}}
 function bindToDraft(pg){pg.querySelectorAll("[data-todraft]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const id=b.dataset.todraft,a=S.articles.find(x=>x._id===id);if(!a)return;
     if(S.toDraftArm!==id){S.toDraftArm=id;render();setTimeout(()=>{if(S.toDraftArm===id){S.toDraftArm=null;render()}},4000);return}
-    S.toDraftArm=null;if(busy("article","articleId",id)){toast("この記事の依頼がもう進んでいます");return}
-    await requestWrite(a,{note:"運営者が企画から下書きに回しました"});toast("下書きに移して、作成に頼みました")};
+    S.toDraftArm=null;await toWriting(a,"運営者が企画から執筆中に回しました")};
   b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}})}
 function bindSel(pg){bindToDraft(pg);pg.querySelectorAll("[data-plan-more]").forEach(b=>b.onclick=()=>{const k=b.dataset.planMore;S.planOpen={...(S.planOpen||{}),[k]:!(S.planOpen||{})[k]};render()});
   const go=pg.querySelector("#selGo");if(!go)return;
@@ -798,7 +808,7 @@ function viewArticles(){
     ${selForm()}
     <div class="d-board cats ${cats.length>1?"scroll":""}" style="--n:${cats.length}">${cats.map(k=>pcol(k,plan.filter(a=>(CATS.includes(a.pillar)?a.pillar:"other")===k))).join("")}</div></div>
   <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">IN PROGRESS</span>進行中</h2></div>
-    <div class="d-board n3">${["下書き","査読中","公開待ち"].map(st=>col(st,list.filter(a=>ast(a)===st))).join("")}</div></div>`;
+    <div class="d-board n3">${["執筆中","査読中","公開待ち"].map(st=>col(st,list.filter(a=>ast(a)===st))).join("")}</div></div>`;
 }
 function viewArchive(){
   const f=S.filter.pillar,list=S.articles.filter(a=>isPub(a)&&(f==="all"||a.pillar===f));
@@ -968,7 +978,7 @@ function viewKpi(){
 // 役割ごとの Routine。手順書は ops/<manual>（このアプリと一緒に公開）
 const AG={
   planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った企画を優先度つきでカードにする",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","3つの問いで絞り、優先度（高・中・低）と理由をつけて企画中のカードにする","記事選定から頼まれたカテゴリを優先して補充する"],never:"記事は書かない・企画中より先に進めない（選ぶのは記事選定）"},
-  selector:{l:"記事選定",kinds:["select"],trig:"selectorTriggerId",desc:"企画を査定し、期間と本数に合わせて選んで下書きに回す",when:"毎日 7:43＋依頼",pc:"launch",ic:"target",manual:"selector-manual.md",yen:60,tasks:["新しい企画を査定し、質の低いものは理由つきで受信箱へ","指定の期間と本数に合わせて企画を選び、下書きに回して作成に頼む","カテゴリの企画が少なくなったら、企画エージェントに依頼する"],never:"記事を書かない・企画を自分で作らない・公開済みの記事は触らない"},
+  selector:{l:"記事選定",kinds:["select"],trig:"selectorTriggerId",desc:"企画を査定し、期間と本数に合わせて選んで執筆中に回す",when:"毎日 7:43＋依頼",pc:"launch",ic:"target",manual:"selector-manual.md",yen:60,tasks:["新しい企画を査定し、質の低いものは理由つきで受信箱へ","指定の期間と本数に合わせて企画を選び、執筆中に回して作成に頼む","カテゴリの企画が少なくなったら、企画エージェントに依頼する"],never:"記事を書かない・企画を自分で作らない・公開済みの記事は触らない"},
   writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","記事に入れる図（タイムライン・方角・距離）を作る","査読の指摘で書き直す（最大5回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
   reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
   designer:{l:"画像",kinds:["eyecatch","snsimage"],trig:"designerTriggerId",desc:"査読でAになった記事のアイキャッチと、審査を通ったSNS投稿の画像を作る",when:"依頼（査読A・SNS審査OK）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、アイキャッチ（見出し・英語の一文・背景）を作る","審査を通ったSNS投稿に、X（横長）・Instagram（縦長）の画像を作る","直近と背景がかぶらないよう描き分け、できた画像を自分で確かめる"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
@@ -1034,7 +1044,7 @@ async function requestWrite(a,opt){
   const replace=isPub(a);
   const ok=await enqueue(id,{kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||(replace?"公開中の記事の差し替え稿（article-manual.md の 10 章）":""),rewrite:round>1,...(replace?{replace:true}:{})});
   if(!ok) return;
-  try{await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||5,updatedAt:now,...(replace?{replace:true}:{})},withExperience:!!opt.withExperience,...(ast(a)==="企画中"?{status:"下書き"}:{})})}catch(_){}
+  try{await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||5,updatedAt:now,...(replace?{replace:true}:{})},withExperience:!!opt.withExperience,...(ast(a)==="企画中"?{status:"執筆中"}:{})})}catch(_){}
 }
 async function retryJob(j){
   try{await S.db.doc("jobs/"+j._id).update({status:"queued",message:"もう一度依頼しました",updatedAt:iso()})}catch(e){toast("書けませんでした："+(e.message||e.code));return}
@@ -1070,6 +1080,7 @@ async function setGroup(g,on){
     try{await S.mcp.callTool(S.bg.server||"Claude Code Remote","update_trigger",{trigger_id:trig,enabled:on},{cache:false})}catch(_){ng++}}
   const other=g==="article"?"sns":"article",full=on&&groupState(other)==="on";
   toast(`${GROUPS[g].l}を${on?"オン":"オフ"}にしました${full?"・完全自動運転":""}${ng?"（定時の切り替えに失敗 "+ng+"件）":""}`);
+  if(on&&g==="article")await kickWriting(true);
   if(on)for(const r of GROUPS[g].roles){const w=S.jobs.filter(j=>j.status==="queued"&&roleOf(j.kind)===r).reverse().slice(0,2);for(const j of w)await fire(r,j._id)}
 }
 
@@ -1077,6 +1088,7 @@ async function setGroup(g,on){
 // Routine どうしは起こし合えないことがあるため、受け渡しの依頼はここで拾う
 function kickQueued(){
   if(!S.mcp||!S.canWrite||!S.db) return;
+  if(!S.kickedWriting&&S.articles.length){S.kickedWriting=true;kickWriting()}
   const now=Date.now();
   S.jobs.filter(j=>j.status==="queued"&&!S.kicked.has(j._id)&&now-new Date(j.createdAt||0)>12e4&&(!j.kickedAt||now-new Date(j.kickedAt)>18e5)&&!S.pause[roleOf(j.kind)])
     .slice(0,3).forEach(j=>{S.kicked.add(j._id);fire(roleOf(j.kind),j._id)});
@@ -1583,7 +1595,9 @@ function openSheet(kind,id){
     data.updatedAt=new Date().toISOString();
     // 既にあるカードは差分だけ書く（エージェントの稿・査読を消さないため）
     const exists=docId&&listFor(kind).some(x=>x._id===docId);
-    try{const ref=docId?S.db.doc(F.col+"/"+docId):S.db.collection(F.col).doc();await (exists?ref.update(data):ref.set(data));toast("保存しました");close()}
+    const prev=exists&&kind==="article"?listFor(kind).find(x=>x._id===docId):null;
+    try{const ref=docId?S.db.doc(F.col+"/"+docId):S.db.collection(F.col).doc();await (exists?ref.update(data):ref.set(data));toast("保存しました");close();
+      if(kind==="article"&&data.status==="執筆中"&&(!prev||ast(prev)==="企画中")){const a={...(prev||{}),...data,_id:docId||ref.id};if(!S.pause.writer&&!a.draft)await toWriting(a,"運営者が執筆中に移しました")}}
     catch(err){toast(err.code==="invalid_argument"?"保存する権限がありません":"保存できませんでした："+(err.message||err.code))}
   });
 }
