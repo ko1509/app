@@ -395,6 +395,14 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .sv-warn{font-size:12px;color:var(--bad);font-weight:600}
 .sv-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border-top:.5px solid var(--separator);padding-top:8px;min-width:0}
 .sv-art{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+/* 稿のプレビュー：サイトの部品 */
+.md .mgx-info{border:2px solid var(--label);margin:0 0 1em} .mgx-h{background:var(--label);color:var(--ambient-base);font-family:var(--en);font-size:12px;letter-spacing:.14em;padding:6px 10px;display:flex;justify-content:space-between}
+.mgx-h span{opacity:.7} .mgx-info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;padding:10px 12px;font-size:14px} .mgx-info dt{font-weight:700} .mgx-info dd{margin:0}
+.mgx-st{font-family:var(--en);font-size:11px;padding:1px 6px;margin-right:6px;background:var(--good);color:#fff} .mgx-st.delay,.mgx-st.stop{background:var(--bad)} .mgx-st.sky{background:var(--sky)}
+.md .mgx-verified{font-size:13px;color:var(--label-2);border-left:3px solid var(--brand);padding-left:8px}
+.md .mgx-point{border:1.5px solid var(--label);padding:10px 12px;margin:0 0 1em} .mgx-point b{display:block;color:var(--brand);margin-bottom:4px}
+.md .mgx-fig{margin:0 0 1.2em} .mgx-fig img{width:100%;display:block;border:1px solid var(--separator)} .mgx-fig figcaption{font-size:12.5px;color:var(--label-2);margin-top:6px} .mgx-fig figcaption b{font-family:var(--en);margin-right:8px;color:var(--label)}
+.md .mgx-list{border-top:1px solid var(--separator);padding-top:8px;margin:0 0 1em;font-size:13px} .mgx-list ul{margin:4px 0 0}
 /* 受信箱 */
 .ib-list{display:grid;gap:12px}
 .ib-card{display:grid;gap:10px}
@@ -568,7 +576,7 @@ const TABS=[
 
 const S={events:[],articles:[],posts:[],kpi:[],checks:{},inbox:[],tab:"home",hist:[],db:null,canWrite:true,ready:false,
   filter:{pillar:"all"},inputs:{},chainSel:null,agRole:null,
-  jobs:[],bg:{},pause:{},pauseRaw:{},snsConf:{},lessons:[],plannerLog:[],loopConf:{enabled:true,maxRounds:3,pass:"A"},mcp:null,kicked:new Set()};
+  jobs:[],bg:{},pause:{},pauseRaw:{},snsConf:{},lessons:[],plannerLog:[],loopConf:{enabled:true,maxRounds:5,pass:"A"},mcp:null,kicked:new Set()};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad=n=>String(n).padStart(2,"0");
@@ -748,7 +756,7 @@ function viewArchive(){
     const stale=lv&&diff(lv)<-90,soon=ev&&diff(ev)>=0&&diff(ev)<=7;
     return `<button type="button" class="d-row" data-edit="article" data-id="${esc(a._id)}">${picto(a.pillar)}
     <div class="d-main"><div class="d-t">${esc(a.title)}</div>${a.path?`<div class="d-sub mono">${esc(a.path)}</div>`:""}
-    <div class="pills" style="margin-top:4px">${spill(ast(a),AR_PILL)}${a.recheck?gradePill(a.recheck):""}${a.updateDraft&&!a.updateDraft.applied?`<span class="d-pill warn">直しの案${a.updateDraft.review?"・査読"+esc(a.updateDraft.review.grade):""}</span>`:""}${soon?`<span class="d-pill bad">本番 ${fmt(ev)}・直前更新</span>`:ev&&diff(ev)>=0?`<span class="d-pill mute">本番 ${fmt(ev)}</span>`:""}${u?`<a class="d-pill info" href="${esc(u)}" target="_blank" rel="noopener">ページを開く</a>`:""}</div></div>
+    <div class="pills" style="margin-top:4px">${spill(ast(a),AR_PILL)}${a.recheck?gradePill(a.recheck):""}${a.loop&&a.loop.replace?`<span class="d-pill ${a.loop.state==="passed"?"good":a.loop.state==="failed"?"bad":"info"}">差し替え稿 ${a.loop.state==="passed"?"査読A":a.loop.state==="failed"?"判断待ち":(a.loop.round||1)+"回目"}</span>`:""}${a.updateDraft&&!a.updateDraft.applied?`<span class="d-pill warn">直しの案${a.updateDraft.review?"・査読"+esc(a.updateDraft.review.grade):""}</span>`:""}${soon?`<span class="d-pill bad">本番 ${fmt(ev)}・直前更新</span>`:ev&&diff(ev)>=0?`<span class="d-pill mute">本番 ${fmt(ev)}</span>`:""}${u?`<a class="d-pill info" href="${esc(u)}" target="_blank" rel="noopener">ページを開く</a>`:""}</div></div>
     <div class="d-when">${lv?`最終確認<br><span class="${stale?"late":""}">${fmt(lv)}</span>`:"最終確認<br>—"}</div></button>`};
   return `${agentsCard("archive")}<div class="d-actions">${seg()}<span style="flex:1"></span><span class="d-pill good num">${S.articles.filter(isPub).length}本</span></div>
   ${need.length?`<div><div class="d-group-title"><span><span class="en" style="margin-right:8px">TO UPDATE</span>直すところがある記事</span><span class="num">${need.length}本</span></div><div class="d-group">${need.map(row).join("")}</div></div>`:""}
@@ -892,7 +900,7 @@ function viewKpi(){
 // 役割ごとの Routine。手順書は ops/<manual>（このアプリと一緒に公開）
 const AG={
   planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った記事案を受信箱に出す",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","運営マニュアルの3つの問いで絞り、受信箱に3件まで出す","採用・見送りの理由を次の提案に生かす"],never:"記事カードは作らない（決めるのは運営者）"},
-  writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","査読の指摘で書き直す（最大3回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
+  writer:{l:"記事作成",kinds:["article","update","eyecatch"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","査読の指摘で書き直す（最大3回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
   reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
   eventfetch:{l:"イベント取得",kinds:["eventfetch"],trig:"eventFetchTriggerId",desc:"公式の予定表から新しい打ち上げ・天体イベントを見つけ、イベントに足す",when:"月・木 6:47＋依頼",pc:"spot",ic:"cal",manual:"event-fetch-manual.md",yen:60,tasks:["JAXA・スペースワン・インターステラの打ち上げ予定と、国立天文台・IMO の天体の暦を読む","まだ無いイベントを、公式の日時と出典つきでイベントに足す（重複は足さない）","日付が未発表のものは「日付未定」で足す。迷うものは受信箱へ"],never:"既にあるイベントの日時・状況は変えない（それは公式ウォッチ）・推測の日付を作らない"},
   watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
@@ -902,7 +910,7 @@ const AG={
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={eventfetch:"イベント取得",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
+const KIND_L={eventfetch:"イベント取得",eyecatch:"アイキャッチ",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -953,9 +961,10 @@ async function requestJob(kind,extra){
 async function requestWrite(a,opt){
   if(!S.canWrite||!S.db) return;
   const round=((a.loop&&a.loop.round)||0)+1,id=`article-${a._id}-${round}`,now=iso();
-  const ok=await enqueue(id,{kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||"",rewrite:round>1});
+  const replace=isPub(a);
+  const ok=await enqueue(id,{kind:"article",articleId:a._id,round,title:a.title||"",withExperience:!!opt.withExperience,note:opt.note||(replace?"公開中の記事の差し替え稿（article-manual.md の 10 章）":""),rewrite:round>1,...(replace?{replace:true}:{})});
   if(!ok) return;
-  try{await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||3,updatedAt:now},withExperience:!!opt.withExperience,...(ast(a)==="企画中"?{status:"下書き"}:{})})}catch(_){}
+  try{await S.db.doc("articles/"+a._id).update({loop:{state:"writing",round,max:S.loopConf.maxRounds||5,updatedAt:now,...(replace?{replace:true}:{})},withExperience:!!opt.withExperience,...(ast(a)==="企画中"?{status:"下書き"}:{})})}catch(_){}
 }
 async function retryJob(j){
   try{await S.db.doc("jobs/"+j._id).update({status:"queued",message:"もう一度依頼しました",updatedAt:iso()})}catch(e){toast("書けませんでした："+(e.message||e.code));return}
@@ -1033,7 +1042,7 @@ function islandOutside(e){if(!e.target.closest("#islandPanel"))closeIslandPanel(
 function closeIslandPanel(){const p=$("#islandPanel");if(p)p.remove();setTimeout(updBack);removeEventListener("click",islandOutside);const el=$("#island");if(el)el.setAttribute("aria-expanded","false")}
 
 function draftGroup(){
-  const list=S.articles.filter(a=>a.draft&&a.loop&&(a.loop.state==="passed"||a.loop.state==="failed")&&ast(a)!=="公開済み"&&ast(a)!=="要更新");
+  const list=S.articles.filter(a=>a.draft&&a.loop&&(a.loop.state==="passed"||a.loop.state==="failed")&&(a.loop.replace||(ast(a)!=="公開済み"&&ast(a)!=="要更新")));
   if(!list.length) return "";
   return `<div><div class="d-group-title"><span>エージェントの稿（あなたの確認待ち）</span><span class="num">${list.length}件</span></div>
   <div class="d-group">${list.map(a=>`<button type="button" class="d-row" data-draft="${esc(a._id)}">${picto(a.pillar)}
@@ -1165,7 +1174,7 @@ function viewAgents(){
         <div class="d-sub">費用の目安 <b class="num">${yen.toLocaleString()}円</b>（完了した依頼の数から計算）</div></div>
       <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">査読ループ</h2><p>合格は ${esc(lc.pass||"A")} だけ</p></div>
         <label class="chkline"><input type="checkbox" id="lpOn" ${lc.enabled!==false?"checked":""} ${S.canWrite?"":"disabled"}>書いたら自動で査読に回す</label>
-        <label class="d-fld">書き直しの上限（回）<select id="lpMax" ${S.canWrite?"":"disabled"}>${[1,2,3,4,5].map(n=>`<option ${(lc.maxRounds||3)===n?"selected":""}>${n}</option>`).join("")}</select></label>
+        <label class="d-fld">書き直しの上限（回）<select id="lpMax" ${S.canWrite?"":"disabled"}>${[1,2,3,4,5].map(n=>`<option ${(lc.maxRounds||5)===n?"selected":""}>${n}</option>`).join("")}</select></label>
         <div class="d-actions"><button type="button" class="d-btn small" id="lpSave" ${S.canWrite?"":"disabled"}>保存</button></div></div>
       <div class="d-card d-form"><div class="d-sec" style="margin:0"><h2 style="font-size:17px">作成エージェントへの教訓</h2><p class="num">${S.lessons.length}件</p></div>
         ${S.lessons.length?`<div class="d-group" style="background:none;border:0;box-shadow:none">${S.lessons.map((l,i)=>`<div class="d-row" style="padding:8px 0"><span class="d-sub num">${i+1}</span><div class="d-main"><div class="d-t" style="font-weight:500;font-size:14px">${esc(l.text)}</div><div class="d-sub">${esc(l.from||"")}</div></div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-lesson-del="${i}">外す</button>`:""}</div>`).join("")}</div>`:`<div class="d-sub">まだありません。</div>`}</div>
@@ -1282,10 +1291,10 @@ function bindInbox(pg){
 /* 記事カードの中の「エージェント」欄 */
 function agentBox(a){
   const can=S.canWrite,running=S.jobs.some(j=>j.articleId===a._id&&(j.status==="queued"||j.status==="running")),pub=ast(a)==="公開済み"||ast(a)==="要更新";
-  if(pub) return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${a.recheck?gradePill(a.recheck):""}${a.updateDraft&&!a.updateDraft.applied?'<span class="d-pill warn">直しの案あり</span>':""}</div></div>
+  if(pub) return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${a.recheck?gradePill(a.recheck):""}${a.loop&&a.loop.replace?`<span class="d-pill ${a.loop.state==="passed"?"good":a.loop.state==="failed"?"bad":"info"}">差し替え稿 ${a.loop.state==="passed"?"査読A":a.loop.state==="failed"?"判断待ち":(a.loop.round||1)+"回目"}</span>`:""}${a.updateDraft&&!a.updateDraft.applied?'<span class="d-pill warn">直しの案あり</span>':""}</div></div>
     ${a.updateDraft||a.draft?`<div class="d-actions">${a.updateDraft?`<button type="button" class="d-btn small" id="agUpd">直しの案を見る</button>`:""}${a.draft?`<button type="button" class="d-btn small secondary" id="agDraft">元の稿を見る</button>`:""}</div>`:""}
     <label class="d-fld">直してほしいこと（例：T−3の更新、延期の反映、読者からの指摘）<textarea id="agNote" rows="2" ${can?"":"readonly"}></textarea></label>
-    <div class="d-actions"><button type="button" class="d-btn small secondary" id="agFix" ${can&&!running?"":"disabled"}>直しの案を頼む</button>
+    <div class="d-actions"><button type="button" class="d-btn small" id="agReplace" ${can&&!running?"":"disabled"}>差し替え稿を頼む（査読Aまで）</button><button type="button" class="d-btn small secondary" id="agFix" ${can&&!running?"":"disabled"}>直しの案を頼む</button>
     <button type="button" class="d-btn small secondary" id="agRecheck" ${can&&!running?"":"disabled"}>公開中のページを点検してもらう</button>
     ${running?'<span class="d-sub">いま依頼が進んでいます</span>':""}</div></div>`;
   return `<div class="ag-box"><div class="d-sec" style="margin:0"><h2 style="font-size:16px">エージェント</h2><div class="pills">${loopPill(a)}${gradePill(a.review)}</div></div>
@@ -1301,6 +1310,7 @@ function bindAgentBox(a,close){
   if(u) u.onclick=()=>{close();setTimeout(()=>openDraft(a._id,"update"),400)};
   if(g) g.onclick=async()=>{g.disabled=true;await requestWrite(a,{withExperience:$("#agExp").checked,note:$("#agNote").value.trim()});close()};
   if(f) f.onclick=async()=>{const n=$("#agNote").value.trim();if(!n){toast("直してほしいことを書いてください");return}f.disabled=true;await requestJob("update",{articleId:a._id,title:a.title,note:n});close()};
+  const rp=$("#agReplace");if(rp) rp.onclick=async()=>{rp.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#agNote").value.trim()});close()};
   if(r) r.onclick=async()=>{r.disabled=true;await requestJob("review",{articleId:a._id,title:a.title,mode:"recheck",note:$("#agNote").value.trim()});close()};
 }
 
@@ -1312,15 +1322,26 @@ function mdInline(t){
   s=s.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");
   return s;
 }
-function mdHtml(md,fields){
+const svgUrl=svg=>"data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(svg)));
+function mdHtml(md,fields,figs){
   let L=String(md||"").replace(/\r\n/g,"\n").split("\n"),out=[],i=0;
   if(L[0]&&L[0].trim()==="---"){const e=L.indexOf("---",1);if(e>0){out.push(`<div class="fm">${esc(L.slice(1,e).join("\n"))}</div>`);L=L.slice(e+1)}}
-  const isBlock=x=>/^(#{1,4}\s|[-*]\s|\d+[.)]\s|\||>|\[mm_status\])/.test(x.trim());
+  const isBlock=x=>/^(#{1,4}\s|[-*]\s|\d+[.)]\s|\||>|\[mm_status\]|:::|最終確認：)/.test(x.trim());
   while(i<L.length){
     const s=L[i].trim();
     if(!s){i++;continue}
     let m=s.match(/^(#{1,4})\s+(.*)$/);
     if(m){const n=Math.max(2,m[1].length);out.push(`<h${n}>${mdInline(m[2])}</h${n}>`);i++;continue}
+    const bm=s.match(/^:::(info|point|src|history|fig)\s*(.*)$/);
+    if(bm){const body=[];i++;while(i<L.length&&L[i].trim()!==":::"){if(L[i].trim())body.push(L[i].trim());i++}i++;
+      const k=bm[1],arg=bm[2];
+      if(k==="info")out.push(`<div class="mgx-info"><div class="mgx-h">${esc(arg)}<span>QUICK FACTS</span></div><dl>${body.map(x=>{const q=x.split(/[:：]/);const k2=q.shift();let v=q.join(":").trim(),tag="";const tm=v.match(/^\[(go|delay|sky|stop|done|open)\]\s*/);if(tm){tag=`<b class="mgx-st ${tm[1]}">${tm[1].toUpperCase()}</b>`;v=v.slice(tm[0].length)}return `<dt>${esc(k2)}</dt><dd>${tag}${mdInline(v)}</dd>`}).join("")}</dl></div>`);
+      else if(k==="point")out.push(`<div class="mgx-point"><b>${esc(arg)}</b>${mdInline(body.join(""))}</div>`);
+      else if(k==="fig"){const fm=arg.match(/^(FIG\.?\s*\d+)\s*(.*)$/);const imgs=body.filter(x=>x.startsWith("@")).map(x=>{const svg=(figs||{})[x.slice(1).trim()];return svg?`<img src="${svgUrl(svg)}" alt="">`:`<div class="d-empty">図：${esc(x.slice(1))}</div>`}).join("");
+        out.push(`<figure class="mgx-fig">${imgs}<figcaption>${fm?`<b>${esc(fm[1])}</b>${mdInline(fm[2])}`:mdInline(arg)}</figcaption></figure>`)}
+      else out.push(`<div class="mgx-list"><b>${k==="src"?"出典":"更新履歴"}</b><ul>${body.map(x=>`<li>${mdInline(x.replace(/^[-*]\s+/,""))}</li>`).join("")}</ul></div>`);
+      continue}
+    if(s.startsWith("最終確認：")){out.push(`<p class="mgx-verified">${mdInline(s)}</p>`);i++;continue}
     if(s==="[mm_status]"){const f=fields||{};out.push(`<div class="statusbox">ここに「今の状況」の囲みが出ます（プラグイン）。${f.status?"状況："+esc(f.status)+"・":""}${f.event_date?esc(f.event_date)+" "+esc(f.event_time||""):""}</div>`);i++;continue}
     if(s.startsWith("|")&&L[i+1]&&/^\|?\s*:?-{2,}/.test(L[i+1].trim())){
       const rows=[];while(i<L.length&&L[i].trim().startsWith("|")){rows.push(L[i].trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim()));i++}
@@ -1336,6 +1357,13 @@ function mdHtml(md,fields){
   }
   return out.join("");
 }
+// 画像を保存（downloads が使えればそれで、無ければリンクで）
+async function saveImage(dataUrl,filename){
+  try{const dl=window.claude&&await window.claude.use("downloads");
+    if(dl){const bin=atob(dataUrl.split(",")[1]),u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
+      await dl.save({filename,data:new Blob([u],{type:"image/jpeg"})});return}}catch(e){if(e&&e.code==="cancelled")return}
+  const l=document.createElement("a");l.href=dataUrl;l.download=filename;document.body.appendChild(l);l.click();l.remove();
+}
 function copyText(txt,label,fallbackEl){
   navigator.clipboard.writeText(txt).then(()=>toast(label+"をコピーしました")).catch(()=>{
     if(fallbackEl){fallbackEl.hidden=false;fallbackEl.value=txt;fallbackEl.focus();fallbackEl.select();toast("選択しました。コピーしてください")}else toast("コピーできませんでした")});
@@ -1347,7 +1375,10 @@ function openDraft(aid,startTab){
   const FN={event_date:"イベント日",event_time:"時刻",event_end:"終了日",status:"今の状況",place:"場所",sources:"公式情報のURL",note:"メモ",schema:"構造化データ"};
   const STN={scheduled:"予定どおり",postponed:"延期（日は未定）",rescheduled:"日程変更",cancelled:"中止",ongoing:"開催中・公開中",paused:"休止中・休館中",done:"終了"};
   const panes={
-    body:()=>`<div class="md">${mdHtml(d.markdown,f)}</div>`,
+    body:()=>`<div class="md">${mdHtml(d.markdown,f,d.figures)}</div>`,
+    eye:()=>`<div class="d-form"><div id="eyeBox" class="eye-box"><div class="d-empty">アイキャッチを読み込んでいます…</div></div>
+      ${S.canWrite?`<label class="d-fld">作り直すときの指示（例：Eの型で／月の背景で／日付を外す）<input id="eyeNote" placeholder="なくてもよい"></label>
+      <div class="d-actions"><button type="button" class="d-btn small secondary" id="eyeRe">アイキャッチを作り直す</button></div>`:""}</div>`,
     review:()=>(rv.text?`<div class="pills" style="margin-bottom:10px">${gradePill(rv)}<span class="d-sub">${rv.at?ago(rv.at):""}</span></div><div class="md">${mdHtml(rv.text)}</div>`:`<div class="d-empty">稿はまだ査読されていません。</div>`)
       +(a.recheck&&a.recheck.text?`<div class="d-group-title" style="margin-top:16px"><span>公開中のページの点検</span></div><div class="pills" style="margin-bottom:10px">${gradePill(a.recheck)}<span class="d-sub">${a.recheck.at?ago(a.recheck.at):""}</span></div><div class="md">${mdHtml(a.recheck.text)}</div>`:"")
       +((a.reviewHistory||[]).length?`<div class="d-group-title" style="margin-top:16px"><span>これまでの査読</span></div><div class="pills">${a.reviewHistory.map(h=>`<span class="d-pill mute">${esc(h.round)}${/^\d+$/.test(String(h.round))?"回目":""} ${esc(h.grade)}（P0 ${esc(h.p0)}・P1 ${esc(h.p1)}）</span>`).join("")}</div>`:""),
@@ -1378,7 +1409,7 @@ function openDraft(aid,startTab){
       ${a.draft?`<div class="d-actions"><button type="button" class="d-btn small" data-cp="blocks" ${d.blocks?"":"disabled"}>WordPress 用にコピー</button><button type="button" class="d-btn small secondary" data-cp="md">Markdown をコピー</button></div>
       <p class="d-sub" style="margin:0">WordPress の編集画面で右上の「︙」→「コードエディター」を開き、そのまま貼り付けます。公開の前に、日時・場所・料金・予約の要否を公式ページで目で確かめてください。</p>`:""}
       <textarea id="cpFallback" class="mono" rows="4" hidden aria-label="コピー用" style="width:100%;font-size:12px"></textarea>
-      <div class="d-seg" role="group" aria-label="表示">${[...(a.draft?[["body","本文"]]:[]),...(ud?[["update","直し"]]:[]),["review","査読"],...(a.draft?[["report","報告"],["fields","設定する値"]]:[])].map(([k,l])=>`<button type="button" data-pane="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
+      <div class="d-seg" role="group" aria-label="表示">${[...(a.draft?[["body","本文"],["eye","アイキャッチ"]]:[]),...(ud?[["update","直し"]]:[]),["review","査読"],...(a.draft?[["report","報告"],["fields","設定する値"]]:[])].map(([k,l])=>`<button type="button" data-pane="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
       <div id="pane">${panes[tab]()}</div>
       ${S.canWrite&&ud&&!ud.applied&&(ast(a)==="公開済み"||ast(a)==="要更新")?`<div class="ag-box"><div class="d-t">直しを WordPress に入れたら</div><div class="d-actions"><button type="button" class="d-btn small" id="udDone">反映した（公開済みに戻す）</button></div></div>`:""}
       ${S.canWrite&&a.draft&&ast(a)!=="公開済み"&&ast(a)!=="要更新"?`<div class="ag-box"><div class="d-t">次にすること</div>
@@ -1398,7 +1429,15 @@ function openDraft(aid,startTab){
     else if(k==="title")copyText(seo.title||"","タイトル",fb);else if(k==="desc")copyText(seo.description||"","説明文",fb)});
   const bindCpa=()=>host.querySelectorAll("[data-cpa]").forEach(b=>b.onclick=()=>copyText(((ud&&ud.changes)||[])[+b.dataset.cpa].after||"","新しい文",$("#cpFallback")));
   bindCp();bindCpa();
-  host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp();bindCpa()});
+  const bindEye=async()=>{const box=$("#eyeBox");if(!box)return;
+    const re=$("#eyeRe");if(re)re.onclick=async()=>{re.disabled=true;await requestJob("eyecatch",{articleId:a._id,title:a.title,note:($("#eyeNote").value||"").trim()});};
+    try{const sn=await S.db.doc("images/"+a._id+"-eyecatch").get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);
+      if(!im||!im.dataUrl){box.innerHTML=`<div class="d-empty">まだアイキャッチがありません。</div>`;return}
+      box.innerHTML=`<img src="${esc(im.dataUrl)}" alt="アイキャッチ" style="width:100%;border-radius:12px;display:block"><div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn small" id="eyeDl">ダウンロード（1200×630）</button><span class="d-sub">${im.createdAt?ago(im.createdAt):""}</span></div>`;
+      $("#eyeDl").onclick=()=>saveImage(im.dataUrl,`${(a.path||a._id).replace(/^\/|\/$/g,"").replace(/\//g,"-")||a._id}-eyecatch.jpg`);
+    }catch(e){box.innerHTML=`<div class="d-empty">まだアイキャッチがありません。</div>`}};
+  host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp();bindCpa();if(tab==="eye")bindEye()});
+  if(tab==="eye")bindEye();
   const rw=$("#rwGo");if(rw) rw.onclick=async()=>{rw.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#rwNote").value.trim()});close()};
   const ok=$("#okGo");if(ok) ok.onclick=async()=>{
     try{await S.db.doc("articles/"+a._id).update({status:"公開待ち",loop:{...(a.loop||{}),state:"passed",updatedAt:iso(),byOwner:true}});toast("公開待ちにしました");close()}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
@@ -1548,7 +1587,7 @@ render();requestAnimationFrame(()=>placeLens(false));
   sub("inbox",l=>S.inbox=l);
   sub("jobs",l=>{S.jobs=l.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));if(S.ready)kickQueued()});
   sub("settings",l=>{const m={};for(const d of l)m[d._id]=d;S.bg=m.background||{};S.pauseRaw=(m.agentPause&&m.agentPause.roles)||{};S.pause=Object.fromEntries(Object.entries(S.pauseRaw).map(([k,v])=>[k,!!(v&&v.paused)]));
-    S.snsConf=m.sns||{};S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.plannerLog=(m.plannerLog&&m.plannerLog.items)||[];S.loopConf={enabled:true,maxRounds:3,pass:"A",...(m.reviewLoop||{})}});
+    S.snsConf=m.sns||{};S.lessons=(m.writerLessons&&m.writerLessons.items)||[];S.plannerLog=(m.plannerLog&&m.plannerLog.items)||[];S.loopConf={enabled:true,maxRounds:5,pass:"A",...(m.reviewLoop||{})}});
 })();
 })();
 </script>

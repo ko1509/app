@@ -7,7 +7,7 @@
 | 役割（role） | 名前 | 起動 | 手順書 | 受け持つ依頼（job の kind） |
 |---|---|---|---|---|
 | `planner` | 企画 | 月・木の朝＋依頼 | `ops/planner-manual.md` | `plan` |
-| `writer` | 記事作成 | 6〜23時の毎時＋依頼 | `ops/article-manual.md` | `article`（新しい稿）・`update`（公開済み記事の直し） |
+| `writer` | 記事作成 | 6〜23時の毎時＋依頼 | `ops/article-manual.md` | `article`（新しい稿）・`update`（公開済み記事の直し）・`eyecatch`（アイキャッチの作り直し） |
 | `reviewer` | 査読 | 6〜23時の毎時＋依頼 | `ops/review-manual.md` | `review`（`mode`: `draft` 稿／`update` 直し／`recheck` 公開済みの点検） |
 | `eventfetch` | イベント取得 | 月・木の朝＋依頼 | `ops/event-fetch-manual.md` | `eventfetch` |
 | `watch` | 公式ウォッチ | 1日4回＋依頼 | `ops/watch-manual.md` | `watch` |
@@ -25,6 +25,8 @@
   - 各役割の手順書（上の表）
   - `ops/sky.py` … 天体の計算（方角・高さ・月の出入り・曜日・世界時の変換）。使う前に `pip install ephem==4.2`
   - `ops/md2blocks.py` … Markdown を WordPress のブロックに変換する
+  - `ops/figures.py` … 記事の図（タイムライン・方角と高さ・距離）を SVG で作る
+  - `ops/eyecatch.py` … アイキャッチ（写真風の CG＋記事のタイトル）を作る
   - 読んだファイルは保存先が表示される。`.py` はその保存先のまま `python3` で実行する（中身を書き写さない）。
 - db（アプリの共有データ）の読み書きは **ArtifactData** ツール。
 - 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。**WordPress に書き込まない**（サーバーは海外からの REST API を止めている）。
@@ -72,7 +74,7 @@
 
 ### `jobs/<ID>`（依頼）
 ```json
-{"kind": "article|update|review|plan|watch|sns|audit", "mode": "draft|update|recheck（review のとき）",
+{"kind": "article|update|eyecatch|review|plan|watch|sns|audit", "mode": "draft|update|recheck（review のとき）",
  "articleId": "a01", "eventId": "", "round": 1, "title": "対象の名前",
  "withExperience": false, "note": "運営者や前のエージェントからの指示", "rewrite": false,
  "status": "queued|running|done|waiting|error", "message": "", "step": "", "agent": "", "session": "",
@@ -101,13 +103,16 @@
 ```
 運営者がアプリで答えると `status` が `done`（対応した）か `dismissed`（見送り）になり、`answer`・`answeredAt` が入る。エージェントは `open` のものを書き換えない（自分が出したものの追記だけ、`body` の末尾に足すのは可）。同じ対象・同じ趣旨の `open` があれば新しく作らない。
 
+### `images/<ID>`（画像。大きいので記事カードとは別に置く）
+`kind`（`eyecatch`）・`articleId`・`dataUrl`（`data:image/jpeg;base64,…`）・`spec`・`createdAt`。作成エージェントが書き、アプリが表示・ダウンロードする。
+
 ### `posts/<ID>`（SNS の投稿案）
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`text`・`articleId`・`eventId`・`kind`・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
 - `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
-- `settings/reviewLoop`：`{"enabled": true, "maxRounds": 3, "pass": "A"}`（無ければこの値）
+- `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）
 - `settings/plannerLog`：`{"items": [{"title", "decision": "採用|見送り", "reason", "at"}]}`（アプリが書く。企画が読む）
 

@@ -26,6 +26,8 @@
   :::
   :::src                        → 出典 mg-src（「- 名前：URL」を1行ずつ）
   :::history                    → 更新履歴 mg-history（「- 2026-10-16　公開用に作成」）
+  :::fig FIG.01 キャプション     → 図 mg-fig。中に「@figures/timeline.svg」のように SVG のファイルを1行（Markdown のファイルからの相対パス）
+  （figures.py で作る。キャプションには「模式図」などの注記を入れる）
 先頭の --- で囲まれた frontmatter は読み飛ばす。
 """
 import html
@@ -136,6 +138,26 @@ def list_box(cls: str, title: str, lines) -> str:
     return html_block(f'<div class="{cls}"><b>{html.escape(title, quote=False)}</b><ul>{"".join(items)}</ul></div>')
 
 
+BASE_DIR = "."
+
+
+def figure(arg: str, body) -> str:
+    m = re.match(r"^(FIG\.?\s*\d+)\s*(.*)$", arg.strip())
+    num, cap = (m.group(1), m.group(2)) if m else ("", arg.strip())
+    svgs = []
+    for ln in body:
+        if ln.startswith("@"):
+            import os
+            svg = open(os.path.join(BASE_DIR, ln[1:].strip()), encoding="utf-8").read()
+            svg = re.sub(r"<\?xml[^>]*>", "", svg)
+            svg = re.sub(r"<!--.*?-->", "", svg, flags=re.S)
+            if "<script" in svg or "/*" in svg:
+                raise SystemExit("図に <script> や /* */ が入っています（WAF で保存できません）")
+            svgs.append(svg.strip())
+    capt = (f"<b>{html.escape(num)}</b>" if num else "") + inline(cap)
+    return html_block(f'<figure class="mg-fig">{"".join(svgs)}<figcaption>{capt}</figcaption></figure>')
+
+
 def convert(md: str) -> str:
     lines = md.replace("\r\n", "\n").split("\n")
     if lines and lines[0].strip() == "---":  # frontmatter を飛ばす
@@ -150,7 +172,7 @@ def convert(md: str) -> str:
         if not s:
             i += 1
             continue
-        m = re.match(r"^:::(info|point|src|history)\s*(.*)$", s)
+        m = re.match(r"^:::(info|point|src|history|fig)\s*(.*)$", s)
         if m:
             kind, arg = m.group(1), m.group(2)
             body = []
@@ -164,6 +186,8 @@ def convert(md: str) -> str:
                 out.append(info_box(arg, body))
             elif kind == "point":
                 out.append(point_box(arg, body))
+            elif kind == "fig":
+                out.append(figure(arg, body))
             elif kind == "src":
                 out.append(list_box("mg-src", arg or "出典（すべて最終確認日に閲覧）", body))
             else:
@@ -225,5 +249,10 @@ def convert(md: str) -> str:
 
 
 if __name__ == "__main__":
-    src = sys.stdin.read() if len(sys.argv) < 2 or sys.argv[1] == "-" else open(sys.argv[1], encoding="utf-8").read()
+    if len(sys.argv) >= 2 and sys.argv[1] != "-":
+        import os
+        BASE_DIR = os.path.dirname(os.path.abspath(sys.argv[1]))
+        src = open(sys.argv[1], encoding="utf-8").read()
+    else:
+        src = sys.stdin.read()
     sys.stdout.write(convert(src))

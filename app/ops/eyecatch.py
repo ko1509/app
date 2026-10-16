@@ -1,0 +1,689 @@
+#!/usr/bin/env python3
+"""ミアゲタビのアイキャッチ（1200×630）を作る。写真風の CG の背景に、記事のタイトルを雑誌風に組む。
+
+使い方:  python3 eyecatch.py spec.json out.jpg
+spec.json の例:
+  {"title": "【10/20 4:41】H3ロケット10号機（火星探査機MMX）を見る方法｜家の近くの空・中継・種子島",
+   "category": "launch", "kicker": "H3 F10 / MMX", "date": "2026.10.20 TUE", "time": "04:41 JST",
+   "layout": "transit", "en": "Before the dawn,\nlook south.", "headline": "H3ロケット10号機を見る", "seed": 1,
+   "composition": {"tone": "dawn", "ground": "city", "horizon": 0.80, "motifs": [{"type": "trail", "x": 0.30, "height": 0.62}]}}
+（spec の項目のくわしい説明は ops/article-manual.md の 5-5）
+
+- title: 記事のタイトルをそのまま。先頭の【…】は小見出しに、「｜」より後ろは副題になる
+- category: launch（打ち上げ）| sky（天体）| spot（宇宙スポット）| gear（機材）
+- layout: transit（標準。雑誌 TRANSIT のような組み方：英字の一文・明朝の縦書き）| cinema（下に大きく見出し）| panel（右に黒い帯）
+- scene: 省略するとカテゴリで決まる。sea（海辺の長時間露光）| startrail（星の軌跡）| dawn（夜明け前の丘）
+         | meteor（流星）| moon（月）| observatory（天文台のドーム）| tripod（三脚と星空）
+- date / time: 入れると下に出る（延期の多い打ち上げは、日付が変わったら作り直す）
+文節の切れ目で改行するため、先に pip install budoux を実行しておく（無くても動くが、改行が1文字単位になる）。
+背景はすべてプログラムで描いた CG（写真ではない）なので、右下に「CG ILLUSTRATION」と入れる。
+実在のロケットの形や、ロゴ・人物は描かない。
+"""
+import json, os, re, sys, urllib.request
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+OUT_W, OUT_H = 1200, 630
+S = 2  # 2倍で描いて縮める（なめらかにするため）
+W, H = OUT_W * S, OUT_H * S
+ORANGE = (232, 72, 28)
+CACHE = os.path.expanduser("~/.cache/miagetabi")
+FONTS = {
+    "black": "ofl/zenkakugothicnew/ZenKakuGothicNew-Black.ttf",
+    "medium": "ofl/zenkakugothicnew/ZenKakuGothicNew-Medium.ttf",
+    "mono": "ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf",
+    "mincho": "ofl/shipporimincho/ShipporiMincho-SemiBold.ttf",
+    "serif_i": "ofl/cormorantgaramond/CormorantGaramond-Italic%5Bwght%5D.ttf",
+}
+LOGO_URL = "https://miagetabi.space/wp-content/uploads/2026/10/miagetabi-logo-header.png"
+
+
+def fetch(rel_or_url, name):
+    os.makedirs(CACHE, exist_ok=True)
+    path = os.path.join(CACHE, name)
+    if not os.path.exists(path):
+        url = rel_or_url if rel_or_url.startswith("http") else "https://raw.githubusercontent.com/google/fonts/main/" + rel_or_url
+        urllib.request.urlretrieve(url, path)
+    return path
+
+
+def font(kind, size, weight=None):
+    f = ImageFont.truetype(fetch(FONTS[kind], os.path.basename(FONTS[kind]).replace("%5B", "[").replace("%5D", "]")), int(size * S))
+    if weight:
+        try: f.set_variation_by_axes([weight])
+        except Exception: pass
+    return f
+
+
+def logo_white(height):
+    im = Image.open(fetch(LOGO_URL, "logo-header.png")).convert("RGBA")
+    a = np.asarray(im).astype(np.int16)
+    ink = (a[..., 3] > 0) & ~((a[..., 0] > 150) & (a[..., 1] < 140))  # 黒い部分だけ白に（オレンジはそのまま）
+    a[ink, 0:3] = 255
+    im = Image.fromarray(a.astype(np.uint8), "RGBA")
+    h = int(height * S)
+    return im.resize((round(im.width * h / im.height), h), Image.LANCZOS)
+
+
+# ---------- 背景（CG） ----------
+class Scene:
+    def __init__(self, seed):
+        self.rng = np.random.default_rng(seed)
+        self.yy = np.linspace(0, 1, H)[:, None] * np.ones((1, W), np.float32)
+
+    def blur(self, a, r):
+        im = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8))
+        return np.asarray(im.filter(ImageFilter.GaussianBlur(r))).astype(np.float32) / 255
+
+    def noise(self, scales=(220, 90, 40, 16), w=(1, .6, .35, .2)):
+        out = np.zeros((H, W), np.float32)
+        for s, k in zip(scales, w):
+            out += k * self.blur(self.rng.random((H, W)).astype(np.float32), s / 4)
+        out -= out.min()
+        return out / out.max()
+
+    @staticmethod
+    def lerp(c1, c2, t):
+        return np.array(c1)[None, None, :] * (1 - t[..., None]) + np.array(c2)[None, None, :] * t[..., None]
+
+    def stars(self, img, n, ymax, bright=1.0):
+        lay = np.zeros((H, W), np.float32)
+        xs = self.rng.integers(0, W, n); ys = self.rng.integers(0, max(1, int(ymax)), n)
+        lay[ys, xs] = np.maximum(lay[ys, xs], self.rng.power(9, n) ** 2 * bright)
+        glow = self.blur(lay, 1.2) * 3.0 + self.blur(lay, 4) * 1.2
+        fade = np.clip((ymax - np.arange(H)) / (ymax * 0.35), 0, 1)[:, None]
+        return img + ((lay + glow) * fade)[..., None] * np.array([1, 1, 1.05])
+
+    def milkyway(self, img, offset=-380, tint=(.20, .19, .26)):
+        band = np.exp(-((np.arange(W)[None, :] * 0.55 - np.arange(H)[:, None] + offset) / 260.0) ** 2)
+        return img + (self.noise() ** 2.2 * band)[..., None] * np.array(tint)
+
+    def streak(self, img, pts, core=(1, .95, .85), halo=(1, .45, .12), width=6, glow=46, strength=1.0, ramp=0.0):
+        lay = Image.new("L", (W, H), 0); d = ImageDraw.Draw(lay); n = len(pts)
+        for i in range(n - 1):
+            t = i / (n - 1)
+            d.line([pts[i], pts[i + 1]], fill=int(255 * ((1 - ramp) + ramp * min(1, t * 2.2))), width=width)
+        a = np.asarray(lay).astype(np.float32) / 255
+        g1 = self.blur(a, glow / 6); g2 = self.blur(a, glow)
+        return img + strength * (a[..., None] * np.array(core) + g1[..., None] * np.array(halo) * 1.6 + g2[..., None] * np.array(halo) * 1.4)
+
+    @staticmethod
+    def bez(p0, p1, p2, p3, n=400):
+        t = np.linspace(0, 1, n)[:, None]; P = [np.array(p, float) for p in (p0, p1, p2, p3)]
+        pts = (1 - t) ** 3 * P[0] + 3 * (1 - t) ** 2 * t * P[1] + 3 * (1 - t) * t ** 2 * P[2] + t ** 3 * P[3]
+        return [tuple(p) for p in pts]
+
+    def silhouette(self, img, poly, color=(.006, .008, .014), soften=0):
+        m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).polygon(poly, fill=255)
+        if soften: m = m.filter(ImageFilter.GaussianBlur(soften))
+        a = np.asarray(m).astype(np.float32)[..., None] / 255
+        return img * (1 - a) + a * np.array(color)
+
+    def night(self, top=(.012, .018, .04), bottom=(.08, .13, .24), hz=0.74):
+        return self.lerp(top, bottom, np.clip(self.yy / hz, 0, 1) ** 1.6)
+
+    def ridge(self, base, amp=60, x0=0, x1=None, step=8):
+        x1 = W if x1 is None else x1
+        xs = np.arange(x0, x1 + step, step)
+        prof = base + amp * np.sin(xs / 430) + amp * .5 * np.sin(xs / 190 + 1)
+        return [(0, H)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W, H)]
+
+    # 打ち上げ：海辺の長時間露光
+    def sea(self, side=1):
+        hz = int(H * 0.74)
+        img = self.night()
+        warm = np.exp(-(((np.arange(W)[None, :] - W * (0.15 if side > 0 else 0.85)) / (W * 0.35)) ** 2)) * np.exp(-((self.yy * H - hz) / (H * 0.09)) ** 2)
+        img += warm[..., None] * np.array([.22, .10, .04])
+        img = self.milkyway(img)
+        img = self.stars(img, 3200, hz, 1.1)
+        x0 = W * (0.60 if side > 0 else 0.40)
+        pts = self.bez((x0, hz), (x0 + side * W * .02, hz - 380), (x0 + side * W * .10, hz - 760), (x0 + side * W * .33, hz - 930))
+        img = self.streak(img, pts, ramp=0.55)
+        ref = np.exp(-((np.arange(W)[None, :] - x0) / (W * 0.012)) ** 2) * np.ones((H, 1))
+        wav = self.noise((30, 12, 6), (1, .7, .5))
+        seac = self.lerp((.05, .08, .14), (.01, .015, .03), np.clip((self.yy - 0.74) / 0.26, 0, 1))
+        seac = seac + (ref * (0.25 + 0.6 * wav))[..., None] * np.array([1, .5, .18]) * np.exp(-((self.yy * H - hz) / (H * 0.18)))[..., None]
+        img = np.where((np.arange(H) >= hz)[:, None, None], seac, img)
+        xs = np.arange(0, int(W * 0.42), 8)
+        prof = hz - 80 - 120 * np.exp(-((xs - W * 0.12) / (W * 0.11)) ** 2) - 40 * np.sin(xs / 57) * np.exp(-xs / 700) + (xs / (W * 0.42)) ** 2 * 90
+        poly = [(0, hz + 2)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W * 0.42, hz + 2)]
+        if side < 0: poly = [(W - x, y) for x, y in poly]
+        return self.silhouette(img, poly)
+
+    # 打ち上げ：星の軌跡
+    def startrail(self):
+        img = self.lerp((.01, .012, .03), (.05, .07, .13), np.clip(self.yy, 0, 1) ** 1.4)
+        lay = Image.new("L", (W, H), 0); d = ImageDraw.Draw(lay); cx, cy = W * 0.80, -H * 0.15
+        for _ in range(620):
+            rad = self.rng.uniform(80, W * 1.1); a0 = self.rng.uniform(0, 2 * np.pi)
+            d.arc((cx - rad, cy - rad, cx + rad, cy + rad), np.degrees(a0), np.degrees(a0 + 0.22), fill=int(self.rng.power(5) * 255), width=2)
+        a = np.asarray(lay).astype(np.float32) / 255
+        img = img + (a + self.blur(a, 2) * 1.5)[..., None] * np.array([.85, .9, 1.0]) * 0.9
+        img = self.streak(img, self.bez((W * .22, H * .86), (W * .25, H * .55), (W * .33, H * .28), (W * .50, H * .10)), width=7, glow=52, strength=1.1, ramp=0.4)
+        return self.silhouette(img, self.ridge(H * 0.86, 14), (.004, .005, .01))
+
+    # 夜明け前の丘
+    def dawn(self, trail=True):
+        t = np.clip(self.yy / 0.8, 0, 1)
+        c0, c1, c2, c3 = (.01, .02, .06), (.10, .10, .30), (.55, .30, .40), (.98, .55, .28)
+        img = np.where((t < .55)[..., None], self.lerp(c0, c1, t / .55),
+                       np.where((t < .85)[..., None], self.lerp(c1, c2, (t - .55) / .30), self.lerp(c2, c3, np.clip((t - .85) / .15, 0, 1))))
+        img = self.stars(img, 2600, int(H * 0.6), 0.8)
+        if trail:
+            img = self.streak(img, self.bez((W * .30, H * .80), (W * .36, H * .55), (W * .50, H * .30), (W * .78, H * .17)),
+                              core=(1, .97, .9), halo=(1, .55, .25), width=4, glow=34, strength=.95, ramp=0.6)
+        xs = np.arange(0, W + 8, 8)
+        prof = H * 0.80 + 60 * np.sin(xs / 430) + 30 * np.sin(xs / 190 + 1) - 140 * np.exp(-((xs - W * 0.70) / (W * 0.22)) ** 2)
+        return self.silhouette(img, [(0, H)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W, H)], (.02, .015, .03), 1)
+
+    # 天体：流星（放射点から飛び出す）
+    def meteor(self):
+        img = self.night(hz=0.82)
+        img = self.milkyway(img, offset=-200)
+        img = self.stars(img, 3600, H * 0.82, 1.1)
+        rx, ry = W * self.rng.uniform(.62, .78), H * self.rng.uniform(.12, .22)
+        for _ in range(7):
+            ang = self.rng.uniform(0, 2 * np.pi); r0 = self.rng.uniform(120, 420); ln = self.rng.uniform(160, 420)
+            p0 = (rx + np.cos(ang) * r0, ry + np.sin(ang) * r0); p1 = (rx + np.cos(ang) * (r0 + ln), ry + np.sin(ang) * (r0 + ln))
+            pts = [(p0[0] + (p1[0] - p0[0]) * k / 40, p0[1] + (p1[1] - p0[1]) * k / 40) for k in range(41)]
+            img = self.streak(img, pts, core=(.95, .98, 1), halo=(.45, .6, 1), width=3, glow=14, strength=self.rng.uniform(.5, .95), ramp=0.9)
+        return self.silhouette(img, self.ridge(H * 0.83, 40), (.006, .008, .014), 1)
+
+    # 天体：月
+    def moon(self):
+        img = self.night(hz=0.8)
+        img = self.stars(img, 1400, H * 0.8, 0.7)
+        cx, cy, r = W * .70, H * .30, 120
+        y, x = np.mgrid[0:H, 0:W]; d = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+        disk = np.clip(r - d, 0, 1)
+        tex = 0.82 + 0.18 * self.noise((40, 16, 6), (1, .6, .4))
+        img = img * (1 - disk[..., None]) + disk[..., None] * (tex[..., None] * np.array([1, .96, .86]))
+        img += (np.exp(-np.clip(d - r, 0, None) / 90) * (d > r))[..., None] * np.array([.35, .33, .28]) * 0.6
+        return self.silhouette(img, self.ridge(H * 0.82, 50), (.008, .01, .018), 1)
+
+    # 宇宙スポット：天文台のドーム
+    def observatory(self):
+        img = self.dawn(trail=False)
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+        bx, by = W * 0.70, H * 0.80 - 140 - 10
+        d.rectangle((bx - 120, by - 20, bx + 120, by + 120), fill=255)
+        d.pieslice((bx - 130, by - 150, bx + 130, by + 110), 180, 360, fill=255)
+        d.rectangle((bx - 14, by - 150, bx + 14, by - 40), fill=0)  # スリット
+        a = np.asarray(m.filter(ImageFilter.GaussianBlur(1))).astype(np.float32)[..., None] / 255
+        return img * (1 - a) + a * np.array([.02, .015, .03])
+
+    # 機材：三脚と星空
+    def tripod(self):
+        img = self.night(hz=0.8)
+        img = self.milkyway(img, offset=-300)
+        img = self.stars(img, 3400, H * 0.8, 1.1)
+        img = self.silhouette(img, self.ridge(H * 0.82, 30), (.006, .008, .014), 1)
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+        tx, ty = W * 0.72, H * 0.60
+        for dx in (-150, 0, 150):
+            d.line([(tx, ty), (tx + dx, H * 0.86)], fill=255, width=9)
+        d.rectangle((tx - 70, ty - 70, tx + 80, ty), fill=255); d.polygon([(tx + 80, ty - 60), (tx + 150, ty - 95), (tx + 150, ty + 10), (tx + 80, ty - 10)], fill=255)
+        a = np.asarray(m).astype(np.float32)[..., None] / 255
+        return img * (1 - a) + a * np.array([.004, .005, .01])
+
+    def film(self, img, haze_y=.74, leak=True):
+        """TRANSIT のような写真の空気感：かすみ・にじみ・フィルムの色・光漏れ"""
+        img = np.clip(img, 0, None)
+        haze = np.exp(-((self.yy - haze_y) / .10) ** 2)[..., None] * np.array([.10, .07, .06])
+        img = img + haze
+        bright = np.clip(img.max(axis=2) - .55, 0, 1)
+        bloom = self.blur(bright, 18)[..., None] * np.array([1, .75, .55]) * .9
+        img = img + bloom
+        lum = img.mean(axis=2, keepdims=True)
+        shadow = np.clip(1 - lum * 2.5, 0, 1); high = np.clip((lum - .35) * 2, 0, 1)
+        img = img + shadow * np.array([-.004, .018, .030]) + high * np.array([.05, .02, -.03])
+        img = img * .94 + .035  # 黒を少し持ち上げる（フィルムのような浅さ）
+        if leak:
+            y, x = np.mgrid[0:H, 0:W]
+            d = np.sqrt(((x - W * 1.02) / (W * .55)) ** 2 + ((y + H * .05) / (H * .9)) ** 2)
+            img = img + (np.exp(-d * 2.2) * .28)[..., None] * np.array([1, .45, .18])
+        return img
+
+    def finish(self, img, grain=.035, vig=.55):
+        y, x = np.mgrid[0:H, 0:W]; d = ((x - W / 2) / (W / 2)) ** 2 + ((y - H / 2) / (H / 2)) ** 2
+        img = img * (1 - vig * np.clip(d, 0, 1.4)[..., None] * 0.5)
+        img = img + self.rng.normal(0, grain, (H, W, 1))
+        return Image.fromarray((np.clip(img, 0, 1) ** (1 / 1.05) * 255).astype(np.uint8))
+
+    # ---------- 組み立て式（記事ごとに空・地上・モチーフを変える） ----------
+    def sky(self, tone="night", milky=True, nstars=3200, hz=0.76):
+        if tone == "dawn":
+            t = np.clip(self.yy / (hz + .04), 0, 1)
+            c0, c1, c2, c3 = (.01, .02, .06), (.10, .10, .30), (.55, .30, .40), (.98, .55, .28)
+            img = np.where((t < .55)[..., None], self.lerp(c0, c1, t / .55),
+                           np.where((t < .85)[..., None], self.lerp(c1, c2, (t - .55) / .30), self.lerp(c2, c3, np.clip((t - .85) / .15, 0, 1))))
+            return self.stars(img, int(nstars * .7), H * hz * .8, .8)
+        if tone == "dusk":
+            t = np.clip(self.yy / hz, 0, 1)
+            img = np.where((t < .6)[..., None], self.lerp((.02, .03, .10), (.06, .16, .32), t / .6), self.lerp((.06, .16, .32), (.55, .42, .55), (t - .6) / .4))
+            return self.stars(img, int(nstars * .5), H * hz * .7, .7)
+        img = self.night(hz=hz)
+        if milky: img = self.milkyway(img)
+        return self.stars(img, nstars, H * hz, 1.1)
+
+    def ground(self, img, kind, hz, trail_x=None):
+        hzp = int(H * hz)
+        if kind in ("sea", "island"):
+            wav = self.noise((30, 12, 6), (1, .7, .5))
+            seac = self.lerp((.05, .08, .14), (.01, .015, .03), np.clip((self.yy - hz) / (1 - hz), 0, 1))
+            if trail_x is not None:
+                ref = np.exp(-((np.arange(W)[None, :] - trail_x) / (W * 0.012)) ** 2) * np.ones((H, 1))
+                seac = seac + (ref * (0.25 + 0.6 * wav))[..., None] * np.array([1, .5, .18]) * np.exp(-((self.yy * H - hzp) / (H * 0.18)))[..., None]
+            img = np.where((np.arange(H) >= hzp)[:, None, None], seac + ((wav - .5) * .03)[..., None], img)
+            if kind == "island":  # 平たく長い島（種子島のような）
+                xs = np.arange(int(W * .05), int(W * .62), 8)
+                prof = hzp - 26 - 34 * np.exp(-((xs - W * .22) / (W * .10)) ** 2) - 18 * np.sin(xs / 90) * .5 - 10 * np.exp(-((xs - W * .45) / (W * .06)) ** 2)
+                img = self.silhouette(img, [(W * .05, hzp + 2)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W * .62, hzp + 2)])
+            else:
+                xs = np.arange(0, int(W * 0.42), 8)
+                prof = hzp - 80 - 120 * np.exp(-((xs - W * 0.12) / (W * 0.11)) ** 2) - 40 * np.sin(xs / 57) * np.exp(-xs / 700) + (xs / (W * 0.42)) ** 2 * 90
+                img = self.silhouette(img, [(0, hzp + 2)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W * 0.42, hzp + 2)])
+            return img
+        if kind == "city":  # 街並み（家の近くの空で見る）
+            m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m); x = 0
+            while x < W:
+                bw = self.rng.integers(50, 150); bh = self.rng.integers(30, 150) * (1.8 if self.rng.random() < .08 else 1)
+                d.rectangle((x, hzp - bh, x + bw, H), fill=255); x += bw + self.rng.integers(0, 10)
+            a = np.asarray(m).astype(np.float32)[..., None] / 255
+            img = img * (1 - a) + a * np.array([.012, .014, .022])
+            win = (self.rng.random((H, W)) > .9993).astype(np.float32) * a[..., 0] * (np.arange(H)[:, None] < H * .97)
+            win = self.blur(win, 1.5) * 6
+            return img + win[..., None] * np.array([1, .78, .45])
+        return self.silhouette(img, self.ridge(hzp, 40 if kind == "hills" else 14), (.006, .008, .014), 1)
+
+    def m_trail(self, img, hz, x0=.60, side=1, ramp=.55, width=6, strength=1.0, height=.74):
+        hzp = H * hz; x = W * x0
+        pts = self.bez((x, hzp), (x + side * W * .02, hzp - H * height * .40), (x + side * W * .10, hzp - H * height * .80), (x + side * W * .33, hzp - H * height))
+        return self.streak(img, pts, width=width, ramp=ramp, strength=strength)
+
+    def m_meteors(self, img, rx=.70, ry=.18, n=7):
+        rx, ry = W * rx, H * ry
+        for _ in range(n):
+            ang = self.rng.uniform(0, 2 * np.pi); r0 = self.rng.uniform(120, 420); ln = self.rng.uniform(160, 420)
+            p0 = (rx + np.cos(ang) * r0, ry + np.sin(ang) * r0); p1 = (rx + np.cos(ang) * (r0 + ln), ry + np.sin(ang) * (r0 + ln))
+            pts = [(p0[0] + (p1[0] - p0[0]) * k / 40, p0[1] + (p1[1] - p0[1]) * k / 40) for k in range(41)]
+            img = self.streak(img, pts, core=(.95, .98, 1), halo=(.45, .6, 1), width=3, glow=14, strength=self.rng.uniform(.5, .95), ramp=0.9)
+        return img
+
+    def m_constellation(self, img, name, cx=.70, cy=.30, scale=1.0, radiant=None):
+        """星座の形（模式図。実際の位置関係を簡略化）"""
+        shapes = {"orion": ([(-1.0, -1.3), (.9, -1.1), (-.35, -.05), (0, 0), (.35, .05), (-.9, 1.3), (1.0, 1.2)], [(0, 2), (1, 4), (2, 3), (3, 4), (2, 5), (4, 6)]),
+                  "gemini": ([(-.4, -1.3), (.4, -1.2), (-.6, -.2), (.3, -.1), (-.8, .9), (.2, 1.1)], [(0, 2), (2, 4), (1, 3), (3, 5), (0, 1)]),
+                  "leo": ([(-1.1, -.6), (-.7, -1.1), (-.1, -1.0), (.1, -.5), (-.2, 0), (1.1, .3), (.3, .6)], [(0, 1), (1, 2), (2, 3), (3, 4), (4, 6), (6, 5), (3, 5)])}
+        pts, lines = shapes.get(name, shapes["orion"]); u = 150 * scale
+        P = [(W * cx + x * u, H * cy + y * u) for x, y in pts]
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+        for a, b in lines: d.line([P[a], P[b]], fill=70, width=2)
+        a = np.asarray(m).astype(np.float32) / 255
+        img = img + a[..., None] * np.array([.7, .8, 1.0])
+        lay = np.zeros((H, W), np.float32)
+        for x, y in P: lay[int(y), int(x)] = 1
+        img = img + (self.blur(lay, 3) * 40 + self.blur(lay, 10) * 25)[..., None] * np.array([1, .97, .9])
+        if radiant:
+            rxp, ryp = W * radiant[0], H * radiant[1]
+            m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).ellipse((rxp - 26, ryp - 26, rxp + 26, ryp + 26), outline=255, width=4)
+            img = img + (np.asarray(m).astype(np.float32) / 255)[..., None] * np.array([.91, .28, .11]) * 1.4
+        return img
+
+    def m_moon(self, img, cx=.72, cy=.28, r=110, warm=False):
+        cx, cy = W * cx, H * cy
+        y, x = np.mgrid[0:H, 0:W]; dd = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+        disk = np.clip(r - dd, 0, 1); tex = 0.82 + 0.18 * self.noise((40, 16, 6), (1, .6, .4))
+        col = np.array([1, .78, .55]) if warm else np.array([1, .96, .86])
+        img = img * (1 - disk[..., None]) + disk[..., None] * (tex[..., None] * col)
+        return img + (np.exp(-np.clip(dd - r, 0, None) / (r * .8)) * (dd > r))[..., None] * col * 0.35
+
+    def m_planets(self, img, cx=.68, cy=.42):
+        for (dx, dy, col, rr) in ((0, 0, (1, .97, .9), 9), (70, 38, (1, .55, .35), 7)):
+            lay = np.zeros((H, W), np.float32); lay[int(H * cy + dy), int(W * cx + dx)] = 1
+            img = img + (self.blur(lay, rr * .5) * rr * 60 + self.blur(lay, rr * 3) * rr * 30)[..., None] * np.array(col)
+        return img
+
+    def m_straight(self, img, p0, p1, dots=False):
+        if dots:
+            lay = np.zeros((H, W), np.float32)
+            for k in range(16):
+                x = p0[0] + (p1[0] - p0[0]) * k / 15; y = p0[1] + (p1[1] - p0[1]) * k / 15
+                lay[int(H * y), int(W * x)] = 1
+            return img + (self.blur(lay, 2) * 60 + self.blur(lay, 6) * 20)[..., None] * np.array([1, 1, 1])
+        pts = [(W * (p0[0] + (p1[0] - p0[0]) * k / 60), H * (p0[1] + (p1[1] - p0[1]) * k / 60)) for k in range(61)]
+        return self.streak(img, pts, core=(1, 1, .96), halo=(.6, .7, 1), width=4, glow=16, strength=.9)
+
+    def m_object(self, img, kind, hz, x=.72):
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m); tx = W * x; ground = H * hz + 6
+        if kind == "dome":
+            by = ground - 120
+            d.rectangle((tx - 120, by - 20, tx + 120, ground + 40), fill=255); d.pieslice((tx - 130, by - 150, tx + 130, by + 110), 180, 360, fill=255)
+            d.rectangle((tx - 14, by - 150, tx + 14, by - 40), fill=0)
+        else:  # tripod + camera / phone
+            ty = ground - 300
+            for dx in (-150, 0, 150): d.line([(tx, ty), (tx + dx, ground + 40)], fill=255, width=9)
+            if kind == "phone": d.rounded_rectangle((tx - 44, ty - 170, tx + 44, ty + 4), radius=16, fill=255)
+            else:
+                d.rectangle((tx - 70, ty - 70, tx + 80, ty), fill=255)
+                d.polygon([(tx + 80, ty - 60), (tx + 150, ty - 95), (tx + 150, ty + 10), (tx + 80, ty - 10)], fill=255)
+        a = np.asarray(m).astype(np.float32)[..., None] / 255
+        return img * (1 - a) + a * np.array([.004, .005, .01])
+
+    def compose(self, c):
+        hz = c.get("horizon", .76); motifs = c.get("motifs", [])
+        if "startrail" in motifs:
+            img = self.startrail_sky()
+        else:
+            img = self.sky(c.get("tone", "night"), c.get("milky", True), c.get("stars", 3200), hz)
+        for mo in motifs:
+            if isinstance(mo, str): mo = {"type": mo}
+            k = mo["type"]
+            if k == "meteors": img = self.m_meteors(img, mo.get("rx", .70), mo.get("ry", .18), mo.get("n", 7))
+            elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"))
+            elif k in ("moon", "bigmoon"): img = self.m_moon(img, mo.get("cx", .72), mo.get("cy", .28 if k == "moon" else hz - .12), mo.get("r", 110 if k == "moon" else 260), k == "bigmoon")
+            elif k == "planets": img = self.m_planets(img, mo.get("cx", .68), mo.get("cy", .42))
+            elif k == "iss": img = self.m_straight(img, (mo.get("x0", .30), mo.get("y0", .62)), (mo.get("x1", .95), mo.get("y1", .12)))
+            elif k == "starlink": img = self.m_straight(img, (mo.get("x0", .40), mo.get("y0", .20)), (mo.get("x1", .90), mo.get("y1", .38)), dots=True)
+        trail_x = None
+        for mo in motifs:
+            if isinstance(mo, dict) and mo["type"] in ("trail", "trails"):
+                if mo["type"] == "trail":
+                    img = self.m_trail(img, hz, mo.get("x", .60), mo.get("side", 1), height=mo.get("height", .74)); trail_x = W * mo.get("x", .60)
+                else:
+                    for i, (x, h, st) in enumerate(((.42, .55, .55), (.58, .70, .8), (.74, .62, .65))):
+                        img = self.m_trail(img, hz, x, 1, height=h, strength=st, width=5)
+            elif mo in ("trail",):
+                img = self.m_trail(img, hz); trail_x = W * .60
+        img = self.ground(img, c.get("ground", "hills"), hz, trail_x)
+        for mo in motifs:
+            k = mo if isinstance(mo, str) else mo["type"]
+            if k in ("dome", "tripod", "phone"): img = self.m_object(img, k, hz, (mo.get("x", .72) if isinstance(mo, dict) else .72))
+        return img
+
+    def startrail_sky(self):
+        img = self.lerp((.01, .012, .03), (.05, .07, .13), np.clip(self.yy, 0, 1) ** 1.4)
+        lay = Image.new("L", (W, H), 0); d = ImageDraw.Draw(lay); cx, cy = W * 0.80, -H * 0.15
+        for _ in range(620):
+            rad = self.rng.uniform(80, W * 1.1); a0 = self.rng.uniform(0, 2 * np.pi)
+            d.arc((cx - rad, cy - rad, cx + rad, cy + rad), np.degrees(a0), np.degrees(a0 + 0.22), fill=int(self.rng.power(5) * 255), width=2)
+        a = np.asarray(lay).astype(np.float32) / 255
+        return img + (a + self.blur(a, 2) * 1.5)[..., None] * np.array([.85, .9, 1.0]) * 0.9
+
+
+SCENES = {"launch": ["sea", "startrail"], "sky": ["meteor", "moon"], "spot": ["observatory", "dawn"], "gear": ["tripod"]}
+LABEL = {"launch": "LAUNCH", "sky": "SKY", "spot": "SPOT", "gear": "GEAR"}
+
+
+# ---------- 文字 ----------
+def split_title(t):
+    """先頭の【…】は小見出し、途中の【…】と「｜」より後ろは副題にする。"""
+    t = t.strip(); kicker = ""
+    m = re.match(r"^【([^】]+)】\s*", t)
+    if m: kicker, t = m.group(1), t[m.end():]
+    parts = re.split(r"[｜|]", t, maxsplit=1)
+    main = parts[0].strip(); sub = parts[1].strip() if len(parts) > 1 else ""
+    m = re.search(r"【([^】]+)】", main)
+    if m:
+        rest = main[m.end():].strip()
+        sub = "・".join(x for x in [m.group(1), rest, sub] if x)
+        main = main[:m.start()].strip()
+    return kicker, main, sub
+
+
+def summarize(main, limit=16):
+    """長いタイトルを見出し用に短くする（括弧の中を外し、文節の切れ目で limit 字まで）。
+    本当は作成エージェントが spec の headline に要約を書く。これは無いときの代わり。"""
+    t = re.sub(r"（[^）]*）|\([^)]*\)", "", main).strip()
+    if len(t) <= limit: return t
+    m = re.match(r"^(.+?[？?])", t)
+    if m and len(m.group(1)) <= limit + 2: return m.group(1)
+    out = ""
+    for c in chunks(t):
+        if len(out + c) > limit: break
+        out += c
+    return out or t[:limit]
+
+
+NO_START = set("、。，．・：；？！ー）」』】〕ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ々")
+NO_END = set("（「『【〔")
+
+
+def chunks(text):
+    """文節に分ける（BudouX。無ければ1文字ずつ）。"""
+    try:
+        import budoux
+        return budoux.load_default_japanese_parser().parse(text)
+    except Exception:
+        return list(text)
+
+
+def wrap_chars(text, fnt, maxw, d):
+    lines, cur = [], ""
+    for ch in text:
+        if d.textlength(cur + ch, font=fnt) <= maxw or not cur or ch in NO_START:
+            cur += ch; continue
+        if cur[-1] in NO_END:
+            lines.append(cur[:-1]); cur = cur[-1] + ch; continue
+        lines.append(cur); cur = ch
+    if cur: lines.append(cur)
+    return lines
+
+
+def wrap(text, fnt, maxw, d):
+    """文節の切れ目で折り返す。1つの文節が長すぎるときだけ文字で折る。2行になるときは長さを釣り合わせる。"""
+    cs = chunks(text); lines, cur = [], ""; wrap.broke = False
+    for c in cs:
+        if d.textlength(cur + c, font=fnt) <= maxw:
+            cur += c; continue
+        if cur: lines.append(cur); cur = ""
+        if d.textlength(c, font=fnt) <= maxw: cur = c
+        else:
+            parts = wrap_chars(c, fnt, maxw, d); lines += parts[:-1]; cur = parts[-1]; wrap.broke = True
+    if cur: lines.append(cur)
+    if len(lines) == 2 and len(cs) > 1:  # 2行なら、両方が収まる中でいちばん釣り合う切れ目を選ぶ
+        best = None
+        for i in range(1, len(cs)):
+            l1, l2 = "".join(cs[:i]), "".join(cs[i:])
+            w1, w2 = d.textlength(l1, font=fnt), d.textlength(l2, font=fnt)
+            if w1 <= maxw and w2 <= maxw:
+                score = max(w1, w2) + (0 if w1 >= w2 * 0.8 else (w2 - w1) * 0.3)
+                if best is None or score < best[0]: best = (score, [l1, l2])
+        if best: lines = best[1]
+    return lines
+
+
+def fit(text, kind, sizes, maxw, maxlines, d):
+    """文節を割らずに maxlines 行に収まる、いちばん大きい文字の大きさを選ぶ。無ければ割ってでも収まるもの。"""
+    first = None
+    for sz in sizes:
+        f = font(kind, sz); ls = wrap(text, f, maxw * S, d)
+        if len(ls) <= maxlines:
+            if not wrap.broke: return f, ls, sz
+            first = first or (f, ls, sz)
+    return first or (f, ls[:maxlines], sz)
+
+
+def spaced(d, xy, text, fnt, fill, track=0.18):
+    x, y = xy
+    for ch in text:
+        d.text((x, y), ch, font=fnt, fill=fill); x += d.textlength(ch, font=fnt) + fnt.size * track
+    return x
+
+
+def textlen_spaced(d, text, fnt, track=0.18):
+    return sum(d.textlength(ch, font=fnt) + fnt.size * track for ch in text)
+
+
+def shadowed(base, draw_fn, radius=18, alpha=150):
+    sh = Image.new("RGBA", base.size, (0, 0, 0, 0)); draw_fn(ImageDraw.Draw(sh), (0, 0, 0, alpha))
+    base.alpha_composite(sh.filter(ImageFilter.GaussianBlur(radius)))
+    lay = Image.new("RGBA", base.size, (0, 0, 0, 0)); draw_fn(ImageDraw.Draw(lay), None); base.alpha_composite(lay)
+
+
+VROT = set("ー－―〜～…‥()（）「」『』【】〔〕[]｛｝<>＜＞=＝-")
+
+
+def vtokens(text):
+    """縦書きの単位に分ける（半角の英数字は2〜3字なら縦中横、長ければ横倒し）"""
+    toks = []
+    for m in re.finditer(r"[A-Za-z0-9./:]+|.", text):
+        toks.append(m.group(0))
+    return toks
+
+
+def draw_vertical(img, x, y, text, fnt, fill, lead=1.12):
+    """右上の (x, y) を始点に、上から下へ縦に書く。x は列の中心。"""
+    d = ImageDraw.Draw(img); sz = fnt.size
+    for tk in vtokens(text):
+        if len(tk) == 1 and not tk.isascii():
+            if tk in VROT:
+                g = Image.new("RGBA", (sz * 2, sz * 2), (0, 0, 0, 0)); ImageDraw.Draw(g).text((sz // 2, sz // 2), tk, font=fnt, fill=fill)
+                g = g.rotate(-90, resample=Image.BICUBIC); img.alpha_composite(g, (int(x - sz), int(y - sz * .55)))
+            elif tk in "、。，．":
+                d.text((x - sz * .5 + sz * .55, y - sz * .55), tk, font=fnt, fill=fill)
+            else:
+                d.text((x - d.textlength(tk, font=fnt) / 2, y), tk, font=fnt, fill=fill)
+            y += sz * lead
+        elif len(tk) <= 3:
+            f2 = fnt if len(tk) == 1 else fnt.font_variant(size=int(sz * (0.82 if len(tk) == 2 else 0.62)))
+            d.text((x - d.textlength(tk, font=f2) / 2, y + (sz - f2.size) * .4), tk, font=f2, fill=fill)
+            y += sz * lead
+        else:
+            w = int(d.textlength(tk, font=fnt)) + 4
+            g = Image.new("RGBA", (w, sz * 2), (0, 0, 0, 0)); ImageDraw.Draw(g).text((0, sz // 3), tk, font=fnt, fill=fill)
+            g = g.rotate(-90, expand=True, resample=Image.BICUBIC); img.alpha_composite(g, (int(x - g.width / 2), int(y)))
+            y += w + sz * .15
+    return y
+
+
+def render_transit(spec, bg, cat, main, sub, kicker):
+    d = ImageDraw.Draw(bg); M = 64 * S
+    # 下を少し暗くして文字を読みやすく
+    grad = np.zeros((H, W, 4), np.uint8); a = np.clip((np.arange(H) / H - 0.5) / 0.5, 0, 1) ** 1.6 * 120
+    grad[..., 3] = a[:, None].astype(np.uint8); bg.alpha_composite(Image.fromarray(grad, "RGBA"))
+    # 上：誌名とカテゴリ（小さく）
+    mono = font("mono", 12)
+    x = spaced(d, (M, 50 * S), "MIAGETABI", mono, (255, 255, 255, 230), .32)
+    d.ellipse((x + 10 * S, 54 * S, x + 17 * S, 61 * S), fill=ORANGE)
+    spaced(d, (x + 28 * S, 50 * S), (LABEL[cat] + ("  /  " + kicker if kicker else "")), mono, (255, 255, 255, 170), .24)
+    # 英語の一文（大きな斜体のセリフ）
+    en = spec.get("en") or ""
+    if en:
+        fe = font("serif_i", 92, 400)
+        lines = en.split("\n") if "\n" in en else [en]
+        while max(d.textlength(l, font=fe) for l in lines) > 760 * S and fe.size > 50 * S: fe = fe.font_variant(size=int(fe.size * .92))
+        y = H - 150 * S - int(fe.size * 1.0) * len(lines)
+        def eng(dd, col):
+            yy = y
+            for l in lines:
+                dd.text((M - 4 * S, yy), l, font=fe, fill=col or (255, 252, 245)); yy += int(fe.size * 1.0)
+        shadowed(bg, eng, 22, 120); d = ImageDraw.Draw(bg)
+    # 下：日時・場所（細いモノスペース）と線
+    meta = "  ·  ".join(x for x in [spec.get("date"), spec.get("time"), spec.get("place")] if x)
+    d.line((M, H - 104 * S, M + 48 * S, H - 104 * S), fill=(255, 255, 255, 200), width=2 * S)
+    if meta: spaced(d, (M, H - 88 * S), meta, font("mono", 14), (255, 255, 255, 230), .16)
+    if sub: d.text((M, H - 62 * S), sub, font=font("mincho", 17), fill=(255, 255, 255, 215))
+    # 右：日本語の見出しを縦書き（明朝）
+    fj = font("mincho", 40)
+    vt = len("".join(vtokens(main)))
+    while (len(vtokens(main)) * fj.size * 1.12 > H - 150 * S) and fj.size > 26 * S: fj = fj.font_variant(size=int(fj.size * .92))
+    cols = [main]
+    if len(vtokens(main)) * fj.size * 1.12 > H - 150 * S:  # 長ければ文節で2列に
+        cs = chunks(main); half = len(main) / 2; acc = ""; i = 0
+        while i < len(cs) and len(acc + cs[i]) <= half + 2: acc += cs[i]; i += 1
+        cols = [acc, "".join(cs[i:])]
+    xr = W - 84 * S
+    def vert(img_, col):
+        for k, ctext in enumerate(cols):
+            draw_vertical(img_, xr - k * fj.size * 1.6, 92 * S, ctext, fj, col or (255, 255, 255))
+    sh = Image.new("RGBA", bg.size, (0, 0, 0, 0)); vert(sh, (0, 0, 0, 150)); bg.alpha_composite(sh.filter(ImageFilter.GaussianBlur(14)))
+    vert(bg, None)
+    d = ImageDraw.Draw(bg)
+    cg = font("mono", 9); spaced(d, (W - M - int(textlen_spaced(d, "CG ILLUSTRATION", cg, .14)), H - 34 * S), "CG ILLUSTRATION", cg, (255, 255, 255, 120), .14)
+
+
+def render(spec, out):
+    cat = spec.get("category", "launch") if spec.get("category") in SCENES else "launch"
+    seed = int(spec.get("seed", 1)); layout = spec.get("layout", "transit")
+    scene = spec.get("scene") or SCENES[cat][seed % len(SCENES[cat])]
+    sc = Scene(seed)
+    if spec.get("composition"):
+        img = sc.compose(spec["composition"])
+    else:
+        img = {"sea": lambda: sc.sea(1 if seed % 2 else -1) if layout == "cinema" else sc.sea(1)}.get(scene, getattr(sc, scene))()
+    if layout == "transit":
+        img = sc.film(img, (spec.get("composition") or {}).get("horizon", .76) - .02)
+        bg = sc.finish(img, grain=.055, vig=.7).convert("RGBA")
+    else:
+        bg = sc.finish(img).convert("RGBA")
+    kicker0, main, sub = split_title(spec["title"])
+    main = spec.get("headline") or summarize(main)
+    if "sub" in spec: sub = spec["sub"]
+    elif len(sub) > 30: sub = summarize(sub, 30)
+    kicker = spec.get("kicker") or kicker0
+    if spec.get("bignum"):  # 号機・年などの大きな数字（白抜き）
+        bn = Image.new("RGBA", (W, H), (0, 0, 0, 0)); bd = ImageDraw.Draw(bn); bf = font("mono", 460)
+        tw = bd.textlength(str(spec["bignum"]), font=bf)
+        bd.text((W - tw - 30 * S, H * .02), str(spec["bignum"]), font=bf, fill=(0, 0, 0, 0), stroke_width=2 * S, stroke_fill=(255, 255, 255, 46))
+        bg.alpha_composite(bn)
+    if layout == "transit":
+        render_transit(spec, bg, cat, main, sub, kicker)
+        bg.convert("RGB").resize((OUT_W, OUT_H), Image.LANCZOS).save(out, quality=88, optimize=True, progressive=True)
+        return
+    d0 = ImageDraw.Draw(bg); M = 60 * S
+    mono_s = font("mono", 13); mono_l = font("mono", 16)
+    if layout == "panel":
+        pw = 430 * S
+        panel = Image.new("RGBA", (pw, H), (11, 11, 16, 255)); bg.alpha_composite(panel, (W - pw, 0))
+        d = ImageDraw.Draw(bg); x0 = W - pw + 48 * S
+        d.rectangle((x0, 58 * S, x0 + 9 * S, 67 * S), fill=ORANGE)
+        spaced(d, (x0 + 20 * S, 54 * S), LABEL[cat], mono_s, (255, 255, 255))
+        if kicker: spaced(d, (x0, 150 * S), kicker, font("mono", 12), (255, 255, 255, 150))
+        f, ls, sz = fit(main, "black", (50, 46, 42, 38, 34, 32, 30), 334, 4, d)
+        y = 180 * S
+        for ln in ls:
+            d.text((x0, y), ln, font=f, fill=(255, 255, 255)); y += int(f.size * 1.22)
+        y += 18 * S; d.rectangle((x0, y, x0 + 56 * S, y + 4 * S), fill=ORANGE); y += 26 * S
+        if sub:
+            fs, ls2, _ = fit(sub, "medium", (18, 16, 15), 330, 3, d)
+            for ln in ls2:
+                d.text((x0, y), ln, font=fs, fill=(255, 255, 255, 215)); y += int(fs.size * 1.6)
+        if spec.get("date"):
+            spaced(d, (x0, H - 92 * S), spec["date"], font("mono", 15), (255, 255, 255), .12)
+        if spec.get("time"):
+            spaced(d, (x0, H - 66 * S), spec["time"], font("mono", 15), ORANGE, .12)
+        spaced(d, (24 * S, H - 30 * S), "CG ILLUSTRATION", font("mono", 10), (255, 255, 255, 140), .14)
+    else:
+        grad = np.zeros((H, W, 4), np.uint8); a = np.clip((np.arange(H) / H - 0.45) / 0.55, 0, 1) ** 1.3 * 150
+        grad[..., 3] = a[:, None].astype(np.uint8); bg.alpha_composite(Image.fromarray(grad, "RGBA"))
+        d = ImageDraw.Draw(bg)
+        d.rectangle((M, 56 * S, M + 9 * S, 65 * S), fill=ORANGE)
+        x = spaced(d, (M + 20 * S, 52 * S), LABEL[cat], mono_s, (255, 255, 255))
+        if kicker: spaced(d, (x + 14 * S, 52 * S), kicker, mono_s, (255, 255, 255, 160))
+        f, ls, sz = fit(main, "black", (66, 60, 56, 52, 48, 44), 800, 2, d)
+        foot = 64 * S + (40 * S if spec.get("date") or spec.get("time") else 0)
+        fs = font("medium", 22)
+        subh = int(fs.size * 1.5) if sub else 0
+        lh = int(f.size * 1.18); y = H - foot - subh - lh * len(ls) - (14 * S if sub else 0)
+        def title(dd, col):
+            yy = y
+            for ln in ls:
+                dd.text((M, yy), ln, font=f, fill=col or (255, 255, 255)); yy += lh
+            if sub:
+                dd.text((M, yy + 14 * S), sub if dd.textlength(sub, font=fs) < 900 * S else sub[:40] + "…", font=fs, fill=col or (255, 255, 255, 220))
+        shadowed(bg, title)
+        d = ImageDraw.Draw(bg)
+        if spec.get("date") or spec.get("time"):
+            x = M
+            if spec.get("date"): x = spaced(d, (M, H - 92 * S), spec["date"], mono_l, (255, 255, 255), .12) + 14 * S
+            if spec.get("time"): spaced(d, (x, H - 92 * S), spec["time"], mono_l, ORANGE, .12)
+        lg = logo_white(22); bg.alpha_composite(lg, (W - M - lg.width, H - 84 * S))
+        cg = font("mono", 10); spaced(d, (W - M - int(textlen_spaced(d, "CG ILLUSTRATION", cg, .14)), H - 40 * S), "CG ILLUSTRATION", cg, (255, 255, 255, 140), .14)
+    bg.convert("RGB").resize((OUT_W, OUT_H), Image.LANCZOS).save(out, quality=88, optimize=True, progressive=True)
+
+
+if __name__ == "__main__":
+    spec = json.load(open(sys.argv[1], encoding="utf-8"))
+    render(spec, sys.argv[2] if len(sys.argv) > 2 else "eyecatch.jpg")
+    print("ok", sys.argv[2] if len(sys.argv) > 2 else "eyecatch.jpg")
