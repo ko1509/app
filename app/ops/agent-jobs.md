@@ -7,8 +7,9 @@
 | 役割（role） | 名前 | 起動 | 手順書 | 受け持つ依頼（job の kind） |
 |---|---|---|---|---|
 | `planner` | 企画 | 月・木の朝＋依頼 | `ops/planner-manual.md` | `plan` |
-| `writer` | 記事作成 | 6〜23時の毎時＋依頼 | `ops/article-manual.md` | `article`（新しい稿）・`update`（公開済み記事の直し）・`eyecatch`（アイキャッチの作り直し） |
+| `writer` | 記事作成 | 6〜23時の毎時＋依頼 | `ops/article-manual.md` | `article`（新しい稿）・`update`（公開済み記事の直し） |
 | `reviewer` | 査読 | 6〜23時の毎時＋依頼 | `ops/review-manual.md` | `review`（`mode`: `draft` 稿／`update` 直し／`recheck` 公開済みの点検） |
+| `designer` | アイキャッチ | 依頼（査読 A のとき）＋6〜23時の毎時 | `ops/eyecatch-manual.md` | `eyecatch`（**査読で A になった稿だけ**に作る。運営者の作り直しの依頼も） |
 | `eventfetch` | イベント取得 | 月・木の朝＋依頼 | `ops/event-fetch-manual.md` | `eventfetch` |
 | `watch` | 公式ウォッチ | 1日4回＋依頼 | `ops/watch-manual.md` | `watch` |
 | `sns` | SNS | 依頼だけ（SNS アカウントができるまで停止） | `ops/sns-manual.md` | `sns` |
@@ -38,7 +39,7 @@
 ## 1. ジョブ
 
 1. 追加テキストに `job:<ID>` があれば、その `jobs/<ID>` だけを処理する。無ければ（定時の見回り）、`jobs` を `query`（`where: [["status","==","queued"]]`）して、自分の受け持つ `kind` のものを `createdAt` の古い順に **1 件だけ**選ぶ。
-   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・点検）は手順書の「定時の仕事」をする。作成・査読は、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。
+   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・点検）は手順書の「定時の仕事」をする。作成・査読・アイキャッチは、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。
 2. `status` が `"queued"` でなければ何もしないで終わる（二重起動の防止）。
 3. 始めたら `update` で `status: "running"`・`agent`（自分の役割）・`session`（環境変数 `CLAUDE_CODE_REMOTE_SESSION_ID`。無ければ省く）・`startedAt`・`updatedAt`・`message: "取りかかりました"`。
 4. 進んだら `message`（日本語で短く。アプリにそのまま出る）・`step`・`updatedAt` を更新する。10 分に 1 回以上。
@@ -87,7 +88,7 @@
 - `status`：`企画中` → `下書き` → `査読中` → `公開待ち` → `公開済み` → `要更新`（`ops/site-rules.md` の 10）
 - 作成が書く：`draft`（稿）・`draftPrev`（1つ前の稿）・`updateDraft`（公開済み記事の直し）
 - 査読が書く：`review`・`reviewHistory`・`recheck`（公開済みの点検結果）
-- 作成と査読が書く：`loop`：`{"state": "writing|reviewing|passed|failed", "round": 1, "max": 3, "updatedAt": ""}`
+- 作成と査読が書く：`loop`：`{"state": "writing|reviewing|passed|failed", "round": 1, "max": 5, "updatedAt": ""}`
 
 ### `events/<ID>`（打ち上げ・天体・展示の日付）
 `title`・`pillar`・`date`（YYYY-MM-DD、未定なら空）・`time`・`dateText`・`place`・`status`（`確定|予定|推測|延期|中止|終了`）・`source`・`note`・`history`（変更の記録の配列）・`by`・`addedAt`。**新しく足してよいのはイベント取得だけ**（`ops/event-fetch-manual.md`）、**既にあるものを書き換えてよいのは公式ウォッチだけ**（`ops/watch-manual.md`）。
@@ -104,13 +105,13 @@
 運営者がアプリで答えると `status` が `done`（対応した）か `dismissed`（見送り）になり、`answer`・`answeredAt` が入る。エージェントは `open` のものを書き換えない（自分が出したものの追記だけ、`body` の末尾に足すのは可）。同じ対象・同じ趣旨の `open` があれば新しく作らない。
 
 ### `images/<ID>`（画像。大きいので記事カードとは別に置く）
-`kind`（`eyecatch`）・`articleId`・`dataUrl`（`data:image/jpeg;base64,…`）・`spec`・`createdAt`。作成エージェントが書き、アプリが表示・ダウンロードする。
+`kind`（`eyecatch`）・`articleId`・`dataUrl`（`data:image/jpeg;base64,…`）・`spec`・`createdAt`。アイキャッチ担当が書き、アプリが表示・ダウンロードする。
 
 ### `posts/<ID>`（SNS の投稿案）
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`text`・`articleId`・`eventId`・`kind`・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
-- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
+- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
 - `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）
@@ -122,6 +123,7 @@
 - ID の決まり：
   - 作成 → 査読：`review-<articleId>-<round>`（`mode: "draft"`）、直しなら `review-<articleId>-u<YYYYMMDDHHMM>`（`mode: "update"`）
   - 査読 → 作成（書き直し）：`article-<articleId>-<round+1>`
+  - 査読（A のとき）→ アイキャッチ：`eyecatch-<articleId>-<round>`
   - 公式ウォッチ・点検 → 作成（直し）：`update-<articleId>-<YYYYMMDDHHMM>`
   - 点検 → 査読（公開済みの点検）：`recheck-<articleId>-<YYYYMMDD>`
   - SNS → SNS 審査：`snsreview-<articleId>-<YYYYMMDDHHMM>`、SNS 審査 → SNS（書き直し）：`sns-<articleId>-r<YYYYMMDDHHMM>`

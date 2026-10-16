@@ -280,7 +280,8 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 /* エージェントのウィジェット：PC は3列、スマホは2列 */
 .ag-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .ag-tiles.n1{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:760px){.ag-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ag-tiles.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:760px){.ag-tiles,.ag-tiles.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ag-tile{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;align-items:center;padding:12px;border-radius:18px;
   background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge),0 2px 8px rgba(0,0,0,.05);min-width:0;color:var(--label-3);border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
 .ag-tile>div{display:grid;min-width:0}
@@ -464,7 +465,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 /* 折りたたみの iPhone（開いたときのほぼ正方形の画面）：2列のレイアウト */
 @media (min-width:600px) and (max-width:1023px) and (min-aspect-ratio:3/4) and (max-aspect-ratio:4/3){
   .d-grid2{grid-template-columns:1fr 1fr}
-  .ag-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ag-tiles{grid-template-columns:repeat(3,minmax(0,1fr))} .ag-tiles.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .d-board{grid-template-columns:repeat(4,minmax(0,1fr))} .d-board.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sheet{max-width:none;left:50%;right:0;top:10px;bottom:10px;border-radius:18px 0 0 18px}
@@ -524,6 +525,7 @@ const IC={
   plus:'<path d="M12 5v14M5 12h14"/>',
   archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',
   inbox:'<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
+  image:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M4 17l5-5 4 4 2.5-2.5L20 17"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
   scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/>',
@@ -900,8 +902,9 @@ function viewKpi(){
 // 役割ごとの Routine。手順書は ops/<manual>（このアプリと一緒に公開）
 const AG={
   planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った記事案を受信箱に出す",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","運営マニュアルの3つの問いで絞り、受信箱に3件まで出す","採用・見送りの理由を次の提案に生かす"],never:"記事カードは作らない（決めるのは運営者）"},
-  writer:{l:"記事作成",kinds:["article","update","eyecatch"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","査読の指摘で書き直す（最大3回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
+  writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","記事に入れる図（タイムライン・方角・距離）を作る","査読の指摘で書き直す（最大5回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
   reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
+  designer:{l:"アイキャッチ",kinds:["eyecatch"],trig:"designerTriggerId",desc:"査読でAになった記事だけ、記事を読んでアイキャッチを作る",when:"依頼（査読A）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、見出し・英語の一文・背景を決める","直近の記事と背景がかぶらないように描き分ける","できた画像を自分で確かめ、だめなら作り直す（作り直しの依頼も受ける）"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
   eventfetch:{l:"イベント取得",kinds:["eventfetch"],trig:"eventFetchTriggerId",desc:"公式の予定表から新しい打ち上げ・天体イベントを見つけ、イベントに足す",when:"月・木 6:47＋依頼",pc:"spot",ic:"cal",manual:"event-fetch-manual.md",yen:60,tasks:["JAXA・スペースワン・インターステラの打ち上げ予定と、国立天文台・IMO の天体の暦を読む","まだ無いイベントを、公式の日時と出典つきでイベントに足す（重複は足さない）","日付が未発表のものは「日付未定」で足す。迷うものは受信箱へ"],never:"既にあるイベントの日時・状況は変えない（それは公式ウォッチ）・推測の日付を作らない"},
   watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
   sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"公開済みの記事から X・Instagram の告知文を下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:40,tasks:["公開済みの記事から X・Instagram の告知文を下書きする","公開・T−7・前日・当日・結果の型で、3日以内の分だけ作る"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
@@ -982,7 +985,7 @@ async function setPause(role,paused){
 }
 // 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
 // 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
-const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","writer","reviewer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","writer","reviewer","designer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
 function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
 const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
 function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
@@ -1069,7 +1072,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","writer","reviewer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer"],archive:["watch","writer","reviewer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview"]};
+const AG_SCOPE={all:["planner","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
@@ -1432,10 +1435,10 @@ function openDraft(aid,startTab){
   const bindEye=async()=>{const box=$("#eyeBox");if(!box)return;
     const re=$("#eyeRe");if(re)re.onclick=async()=>{re.disabled=true;await requestJob("eyecatch",{articleId:a._id,title:a.title,note:($("#eyeNote").value||"").trim()});};
     try{const sn=await S.db.doc("images/"+a._id+"-eyecatch").get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);
-      if(!im||!im.dataUrl){box.innerHTML=`<div class="d-empty">まだアイキャッチがありません。</div>`;return}
+      if(!im||!im.dataUrl){box.innerHTML=`<div class="d-empty">${a.review&&a.review.pass?"アイキャッチ担当が作っています。できるとここに出ます。":"まだありません。査読でAになると、アイキャッチ担当が作ります。"}</div>`;return}
       box.innerHTML=`<img src="${esc(im.dataUrl)}" alt="アイキャッチ" style="width:100%;border-radius:12px;display:block"><div class="d-actions" style="margin-top:8px"><button type="button" class="d-btn small" id="eyeDl">ダウンロード（1200×630）</button><span class="d-sub">${im.createdAt?ago(im.createdAt):""}</span></div>`;
       $("#eyeDl").onclick=()=>saveImage(im.dataUrl,`${(a.path||a._id).replace(/^\/|\/$/g,"").replace(/\//g,"-")||a._id}-eyecatch.jpg`);
-    }catch(e){box.innerHTML=`<div class="d-empty">まだアイキャッチがありません。</div>`}};
+    }catch(e){box.innerHTML=`<div class="d-empty">まだありません。査読でAになると、アイキャッチ担当が作ります。</div>`}};
   host.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{tab=b.dataset.pane;host.querySelectorAll("[data-pane]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pane===tab));$("#pane").innerHTML=panes[tab]();bindCp();bindCpa();if(tab==="eye")bindEye()});
   if(tab==="eye")bindEye();
   const rw=$("#rwGo");if(rw) rw.onclick=async()=>{rw.disabled=true;await requestWrite(a,{withExperience:!!a.withExperience,note:$("#rwNote").value.trim()});close()};

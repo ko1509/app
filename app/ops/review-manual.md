@@ -83,7 +83,7 @@
 - `:::src`（出典。公式が先）と `:::history`（更新履歴）が最後にあるか。無ければ P1。
 - 同じ数字がページの中で2回以上書かれていれば P2（直すときに片方が古くなる）。
 - 図（`:::fig`）が2つ未満なら P1（機材の記事は1つでよい）。図の数字（時刻・方角・高さ・距離）を本文・出典・sky.py で照らし、違えば P0。キャプションに「模式図」か出典が無ければ P2。公式の図を写していれば P1。
-- アイキャッチ（`draft.eyecatch`）が無ければ P2。アイキャッチの日時が本文と違えば P0。
+- アイキャッチは見ない（査読 A のあとにアイキャッチ担当が作る）。
 - カテゴリが1つで、タグが `ops/site-rules.md` の表にあるものだけか。違えば P1。
 - 打ち上げの記事で、機体の図鑑ページ（`/rockets/…`）へのリンクが無ければ P1。
 - 確かめられない見込みに「推測」と書いてあるか。書いていなければ P1。「要確認」が残っていれば P1。
@@ -177,8 +177,9 @@ P0 が1つでもあれば C 以下。判定は件数で機械的に行い、甘�
    - `reviewHistory`: これまでの配列に `{"round", "grade", "p0", "p1", "p2", "at"}` を足す（消さない）
 2. 合格（`pass: true`）のとき：
    - `status: "公開待ち"`（`"公開済み"` のカードは変えない）
-   - 差し替え稿（`loop.replace` が `true`、またはカードが `公開済み`・`要更新`）なら、`status` は変えず、受信箱に `inbox/replace-<articleId>-<round>` を `{"kind": "change", "title": "<記事名>：差し替え稿が査読Aになりました", "body": "WordPress の編集画面で本文を差し替えてください（アプリの稿の画面の「WordPress 用にコピー」）。アイキャッチもアプリからダウンロードできます。主な変更点：…（3〜5行）", "reason": "公開中の記事は運営者が差し替えるため", "articleId", "status": "open", "by": "reviewer", "createdAt"}` で出す
+   - 差し替え稿（`loop.replace` が `true`、またはカードが `公開済み`・`要更新`）なら、`status` は変えず、受信箱に `inbox/replace-<articleId>-<round>` を `{"kind": "change", "title": "<記事名>：差し替え稿が査読Aになりました", "body": "WordPress の編集画面で本文を差し替えてください（アプリの稿の画面の「WordPress 用にコピー」）。アイキャッチはアイキャッチ担当が作ります（できたらこの項目に1行足されます）。主な変更点：…（3〜5行）", "reason": "公開中の記事は運営者が差し替えるため", "articleId", "status": "open", "by": "reviewer", "createdAt"}` で出す
    - `loop: {"state": "passed", "round", "max", "updatedAt"}`
+   - **アイキャッチ担当に渡す**：`jobs/eyecatch-<articleId>-<round>` を `{"kind": "eyecatch", "articleId", "round", "title", "status": "queued", "message": "アイキャッチを待っています", "by": "reviewer", "createdAt": "<今>", "updatedAt": "<今>"}` で書き、アイキャッチ担当を起動する（`ops/agent-jobs.md` の 6。trigger ID は `settings/background.designerTriggerId`）。不合格のときは渡さない
 3. 不合格のとき：
    - `round < maxRounds`（既定5。`settings/reviewLoop.maxRounds`）なら、`status: "下書き"`（公開済みのカードは変えない）・`loop.state: "writing"`（`loop.replace` はそのまま）にし、`jobs/article-<articleId>-<round+1>` を次の形で書いて（差し替え稿なら `"replace": true` も付ける）、作成の Routine を起動する（`ops/agent-jobs.md` の 6）：
      ```json

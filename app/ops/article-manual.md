@@ -101,9 +101,9 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 ### 5-3. 体験・写真
 - 体験の偽装（「実際に行ってみると」「スタッフによると」など）は公開を止める誤り。
 - 依頼の `withExperience` が `true` のときだけ、運営者が書き込む欄を置く：`[体験記入: 何を書いてほしいか]`（1記事3か所まで）。宇宙スポットで `false` なら「訪問レポートは準備中」と書く。
-- 写真は入れない（`report` の「写真の案」に、主題そのものが写る被写体を書く）。図とアイキャッチは 5-5 のとおり自分で作る。
+- 写真は入れない（`report` の「写真の案」に、主題そのものが写る被写体を書く）。図は 5-5 のとおり自分で作る。アイキャッチは作らない（査読で A になった稿だけ、アイキャッチ担当が作る）。
 
-### 5-5. 図とアイキャッチ（積極的に入れる）
+### 5-5. 図（積極的に入れる）
 **図**（`ops/figures.py`。サイトのデザインのルールに合わせた SVG。数字は確かめた値と sky.py の計算値だけ）
 - 1記事に **2つ以上**入れる（読者が「どっちを見る・何時に動く・どこに立つ」を一目でわかるところ）。目安：
   - 打ち上げ：当日のタイムライン（`timeline`）、発射台から見学場までの距離（`distance`。距離は自治体・JAXA の案内の値だけ）、家の近くの空の方角（`skydir`。公式の方角図があるときだけ、その値で）
@@ -119,31 +119,6 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
   FIG の番号は記事の中で 01 から順に。キャプションに「模式図」か「sky.py で計算」と出典を必ず書く。
 - 図の中の文字は少なく。見た目のために数字を変えない。公式の図（JAXA の方角図など）を写さない（値だけを使い、自分で描く）。
 
-**アイキャッチ**（`ops/eyecatch.py`。写真風の CG の背景に、記事の見出しを組む。1200×630）
-- 先に `pip install budoux`（文節で改行するため）。書体とロゴは初回に自動で取ってくる。
-- 文字とレイアウトは標準の型（`layout: "cinema"`：左上に英字のカテゴリ、下に大きな見出しと副題、右下にロゴ）。背景はフィルム調（自動）。
-- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`・`site/eyecatch/v4/*.json`（リポジトリ。流星・施設・持ち物は v4 が新しい）と同じ形。
-  ```json
-  {"title": "<記事のタイトル>", "category": "launch",
-   "headline": "H3ロケット10号機を見る", "sub": "家の近くの空・中継・種子島", "kicker": "H3 F10 / MMX",
-   "date": "2026.10.20 TUE", "time": "04:41 JST", "bignum": "10", "seed": 11,
-   "composition": {"tone": "dawn", "ground": "sea", "horizon": 0.76,
-                   "clouds": {"y0": 0.58, "y1": 0.72, "density": 0.5},
-                   "motifs": [{"type": "trail", "x": 0.52, "height": 0.50, "curve": 0.26, "plume": true}]}}
-  ```
-  - `en`：**英語の一文（必ず入れる）**。見出しの上に斜体で小さく入る（雑誌 TRANSIT のような味つけ）。記事の情景や気分を短く（40字まで）。例：`Before the dawn, look south.`／`A night of falling stars.`。事実と違うこと（青空でないのに blue sky など）や、宣伝の言い方は書かない。
-  - `headline`：**記事のタイトルを要約した見出し（16字まで）**。長いタイトルをそのまま入れない。`sub`：副題（30字まで）。`kicker`：英字の小見出し。
-  - `composition`（背景。記事の中身に合わせて選ぶ）
-    - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）
-    - `ground`：`sea`（海辺）・`island`（島と町の灯り）・`lake`（湖と山と木）・`mountains`（重なる山。`rough` で険しさ）・`forest`（山と木）・`city`（街）・`hills`（低い丘）
-    - `clouds`：薄い雲（`y0`〜`y1` の高さ、`density`）。`glow`：街明かりのドームの横位置（0〜1）。`milkyway`：天の川の位置と傾き（`cx`・`cy`・`angle`・`width`）。`milky: false` で天の川を消す
-    - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side`（1 右へ／-1 左へ）・`curve`。明け方の打ち上げは `plume: true` で日が当たった噴煙。**ロケットの光跡は1本だけ**。何本も同時に上がる絵はありえないので描かない）、`pad`（照明に照らされて射点に立つロケット。打ち上げ前・予定の記事に。`x`・`scale`）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点、`n` は**1〜3本**。写真のように細く、尾から頭へ明るくなって消える。たくさん降る絵にしない）、`constellation`（`name`：`orion`・`gemini`・`leo`。写真に線は写らないので星だけ。線や放射点の丸は描かない）、`moon`・`bigmoon`（`cx`・`cy`・`r`）、`planets`（接近する2つの惑星）、`iss`（光の線）、`starlink`（並んだ光点）、`dome`（天文台の影）、`tripod`・`phone`（三脚とカメラ／スマホ）
-    - 施設紹介（`category: "spot"`）：`observatory`（スリットが開いて中が赤く灯る天文台。`x`・`size`）、`planetarium`（ドームのある科学館。窓と街灯の明かり）、`deck`（展望デッキの手すりと、海を見る人の影。`people`：1〜4）。見学場なら `deck` と遠くの `pad` を合わせる
-    - 持ち物紹介（`category: "gear"`）：手前に物を置く。`chair`（折りたたみ椅子）・`backpack`・`thermos`（水筒）・`mug`（湯気の立つカップ）・`binoculars`（こちらを向いた双眼鏡）・`bench`（`x0` から右へのベンチ。物を上に置くときは同じ `y`）・`headlamp`（赤いライト。まわりの物の縁を赤く照らす。`color` で色）。それぞれ `x`・`y`（置く高さ）・`size`。**物は右半分（`x` 0.55〜0.92）に置き、`y` は 0.72〜0.86**（下は見出しと重なるため）。`horizon` は 0.62〜0.66 に上げる
-  - `bignum`：号機・年など大きく見せたい数字（無くてもよい）。`date`・`time` は日時が公式に確定しているイベントだけ。
-  - 背景は「雰囲気の絵」で、実際の空の再現ではない。実在のロケットの形・ロゴ・人物は描かない。右下に「CG ILLUSTRATION」が入る。
-- `python3 eyecatch.py spec.json eyecatch.jpg` で作り、7 章の形で db に保存する。作ったら画像を開いて確かめる：モチーフが見出しと重なって読みにくい・画面の端で切れている・シルエットが暗くて見えない、のどれかなら `x`・`height`・`horizon` を変えて作り直す。
-
 ## 6. 手順：新しい稿（`kind: "article"`）
 1. 共通の手順で依頼を受け取る（`ops/agent-jobs.md` の 0〜1）。
 2. 読む（2 章）。書き直しなら、今の `draft` を `draftPrev` に移す。`review.text` の P0・P1 を全部直す。直せなかった指摘は、理由と当たった出典を `report` の冒頭に書く（反論するときは根拠の URL を付ける）。
@@ -152,12 +127,11 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 5. 書く（5 章）。運営者に聞かないと書けないこと（体験の有無、方針の判断）があれば、推測で埋めず `inbox` に `kind: "question"` で出し（`proposal: {"questions": ["…"]}`）、その節は書かずに `report` に書く。
 6. 図を作る（5-5）。図の SVG は Markdown と同じ場所の `figures/` に置く。
 7. ブロックに変換：Markdown をファイルに保存し `python3 md2blocks.py article.md > article.blocks.html`（図は SVG がそのままブロックに入る）。
-8. アイキャッチを作る（5-5）。
-9. 自己点検：`ops/review-manual.md` の P0・P1 の観点で頭から読み直して直す。とくに曜日・日付・時刻をもう一度コードで、状況をもう一度公式ページで。相対日付・同じ数字の重複・表の列数・「最終確認」・出典・更新履歴。
-10. 保存（7 章の形で `articles/<articleId>` を `update`）：`status` を `"査読中"`、`loop` を `{"state": "reviewing", "round", "max", "updatedAt"}`。
+8. 自己点検：`ops/review-manual.md` の P0・P1 の観点で頭から読み直して直す。とくに曜日・日付・時刻をもう一度コードで、状況をもう一度公式ページで。相対日付・同じ数字の重複・表の列数・「最終確認」・出典・更新履歴。
+9. 保存（7 章の形で `articles/<articleId>` を `update`）：`status` を `"査読中"`、`loop` を `{"state": "reviewing", "round", "max", "updatedAt"}`。
    - `settings/reviewLoop.enabled` が `false` なら、`status: "下書き"`・`loop.state: "passed"` にして査読に回さない。
-11. 査読に回す：`jobs/review-<articleId>-<round>`（`kind: "review"`, `mode: "draft"`）を `queued` で書き、査読を起動（`ops/agent-jobs.md` の 6）。
-12. 依頼を `done` にし、報告する（3行以内）。
+10. 査読に回す：`jobs/review-<articleId>-<round>`（`kind: "review"`, `mode: "draft"`）を `queued` で書き、査読を起動（`ops/agent-jobs.md` の 6）。
+11. 依頼を `done` にし、報告する（3行以内）。
 
 ## 7. 保存する形（`articles/<articleId>.draft`）
 ```json
@@ -167,7 +141,6 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
   "seo": {"title": "タイトル（32字前後）", "description": "説明文（80〜120字）"},
   "wp": {"category": "launch", "tags": ["h3", "tanegashima"], "slug": "h3-f10-mmx"},
   "figures": {"figures/timeline.svg": "<svg …>（作った図の SVG。アプリのプレビュー用）"},
-  "eyecatch": {"spec": {"…eyecatch.py に渡した spec": ""}, "imageId": "<articleId>-eyecatch", "createdAt": "<今>"},
   "updateChecklist": [{"when": "T-7", "check": "何をどこで確かめ直すか"}, {"when": "T-3", "check": "…"}, {"when": "T-1", "check": "…"}, {"when": "当日", "check": "…"}, {"when": "翌日", "check": "…"}],
   "report": "運営者への報告（下の形）",
   "round": 1, "model": "このセッションのモデル名", "createdAt": "<今>", "chars": 本文の文字数
@@ -175,9 +148,7 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 ```
 - `updateChecklist` は `ops/site-rules.md` の 8 の直前更新に合わせる。常設ガイドは「3か月ごと」の点検項目でよい。
 - 256KiB を超えるときは `blocks` を空にして、`report` にそう書く。
-- アイキャッチの画像は、記事カードとは別のドキュメント `images/<articleId>-eyecatch` に `set` で保存する（大きいため）：
-  `{"kind": "eyecatch", "articleId": "a01", "dataUrl": "data:image/jpeg;base64,<eyecatch.jpg を base64 にしたもの>", "spec": {…}, "createdAt": "<今>"}`
-  （`python3 -c "import base64;print(base64.b64encode(open('eyecatch.jpg','rb').read()).decode())"` で作る。ArtifactData の `file_path` に JSON ファイルを渡すと楽）
+- アイキャッチは書かない（`draft.eyecatch` も `images/` も触らない。アイキャッチ担当の持ち物）。
 
 ### `report` の形
 ```
@@ -224,16 +195,9 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
 - 修正の理由を記事の地の文に書くこと（更新履歴にだけ書く）。
 - 査読の基準を自分で緩めること。
 
-## 9. 手順：アイキャッチだけ作り直す（`kind: "eyecatch"`）
-運営者がアプリの「アイキャッチを作り直す」を押したとき。`note` に指示（例：「Eの型で」「月の背景で」「日付を外す」）がある。
-1. `articles/<articleId>` を読み、タイトル（公開済みならサイトの記事の見出し、無ければ `draft.seo.title` かカードの `title`）・カテゴリ・日時を確かめる。日時が入るなら公式ページで今の値を確かめる。
-2. 5-5 のとおり spec を作り（`note` の指示を反映。`seed` を変えると背景の星や光跡の配置が変わる）、`eyecatch.py` で作る。
-3. `images/<articleId>-eyecatch` を `set` し、`articles/<articleId>` の `draft.eyecatch`（稿が無ければ `eyecatch`）を `update` する（親のオブジェクトを丸ごと）。
-4. 依頼を `done` にし、報告する。
-
 ## 10. 手順：公開済み記事の差し替え稿（`kind: "article"` で `replace: true`）
 公開中の記事を、査読で A になる稿に書き直して丸ごと差し替えるための依頼。
 1. 公開中のページを読む：`curl -sL <カードの url>`。本文（`class="post_content"` の中）の事実・構成・出典を下敷きにする。**URL（`path`）とカテゴリは変えない。**
-2. 6 章と同じ手順で稿を書く。公開中の記事にある事実も、すべて公式ページで確かめ直す（古くなっている値は直す）。図を2つ以上（5-5）、アイキャッチ（5-5）も作る。更新履歴には公開中の履歴を残し、末尾に「YYYY-MM-DD　記事全体を見直して差し替え」を足す。
+2. 6 章と同じ手順で稿を書く。公開中の記事にある事実も、すべて公式ページで確かめ直す（古くなっている値は直す）。図を2つ以上（5-5）作る（アイキャッチは査読 A のあとにアイキャッチ担当が作り直す）。更新履歴には公開中の履歴を残し、末尾に「YYYY-MM-DD　記事全体を見直して差し替え」を足す。
 3. 保存：`draft` に書く（7 章の形）。**`status` は変えない**（`公開済み` のまま）。`loop` は `{"state": "reviewing", "round", "max", "updatedAt", "replace": true}`。
 4. 査読に回す（`kind: "review"`, `mode: "draft"`。`note` に「公開中の記事の差し替え稿」）。
