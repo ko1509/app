@@ -194,6 +194,10 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .cat-launch{--cat:var(--launch)} .cat-sky{--cat:var(--sky)} .cat-spot{--cat:var(--spot)} .cat-gear{--cat:var(--gear)} .cat-other{--cat:var(--label-3)}
 .d-kcard[class*="cat-"]{border-left:5px solid var(--cat);padding-left:10px}
 .cat-col{border-top:3px solid var(--cat)}
+.d-board.cats{grid-template-columns:repeat(var(--n,4),minmax(0,1fr))}
+.plan-wrap{min-width:0} .d-board.cats.scroll{contain:inline-size}
+.plan-more{display:block;width:100%;margin-top:4px;padding:8px;font-size:14px;text-align:center}
+@media (max-width:860px){.d-board.cats.scroll{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(240px,78%);overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:2px 16px 8px;scroll-padding:0 16px;scrollbar-width:none} .d-board.cats.scroll::-webkit-scrollbar{display:none} .d-board.cats.scroll>.d-col{scroll-snap-align:start}}
 .cat-name{display:inline-flex;align-items:center;gap:6px;color:var(--cat)} .cat-name i,.cat-legend i{width:9px;height:9px;border-radius:50%;background:var(--cat);display:inline-block}
 .cat-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--label-2)} .cat-legend span{display:inline-flex;align-items:center;gap:5px}
 .d-when .late{color:var(--bad);font-weight:700}
@@ -755,7 +759,8 @@ function selForm(){const c=S.selConf||{},can=S.canWrite,stock=CATS.map(k=>[k,S.a
     <label class="sel-f sel-chk"><input id="selAuto" type="checkbox" ${c.auto?"checked":""} ${can?"":"disabled"}>毎日この条件で選ぶ</label>
     <span style="flex:1"></span>${can?`<button type="button" class="d-btn small" id="selGo">選定を頼む</button>`:""}</div>
     <div class="sel-stock">${stock.map(([k,n])=>`<span class="cat-${k} ${n<(c.minStock||3)?"low":""}"><i></i>${PILLAR[k]} ${n}</span>`).join("")}<span class="d-sub">企画の残り（${c.minStock||3}件を切ると、記事選定が企画を頼みます）</span></div></div>`}
-function bindSel(pg){const go=pg.querySelector("#selGo");if(!go)return;
+function bindSel(pg){pg.querySelectorAll("[data-plan-more]").forEach(b=>b.onclick=()=>{const k=b.dataset.planMore;S.planOpen={...(S.planOpen||{}),[k]:!(S.planOpen||{})[k]};render()});
+  const go=pg.querySelector("#selGo");if(!go)return;
   const val=()=>({days:+$("#selDays").value||14,count:Math.max(1,Math.min(10,+$("#selCount").value||3)),auto:$("#selAuto").checked});
   const save=async()=>{const v=val();try{await S.db.doc("settings/selection").set({...S.selConf,...v,updatedAt:iso()})}catch(_){}return v};
   pg.querySelector("#selAuto").onchange=async()=>{await save();toast($("#selAuto").checked?"毎日この条件で選びます":"毎日の選定を止めました")};
@@ -764,12 +769,16 @@ function bindSel(pg){const go=pg.querySelector("#selGo");if(!go)return;
 function viewArticles(){
   const f=S.filter.pillar,list=S.articles.filter(a=>f==="all"||a.pillar===f).sort((a,b)=>(a.priority??999)-(b.priority??999));
   const plan=list.filter(a=>ast(a)==="企画中").sort(planSort),held=S.articles.filter(a=>a.status==="保留").length,cats=[...CATS,...(plan.some(a=>!CATS.includes(a.pillar))?["other"]:[])].filter(k=>f==="all"||k===f);
+  // 企画はカテゴリごとの列。5枚以上なら4枚だけ見せて折りたたむ
+  const PFOLD=4,pcol=(k,items)=>{const open=(S.planOpen||{})[k],fold=items.length>PFOLD,shown=fold&&!open?items.slice(0,PFOLD):items;
+    return `<section class="d-col cat-col cat-${k}"><h3><span class="cat-name cat-${k}"><i></i>${PILLAR[k]}</span><span class="num">${items.length}</span></h3>${items.length?shown.map(a=>kcard(a,"企画中")).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}
+      ${fold?`<button type="button" class="text-btn plan-more" data-plan-more="${k}">${open?"たたむ":`あと${items.length-PFOLD}件を見る`}</button>`:""}</section>`};
   const col=(title,items,cls="")=>`<section class="d-col ${cls}"><h3>${title}<span class="num">${items.length}</span></h3>${items.length?items.map(a=>kcard(a,ast(a))).join(""):`<div class="d-empty" style="padding:12px 4px">なし</div>`}</section>`;
   return `${agentsCard("article")}<div class="d-actions">${seg()}<span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="plan">${ic("idea")}企画を頼む</button>`:""}${addBtn("article","記事を追加")}</div>
   ${catLegend()}
-  <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">PLANNING</span>企画</h2>${held?`<button type="button" class="text-btn" data-go="inbox" style="font-size:14px">保留 ${held}件（受信箱）</button>`:""}</div>
+  <div class="plan-wrap"><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">PLANNING</span>企画</h2>${held?`<button type="button" class="text-btn" data-go="inbox" style="font-size:14px">保留 ${held}件（受信箱）</button>`:""}</div>
     ${selForm()}
-    <div class="d-board cats n${cats.length}">${cats.map(k=>col(`<span class="cat-name cat-${k}"><i></i>${PILLAR[k]}</span>`,plan.filter(a=>(CATS.includes(a.pillar)?a.pillar:"other")===k),"cat-col cat-"+k)).join("")}</div></div>
+    <div class="d-board cats ${cats.length>1?"scroll":""}" style="--n:${cats.length}">${cats.map(k=>pcol(k,plan.filter(a=>(CATS.includes(a.pillar)?a.pillar:"other")===k))).join("")}</div></div>
   <div><div class="d-sec"><h2 style="font-size:19px"><span class="en-l">IN PROGRESS</span>進行中</h2></div>
     <div class="d-board n3">${["下書き","査読中","公開待ち"].map(st=>col(st,list.filter(a=>ast(a)===st))).join("")}</div></div>`;
 }
