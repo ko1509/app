@@ -131,6 +131,7 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
                    "clouds": {"y0": 0.58, "y1": 0.72, "density": 0.5},
                    "motifs": [{"type": "trail", "x": 0.52, "height": 0.50, "curve": 0.26, "plume": true}]}}
   ```
+  - `en`：**英語の一文（必ず入れる）**。見出しの上に斜体で小さく入る（雑誌 TRANSIT のような味つけ）。記事の情景や気分を短く（40字まで）。例：`Before the dawn, look south.`／`A night of falling stars.`。事実と違うこと（青空でないのに blue sky など）や、宣伝の言い方は書かない。
   - `headline`：**記事のタイトルを要約した見出し（16字まで）**。長いタイトルをそのまま入れない。`sub`：副題（30字まで）。`kicker`：英字の小見出し。
   - `composition`（背景。記事の中身に合わせて選ぶ）
     - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）

@@ -11,6 +11,7 @@ spec.json の例:
 
 - title: 記事のタイトルをそのまま。先頭の【…】は小見出しに、「｜」より後ろは副題になる
 - category: launch（打ち上げ）| sky（天体）| spot（宇宙スポット）| gear（機材）
+- en: 英語の一文（短く。標準の型では見出しの上に斜体で小さく入る）
 - layout: cinema（標準。下に大きく見出し）| panel（右に黒い帯）| transit（英字の一文・明朝の縦書き）
 - 背景はフィルム調の色・かすみ・光漏れ（film: false で無し）。composition の項目は ops/article-manual.md の 5-5
 - scene: 省略するとカテゴリで決まる。sea（海辺の長時間露光）| startrail（星の軌跡）| dawn（夜明け前の丘）
@@ -1015,7 +1016,13 @@ def render(spec, out):
         fs = font("medium", 22)
         subh = int(fs.size * 1.5) if sub else 0
         lh = int(f.size * 1.18); y = H - foot - subh - lh * len(ls) - (14 * S if sub else 0)
+        en = (spec.get("en") or "").replace("\n", " ").strip()
+        if en:  # 英語の一文（TRANSIT のような斜体のセリフ）を見出しの上に小さく
+            fe = font("serif_i", 34, 400)
+            while d.textlength(en, font=fe) > 760 * S and fe.size > 24 * S: fe = fe.font_variant(size=int(fe.size * .94))
+            ye = y - int(fe.size * 1.30)
         def title(dd, col):
+            if en: dd.text((M + 2 * S, ye), en, font=fe, fill=col or (255, 244, 228, 235))
             yy = y
             for ln in ls:
                 dd.text((M, yy), ln, font=f, fill=col or (255, 255, 255)); yy += lh
