@@ -119,29 +119,27 @@ tags: h3, tanegashima（ops/site-rules.md の表にあるものだけ）
   FIG の番号は記事の中で 01 から順に。キャプションに「模式図」か「sky.py で計算」と出典を必ず書く。
 - 図の中の文字は少なく。見た目のために数字を変えない。公式の図（JAXA の方角図など）を写さない（値だけを使い、自分で描く）。
 
-**アイキャッチ**（`ops/eyecatch.py`。写真風の CG に、雑誌 TRANSIT のような落ち着いた組み方で文字を置く。1200×630）
+**アイキャッチ**（`ops/eyecatch.py`。写真風の CG の背景に、記事の見出しを組む。1200×630）
 - 先に `pip install budoux`（文節で改行するため）。書体とロゴは初回に自動で取ってくる。
-- **記事ごとに独自のものにする。** 同じ組み合わせを、直近の公開記事と続けて使わない。spec の例：
+- 文字とレイアウトは標準の型（`layout: "cinema"`：左上に英字のカテゴリ、下に大きな見出しと副題、右下にロゴ）。背景はフィルム調（自動）。
+- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`（リポジトリ）と同じ形。
   ```json
   {"title": "<記事のタイトル>", "category": "launch",
-   "headline": "H3ロケット10号機を見る", "sub": "家の近くの空・中継・種子島",
-   "en": "Before the dawn,\nlook south.", "kicker": "H3 F10 / MMX",
-   "date": "2026.10.20 TUE", "time": "04:41 JST", "place": "TANEGASHIMA",
-   "layout": "transit", "seed": 1,
-   "composition": {"tone": "dawn", "ground": "city", "horizon": 0.80,
-                   "motifs": [{"type": "trail", "x": 0.30, "height": 0.62}]}}
+   "headline": "H3ロケット10号機を見る", "sub": "家の近くの空・中継・種子島", "kicker": "H3 F10 / MMX",
+   "date": "2026.10.20 TUE", "time": "04:41 JST", "bignum": "10", "seed": 11,
+   "composition": {"tone": "dawn", "ground": "sea", "horizon": 0.76,
+                   "clouds": {"y0": 0.58, "y1": 0.72, "density": 0.5},
+                   "motifs": [{"type": "trail", "x": 0.52, "height": 0.50, "curve": 0.26, "plume": true}]}}
   ```
-  - `headline`：**記事のタイトルを要約した見出し（16字まで）**。日本語の縦書きで右端に出る。長いタイトルをそのまま入れない。
-  - `sub`：副題（30字まで）。`en`：記事の情景を一言で表す英語（2行・1行24字まで。`\n` で改行）。誇張や事実の主張（「最高の」「見える」など）は書かない。
-  - `layout`：`transit`（標準）。運営者の指示があれば `cinema`（C）・`panel`（E）。
+  - `headline`：**記事のタイトルを要約した見出し（16字まで）**。長いタイトルをそのまま入れない。`sub`：副題（30字まで）。`kicker`：英字の小見出し。
   - `composition`（背景。記事の中身に合わせて選ぶ）
-    - `tone`：`night`（夜）・`dawn`（夜明け前。明け方の打ち上げ・流星）・`dusk`（夕方）
-    - `ground`：`sea`（海辺）・`island`（島。種子島など）・`city`（街。家の近くの空で見る話）・`hills`（丘・山）
-    - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side` で位置）、`trails`（何本もの光跡。予定まとめ）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点の位置）、`constellation`（星座の形。`name`：`orion`・`gemini`・`leo`、`radiant` に放射点の位置）、`moon`・`bigmoon`（月・地平線の大きな月）、`planets`（惑星の接近）、`iss`（ISS の光の線）、`starlink`（並んだ光点）、`dome`（天文台）、`tripod`・`phone`（三脚とカメラ／スマホ）
-  - `bignum`：号機・年など、大きく見せたい数字（例 `"10"`）。無くてもよい。
-  - `date`・`time` は日時が公式に確定しているイベントだけ。常設ガイドには入れない。`place` は英字の地名。
-  - 背景の方角や星座は「雰囲気の絵」で、実際の空の再現ではない。実在のロケットの形・ロゴ・人物は描かない（スクリプトは描かない）。右下に「CG ILLUSTRATION」が入る。
-- `python3 eyecatch.py spec.json eyecatch.jpg` で作り、7 章の形で db に保存する。作ったら画像を開いて、文字が背景のモチーフと重なって読みにくくないか確かめる（重なるなら `x` や `cx` をずらして作り直す）。
+    - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）
+    - `ground`：`sea`（海辺）・`island`（島と町の灯り）・`lake`（湖と山と木）・`mountains`（重なる山。`rough` で険しさ）・`forest`（山と木）・`city`（街）・`hills`（低い丘）
+    - `clouds`：薄い雲（`y0`〜`y1` の高さ、`density`）。`glow`：街明かりのドームの横位置（0〜1）。`milkyway`：天の川の位置と傾き（`cx`・`cy`・`angle`・`width`）。`milky: false` で天の川を消す
+    - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side`（1 右へ／-1 左へ）・`curve`。明け方の打ち上げは `plume: true` で日が当たった噴煙）、`trails`（何本もの光跡）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点）、`constellation`（`name`：`orion`・`gemini`・`leo`、`radiant` に放射点）、`moon`・`bigmoon`（`cx`・`cy`・`r`）、`planets`（接近する2つの惑星）、`iss`（光の線）、`starlink`（並んだ光点）、`dome`（天文台）、`tripod`・`phone`（三脚とカメラ／スマホ）
+  - `bignum`：号機・年など大きく見せたい数字（無くてもよい）。`date`・`time` は日時が公式に確定しているイベントだけ。
+  - 背景は「雰囲気の絵」で、実際の空の再現ではない。実在のロケットの形・ロゴ・人物は描かない。右下に「CG ILLUSTRATION」が入る。
+- `python3 eyecatch.py spec.json eyecatch.jpg` で作り、7 章の形で db に保存する。作ったら画像を開いて確かめる：モチーフが見出しと重なって読みにくい・画面の端で切れている・シルエットが暗くて見えない、のどれかなら `x`・`height`・`horizon` を変えて作り直す。
 
 ## 6. 手順：新しい稿（`kind: "article"`）
 1. 共通の手順で依頼を受け取る（`ops/agent-jobs.md` の 0〜1）。

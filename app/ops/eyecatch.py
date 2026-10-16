@@ -5,13 +5,14 @@
 spec.json の例:
   {"title": "【10/20 4:41】H3ロケット10号機（火星探査機MMX）を見る方法｜家の近くの空・中継・種子島",
    "category": "launch", "kicker": "H3 F10 / MMX", "date": "2026.10.20 TUE", "time": "04:41 JST",
-   "layout": "transit", "en": "Before the dawn,\nlook south.", "headline": "H3ロケット10号機を見る", "seed": 1,
-   "composition": {"tone": "dawn", "ground": "city", "horizon": 0.80, "motifs": [{"type": "trail", "x": 0.30, "height": 0.62}]}}
+   "headline": "H3ロケット10号機を見る", "seed": 11,
+   "composition": {"tone": "dawn", "ground": "sea", "horizon": 0.76, "motifs": [{"type": "trail", "x": 0.52, "height": 0.50, "plume": true}]}}
 （spec の項目のくわしい説明は ops/article-manual.md の 5-5）
 
 - title: 記事のタイトルをそのまま。先頭の【…】は小見出しに、「｜」より後ろは副題になる
 - category: launch（打ち上げ）| sky（天体）| spot（宇宙スポット）| gear（機材）
-- layout: transit（標準。雑誌 TRANSIT のような組み方：英字の一文・明朝の縦書き）| cinema（下に大きく見出し）| panel（右に黒い帯）
+- layout: cinema（標準。下に大きく見出し）| panel（右に黒い帯）| transit（英字の一文・明朝の縦書き）
+- 背景はフィルム調の色・かすみ・光漏れ（film: false で無し）。composition の項目は ops/article-manual.md の 5-5
 - scene: 省略するとカテゴリで決まる。sea（海辺の長時間露光）| startrail（星の軌跡）| dawn（夜明け前の丘）
          | meteor（流星）| moon（月）| observatory（天文台のドーム）| tripod（三脚と星空）
 - date / time: 入れると下に出る（延期の多い打ち上げは、日付が変わったら作り直す）
@@ -370,14 +371,147 @@ class Scene:
         a = np.asarray(m).astype(np.float32)[..., None] / 255
         return img * (1 - a) + a * np.array([.004, .005, .01])
 
+    # ---------- 写真らしさを足す部品 ----------
+    def lowres_noise(self, gw, gh, sx=1.0, sy=1.0, octaves=4):
+        """横長・縦長に引き伸ばしたノイズ（雲・波）"""
+        out = np.zeros((H, W), np.float32); amp = 1.0
+        for o in range(octaves):
+            w = max(2, int(gw * 2 ** o / sx)); h = max(2, int(gh * 2 ** o / sy))
+            n = Image.fromarray((self.rng.random((h, w)) * 255).astype(np.uint8)).resize((W, H), Image.BICUBIC)
+            out += amp * np.asarray(n).astype(np.float32) / 255; amp *= .5
+        out -= out.min(); return out / out.max()
+
+    def stars_real(self, img, n, hz, bright=1.0, ext=True):
+        hzp = H * hz; ys = self.rng.integers(0, int(hzp), n); xs = self.rng.integers(0, W, n)
+        mag = self.rng.power(14, n) ** 3 * bright
+        pal = np.array([[.70, .80, 1], [.86, .92, 1], [1, 1, 1], [1, .93, .82], [1, .80, .62]])
+        cols = pal[self.rng.choice(5, n, p=[.12, .28, .30, .18, .12])]
+        if ext: mag = mag * np.clip((hzp - ys) / (H * .30), .08, 1) ** .9
+        lay = np.zeros((H, W, 3), np.float32); lay[ys, xs] = cols * mag[:, None]
+        g = np.stack([self.blur(lay[..., k] / max(lay[..., k].max(), 1e-6), 1.1) * lay[..., k].max() for k in range(3)], -1)
+        g2 = np.stack([self.blur(lay[..., k] / max(lay[..., k].max(), 1e-6), 3.5) * lay[..., k].max() for k in range(3)], -1)
+        return img + lay * .9 + g * 3.2 + g2 * 1.4
+
+    def milky_real(self, img, cx=.45, cy=.30, angle=-62, width=.17, core=(.25, .75), strength=1.0):
+        y, x = np.mgrid[0:H, 0:W].astype(np.float32); th = np.radians(angle)
+        u = (x - W * cx) * np.cos(th) + (y - H * cy) * np.sin(th); v = -(x - W * cx) * np.sin(th) + (y - H * cy) * np.cos(th)
+        band = np.exp(-(v / (H * width)) ** 2)
+        cloud = self.noise((260, 110, 46, 18, 8), (1, .7, .45, .3, .2)) ** 1.6
+        dust = self.noise((90, 40, 16), (1, .6, .4))
+        rift = np.exp(-((v + H * width * .12 * np.sin(u / 300)) / (H * width * .22)) ** 2) * np.clip(dust * 1.6 - .45, 0, 1)
+        glow = band * cloud * (1 - .85 * rift)
+        corepos = np.exp(-((u - W * (core[0] - .5) * 1.2) / (W * core[1] * .35)) ** 2)
+        col = (1 - corepos)[..., None] * np.array([.55, .62, .85]) + corepos[..., None] * np.array([1, .85, .62])
+        return img + glow[..., None] * col * .32 * strength
+
+    def airglow(self, img, hz, col=(.06, .11, .06)):
+        return img + np.exp(-((self.yy - (hz - .06)) / .07) ** 2)[..., None] * np.array(col)
+
+    def lightdome(self, img, x, hz, strength=1.0):
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        d = np.sqrt(((xx - W * x) / (W * .45)) ** 2 + ((y - H * hz) / (H * .32)) ** 2)
+        return img + (np.exp(-d * 2.4) * strength)[..., None] * np.array([.30, .17, .08])
+
+    def clouds(self, img, y0, y1, lit=(.9, .6, .45), dens=.55, alpha=.85):
+        n = self.lowres_noise(6, 3, sx=1.0, sy=.35)
+        band = np.clip((self.yy - y0) / .04, 0, 1) * np.clip((y1 - self.yy) / .05, 0, 1)
+        a = np.clip((n - (1 - dens)) * 3.2, 0, 1) * band * alpha
+        under = np.clip((self.yy - y0) / max(y1 - y0, .01), 0, 1)
+        col = np.array(lit)[None, None, :] * (1 - under[..., None] * .6) * (.35 + .65 * n[..., None])
+        return img * (1 - a[..., None]) + col * a[..., None] * .55 + img * a[..., None] * .25
+
+    def ridge_profile(self, base, rough, seed_shift=0, step=6):
+        xs = np.arange(0, W + step, step).astype(np.float32); prof = np.full_like(xs, base)
+        for k, (wl, amp) in enumerate(((900, 1), (380, .5), (150, .25), (60, .12), (24, .06))):
+            ph = self.rng.uniform(0, 6.28)
+            prof -= rough * amp * (np.sin(xs / wl * 6.28 / 3 + ph) * .5 + .5 + .4 * np.sin(xs / (wl * .37) + ph * 1.7))
+        return xs, prof
+
+    def mountains(self, img, hz, layers=3, rough=170, trees=False, near=(.006, .008, .014)):
+        hzp = H * hz; haze = img[int(hzp) - 8].mean(axis=0)
+        for i in range(layers):
+            t = (i + 1) / layers
+            xs, prof = self.ridge_profile(hzp + 6 - rough * (1.15 - t) * .6, rough * (.55 + t * .45))
+            col = haze * (1 - t) ** 1.3 * .9 + np.array(near) * t
+            m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+            d.polygon([(0, H)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W, H)], fill=255)
+            if trees and i == layers - 1:
+                for x, p in zip(xs[::3], prof[::3]):
+                    if self.rng.random() < .55:
+                        th = self.rng.uniform(26, 70); tw = th * .32
+                        d.polygon([(x - tw, p + 6), (x, p - th), (x + tw, p + 6)], fill=255)
+            a = np.asarray(m.filter(ImageFilter.GaussianBlur(.8 + (1 - t) * 1.5))).astype(np.float32)[..., None] / 255
+            img = img * (1 - a) + a * col
+        return img
+
+    def sea_real(self, img, hz, trail_x=None):
+        hzp = int(H * hz); rows = H - hzp
+        sky = img[max(0, hzp - rows):hzp][::-1]
+        if sky.shape[0] < rows: sky = np.concatenate([sky, np.repeat(sky[-1:], rows - sky.shape[0], 0)], 0)
+        wav = self.lowres_noise(40, 10, sx=1, sy=.12, octaves=4)[hzp:]
+        refl = sky * .38 * (.7 + .5 * wav[..., None])
+        depth = np.clip(np.arange(rows) / rows, 0, 1)[:, None, None]
+        sea = refl * (1 - depth * .7) + np.array([.008, .014, .026]) * depth
+        if trail_x is not None:
+            xs = np.arange(W)[None, :]; jitter = (wav - .5) * 40
+            col = np.exp(-((xs - trail_x - jitter) / (W * .010)) ** 2) * (wav > .45) * np.exp(-np.arange(rows)[:, None] / (rows * .7))
+            sea = sea + col[..., None] * np.array([1, .52, .2]) * .9
+        img = img.copy(); img[hzp:] = sea
+        img[hzp - 2:hzp + 2] += np.array([.05, .05, .06])
+        return img
+
+    def trail_real(self, img, hz, x0=.60, side=1, height=.74, strength=1.0, curve=.33):
+        hzp = H * hz; x = W * x0
+        pts = self.bez((x, hzp), (x + side * W * .02, hzp - H * height * .40), (x + side * W * .10, hzp - H * height * .80), (x + side * W * curve, hzp - H * height))
+        lay = Image.new("L", (W, H), 0); d = ImageDraw.Draw(lay); n = len(pts)
+        for i in range(n - 1):
+            t = i / (n - 1); v = int(255 * (1 - .55 * t)); w = int(10 - 7 * t)
+            d.line([pts[i], pts[i + 1]], fill=v, width=max(2, w))
+        a = np.asarray(lay).astype(np.float32) / 255
+        img = img + strength * (a[..., None] * np.array([1, .93, .8]) + self.blur(a, 9)[..., None] * np.array([1, .5, .16]) * 1.8 + self.blur(a, 46)[..., None] * np.array([1, .42, .12]) * 1.5)
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        base = np.exp(-(((xx - x) / (W * .05)) ** 2 + ((y - hzp) / (H * .05)) ** 2))
+        return img + (base * .55 * strength)[..., None] * np.array([1, .55, .25]), pts[-1]
+
+    def jellyfish(self, img, cx, cy, size=300, col=(.75, .88, 1)):
+        """明け方の打ち上げで、日が当たった噴煙が広がって光る現象（模式的に）"""
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m)
+        for k in range(26):
+            ang = np.radians(200 + k * 5.5 + self.rng.uniform(-2, 2)); r = size * self.rng.uniform(.75, 1.05)
+            d.line([(cx, cy), (cx + np.cos(ang) * r, cy + np.sin(ang) * r * .75)], fill=int(self.rng.uniform(60, 140)), width=int(self.rng.uniform(8, 22)))
+        d.ellipse((cx - size * .35, cy - size * .25, cx + size * .35, cy + size * .2), fill=150)
+        a = np.asarray(m.filter(ImageFilter.GaussianBlur(14))).astype(np.float32) / 255
+        tex = self.noise((60, 24, 10), (1, .6, .4))
+        return img + (a * (.5 + .7 * tex))[..., None] * np.array(col) * .9
+
     def compose(self, c):
-        hz = c.get("horizon", .76); motifs = c.get("motifs", [])
-        if "startrail" in motifs:
-            img = self.startrail_sky()
+        hz = c.get("horizon", .76); tone = c.get("tone", "night"); motifs = [m if isinstance(m, dict) else {"type": m} for m in c.get("motifs", [])]
+        types = [m["type"] for m in motifs]
+        # 空
+        if tone == "dawn":
+            t = np.clip(self.yy / (hz + .02), 0, 1)
+            img = np.where((t < .5)[..., None], self.lerp((.008, .014, .045), (.07, .08, .24), t / .5),
+                           np.where((t < .82)[..., None], self.lerp((.07, .08, .24), (.48, .27, .38), (t - .5) / .32), self.lerp((.48, .27, .38), (1, .58, .30), np.clip((t - .82) / .18, 0, 1))))
+        elif tone == "dusk":
+            t = np.clip(self.yy / hz, 0, 1)
+            img = np.where((t < .55)[..., None], self.lerp((.015, .03, .09), (.05, .15, .30), t / .55), self.lerp((.05, .15, .30), (.62, .46, .52), (t - .55) / .45))
+        elif tone == "bluehour":
+            img = self.lerp((.01, .02, .07), (.10, .22, .42), np.clip(self.yy / hz, 0, 1) ** 1.3)
+        elif tone == "moonlit":
+            img = self.lerp((.02, .04, .09), (.13, .20, .32), np.clip(self.yy / hz, 0, 1) ** 1.2)
         else:
-            img = self.sky(c.get("tone", "night"), c.get("milky", True), c.get("stars", 3200), hz)
+            img = self.lerp((.006, .010, .028), (.05, .085, .16), np.clip(self.yy / hz, 0, 1) ** 1.7)
+        dark = tone in ("night", "moonlit")
+        if "startrail" in types:
+            img = img + (self.startrail_sky() - self.lerp((.01, .012, .03), (.05, .07, .13), np.clip(self.yy, 0, 1) ** 1.4))
+        else:
+            if dark and c.get("milky", True):
+                mw = c.get("milkyway", {}); img = self.milky_real(img, mw.get("cx", .45), mw.get("cy", .30), mw.get("angle", -62), mw.get("width", .17), strength=.6 if tone == "moonlit" else 1)
+            img = self.stars_real(img, c.get("stars", {"night": 5200, "moonlit": 1800, "bluehour": 900, "dusk": 700, "dawn": 1800}[tone]), hz, 1.0 if dark else .7)
+        if dark: img = self.airglow(img, hz)
+        if c.get("glow") is not None: img = self.lightdome(img, c["glow"], hz, c.get("glowStrength", 1.0))
+        # 空のモチーフ
         for mo in motifs:
-            if isinstance(mo, str): mo = {"type": mo}
             k = mo["type"]
             if k == "meteors": img = self.m_meteors(img, mo.get("rx", .70), mo.get("ry", .18), mo.get("n", 7))
             elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"))
@@ -387,18 +521,41 @@ class Scene:
             elif k == "starlink": img = self.m_straight(img, (mo.get("x0", .40), mo.get("y0", .20)), (mo.get("x1", .90), mo.get("y1", .38)), dots=True)
         trail_x = None
         for mo in motifs:
-            if isinstance(mo, dict) and mo["type"] in ("trail", "trails"):
-                if mo["type"] == "trail":
-                    img = self.m_trail(img, hz, mo.get("x", .60), mo.get("side", 1), height=mo.get("height", .74)); trail_x = W * mo.get("x", .60)
-                else:
-                    for i, (x, h, st) in enumerate(((.42, .55, .55), (.58, .70, .8), (.74, .62, .65))):
-                        img = self.m_trail(img, hz, x, 1, height=h, strength=st, width=5)
-            elif mo in ("trail",):
-                img = self.m_trail(img, hz); trail_x = W * .60
-        img = self.ground(img, c.get("ground", "hills"), hz, trail_x)
+            if mo["type"] == "trail":
+                img, tip = self.trail_real(img, hz, mo.get("x", .60), mo.get("side", 1), mo.get("height", .74), mo.get("strength", 1.0), mo.get("curve", .33))
+                trail_x = W * mo.get("x", .60)
+                if mo.get("plume"): img = self.jellyfish(img, tip[0], tip[1], mo.get("plumeSize", 320))
+            elif mo["type"] == "trails":
+                for x, h, st in ((.40, .52, .5), (.57, .70, .85), (.74, .60, .65)):
+                    img, _ = self.trail_real(img, hz, x, 1, h, st, .25)
+        if c.get("clouds"):
+            cl = c["clouds"]; img = self.clouds(img, cl.get("y0", hz - .16), cl.get("y1", hz - .02), tuple(cl.get("lit", (.9, .6, .45) if tone in ("dawn", "dusk") else (.35, .4, .5))), cl.get("density", .55))
+        # 地上
+        g = c.get("ground", "hills")
+        if g in ("sea", "island", "lake"):
+            img = self.sea_real(img, hz, trail_x)
+            if g == "island":
+                hzp = int(H * hz); xs = np.arange(int(W * .04), int(W * .64), 6)
+                prof = hzp - 22 - 30 * np.exp(-((xs - W * .22) / (W * .10)) ** 2) - 6 * np.sin(xs / 37) - 12 * np.exp(-((xs - W * .46) / (W * .05)) ** 2)
+                img = self.silhouette(img, [(W * .04, hzp + 1)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W * .64, hzp + 1)], (.012, .014, .024))
+                lights = np.zeros((H, W), np.float32)
+                for _ in range(26): lights[int(hzp - self.rng.uniform(3, 14)), int(self.rng.uniform(W * .08, W * .6))] = 1
+                img = img + self.blur(lights, 1.6)[..., None] * 18 * np.array([1, .75, .42])
+            elif g == "lake":
+                img = self.mountains(img, hz, 2, 120, trees=True)
+            else:
+                xs = np.arange(0, int(W * .40), 6); hzp = int(H * hz)
+                prof = hzp - 70 - 120 * np.exp(-((xs - W * .12) / (W * .11)) ** 2) - 30 * np.sin(xs / 57) * np.exp(-xs / 700) + (xs / (W * .40)) ** 2 * 80
+                img = self.silhouette(img, [(0, hzp + 1)] + [(float(x), float(p)) for x, p in zip(xs, prof)] + [(W * .40, hzp + 1)])
+        elif g == "city":
+            img = self.mountains(img, hz - .03, 1, 60)
+            img = self.ground(img, "city", hz, None)
+        elif g in ("mountains", "forest"):
+            img = self.mountains(img, hz, 3, c.get("rough", 170), trees=(g == "forest"))
+        else:
+            img = self.mountains(img, hz, 2, 60)
         for mo in motifs:
-            k = mo if isinstance(mo, str) else mo["type"]
-            if k in ("dome", "tripod", "phone"): img = self.m_object(img, k, hz, (mo.get("x", .72) if isinstance(mo, dict) else .72))
+            if mo["type"] in ("dome", "tripod", "phone"): img = self.m_object(img, mo["type"], hz, mo.get("x", .72))
         return img
 
     def startrail_sky(self):
@@ -605,16 +762,16 @@ def render_transit(spec, bg, cat, main, sub, kicker):
 
 def render(spec, out):
     cat = spec.get("category", "launch") if spec.get("category") in SCENES else "launch"
-    seed = int(spec.get("seed", 1)); layout = spec.get("layout", "transit")
+    seed = int(spec.get("seed", 1)); layout = spec.get("layout", "cinema")
     scene = spec.get("scene") or SCENES[cat][seed % len(SCENES[cat])]
     sc = Scene(seed)
     if spec.get("composition"):
         img = sc.compose(spec["composition"])
     else:
         img = {"sea": lambda: sc.sea(1 if seed % 2 else -1) if layout == "cinema" else sc.sea(1)}.get(scene, getattr(sc, scene))()
-    if layout == "transit":
-        img = sc.film(img, (spec.get("composition") or {}).get("horizon", .76) - .02)
-        bg = sc.finish(img, grain=.055, vig=.7).convert("RGBA")
+    if spec.get("film", True):  # フィルムのような色・かすみ・光漏れ（エモい写真の空気感）
+        img = sc.film(img, (spec.get("composition") or {}).get("horizon", .76) - .02, leak=spec.get("leak", True))
+        bg = sc.finish(img, grain=.05, vig=.68).convert("RGBA")
     else:
         bg = sc.finish(img).convert("RGBA")
     kicker0, main, sub = split_title(spec["title"])

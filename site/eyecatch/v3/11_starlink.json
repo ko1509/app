@@ -1,0 +1,1 @@
+{"title": "夜空を列になって動く光は何？", "category": "sky", "headline": "列になって動く光の正体", "sub": "スターリンク衛星の見つけ方", "kicker": "STARLINK", "seed": 21, "composition": {"tone": "moonlit", "ground": "lake", "horizon": 0.7, "motifs": [{"type": "starlink", "x0": 0.3, "y0": 0.16, "x1": 0.92, "y1": 0.42}, {"type": "moon", "cx": 0.16, "cy": 0.2, "r": 60}]}}
