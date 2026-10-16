@@ -281,6 +281,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .ag-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .ag-tiles.n1{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ag-tiles.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sv-ximg{margin:8px 0 0;border-radius:14px;overflow:hidden;border:1px solid var(--sep,rgba(0,0,0,.1))} .sv-ximg img{display:block;width:100%;height:auto}
 @media (max-width:760px){.ag-tiles,.ag-tiles.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ag-tile{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;align-items:center;padding:12px;border-radius:18px;
   background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge),0 2px 8px rgba(0,0,0,.05);min-width:0;color:var(--label-3);border:0;font:inherit;text-align:left;cursor:pointer;width:100%}
@@ -387,7 +388,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .sv-logo{font-size:18px;font-weight:700;color:var(--label)} .sv-logo.ig{background:linear-gradient(45deg,#f9a03f,#d6249f,#285aeb);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sv-text{font-size:15px;line-height:1.55;overflow-wrap:anywhere} .sv-text a,.sv-text .tag{color:#1d9bf0}
 .sv-ig .sv-text{font-size:14px} .sv-ig .sv-text .tag{color:#00376b} :root[data-theme="dark"] .sv-ig .sv-text .tag{color:#e0f1ff}
-.sv-img{aspect-ratio:1/1;margin:0 -14px;background:#0B0B10;color:rgba(255,255,255,.7);display:grid;place-items:center;text-align:center;font-size:13px;overflow:hidden} .sv-img span{padding:20px}
+.sv-img{aspect-ratio:4/5;margin:0 -14px;background:#0B0B10;color:rgba(255,255,255,.7);display:grid;place-items:center;text-align:center;font-size:13px;overflow:hidden} .sv-img span{padding:20px}
 .sv-count{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--label-2)} .sv-count i{width:22px;height:22px;border-radius:50%;background:conic-gradient(#1d9bf0 var(--p),var(--fill-strong) 0);flex:none}
 .sv-count.over,.sv-count.over span{color:var(--bad)} .sv-count.over i{background:conic-gradient(var(--bad) 100%,var(--bad) 0)}
 .sv-img img{width:100%;height:100%;object-fit:cover;display:block}
@@ -775,14 +776,22 @@ const relDay=d=>{if(!d)return "";const n=diff(d);return n===0?"今日":n===1?"�
 function postWhen(p){const d=parse(p.date),n=d?diff(d):null,past=n!=null&&n<0&&p.status!=="投稿済み";
   return `<div class="sv-when ${n===0?"today":""} ${past?"late":""}"><b class="num">${esc(p.time||"--:--")}</b><span>${d?fmt(d):"日付なし"}${d?" · "+relDay(d):""}</span><em>${esc(p.channel||"X")}${p.kind?"・"+esc(p.kind):""}</em></div>`}
 function postMeta(p){const a=S.articles.find(x=>x._id===p.articleId);
-  return `${mcAction(p)}<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
+  return `${mcAction(p)}<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.topic&&p.topic!=="記事"?`<span class="d-pill info">${esc(TOPIC_L[p.topic]||p.topic)}</span>`:""}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
+const TOPIC_L={"記事":"記事","イベント":"イベント","今夜の空":"今夜の空","コラム":"コラム"};
+// 画像担当が作った投稿画像（images/sns-<投稿ID>）。一度読んだら覚えておく
+function postImg(p){if(/^https:\/\//.test(p.imageUrl||""))return p.imageUrl;const k=p.imageId;if(!k)return "";
+  S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
+  (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
+function postImgBar(p){const g=!(/^https:\/\//.test(p.imageUrl||""))&&p.imageId&&(S.snsImg||{})[p.imageId];
+  return g?`<div class="sv-act"><span class="d-sub">${p.channel==="Instagram"?"予約には、この画像を WordPress のメディアなどに上げて URL を入れてください":"画像つきで予約するなら、上げた画像の URL を入れてください"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">画像を保存</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
 function xCard(p){const n=xLen(p.text),d=parse(p.date);
   return `<button type="button" class="sv sv-x" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>ミアゲタビ</b><span>@${esc(xHandle())}</span></div><span class="sv-logo">𝕏</span></div>
     <div class="sv-text">${snsText(p.text)||'<span class="d-sub">（本文なし）</span>'}</div>
+    ${(()=>{const u=postImg(p);return u?`<div class="sv-ximg"><img src="${esc(u)}" alt="" loading="lazy"></div>`:""})()}${postImgBar(p)}
     <div class="sv-count ${n>280?"over":""}"><i style="--p:${Math.min(100,n/280*100)}%"></i><span class="num">${n}/280</span></div>${postMeta(p)}</button>`}
 function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length,d=parse(p.date),cap=String(p.text||"");
   return `<button type="button" class="sv sv-ig" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>${esc(igHandle())}</b><span>ミアゲタビ</span></div><span class="sv-logo ig">◎</span></div>
-    <div class="sv-img">${/^https:\/\//.test(p.imageUrl||"")?`<img src="${esc(p.imageUrl)}" alt="" loading="lazy">`:`<span>${esc(p.imageNote||"画像は運営者が選ぶ")}<br><b>画像のURLを入れると予約できます</b></span>`}</div>
+    <div class="sv-img">${(()=>{const u=postImg(p);return u?`<img src="${esc(u)}" alt="" loading="lazy">`:`<span>${p.imageId||p.status==="審査済み"?"画像担当が画像を作っています":esc(p.imageNote||"審査を通ると画像担当が画像を作ります")}<br><b>画像のURLを入れると予約できます</b></span>`})()}</div>${postImgBar(p)}
     <div class="sv-text"><b>${esc(igHandle())}</b> ${snsText(cap.length>150?cap.slice(0,150)+"…":cap)}${cap.length>150?' <span class="d-sub">もっと見る</span>':""}</div>
     <div class="sv-count ${tags!==8&&tags?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/8</span></div>${postMeta(p)}</button>`}
 /* ---------- Metricool で予約（運営者がワンタップ。審査済みの投稿だけ） ---------- */
@@ -825,7 +834,7 @@ async function mcSchedule(id){
     let dup=near.find(x=>(x.providers||[]).some(v=>v.network===net)&&norm(x.text)===norm(p.text));
     let uuid=dup?String(dup.uuid||""):"",url="";
     if(!dup){
-      const info={autoPublish:true,draft:false,descendants:[],firstCommentText:"",hasNotReadNotes:false,media:net==="instagram"?[p.imageUrl]:[],mediaAltText:[],providers:[{network:net}],
+      const info={autoPublish:true,draft:false,descendants:[],firstCommentText:"",hasNotReadNotes:false,media:/^https:\/\//.test(p.imageUrl||"")?[p.imageUrl]:[],mediaAltText:[],providers:[{network:net}],
         publicationDate:{dateTime:at+":00",timezone:"Asia/Tokyo"},shortener:false,smartLinkData:{ids:[]},text:p.text};
       if(net==="twitter")info.twitterData={tags:[]};
       if(net==="instagram")info.instagramData={type:"POST",isAiGenerated:false};
@@ -863,6 +872,9 @@ function snsAccounts(){
       <p class="d-sub" style="margin:0">ミアゲタビ用のブランドを選んでください（KOAlil のブランドには予約しません）。</p></div></details>`;
 }
 function bindSns(pg){
+  pg.querySelectorAll("[data-snsdl]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsdl),u=p&&(S.snsImg||{})[p.imageId];if(u)saveImage(u,`miagetabi-${p._id}.jpg`)};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-snsre]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsre);if(!p)return;
+    await requestJob("snsimage",{postIds:[p._id],title:"SNS画像の作り直し",note:`作り直し：${p._id}${p.imageNote?"／指示："+p.imageNote:""}`})};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-mc]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();if(!b.classList.contains("is-dis"))mcSchedule(b.dataset.mc)};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   const ld=$("#snsLoad");if(ld)ld.onclick=async()=>{try{S.mcBrands=(mcPayload(await S.mcp.callTool(METRICOOL,"getBrandSettings",{},{cache:false}))||{}).data||[];render();toast(`ブランドを${S.mcBrands.length}件読みました`)}catch(e){toast("読めませんでした："+mcErr(e))}};
   const sv=$("#snsSave");if(sv)sv.onclick=async()=>{const id=$("#snsBrand").value,b=(S.mcBrands||[]).find(x=>String(x.id)===id);
@@ -904,16 +916,16 @@ const AG={
   planner:{l:"企画",kinds:["plan"],trig:"plannerTriggerId",desc:"公式の予定と暦から、3つの問いを通った記事案を受信箱に出す",when:"月・木 7:13＋依頼",pc:"gear",ic:"idea",manual:"planner-manual.md",yen:80,tasks:["公式の予定と国立天文台の暦から、次に書く記事を探す","運営マニュアルの3つの問いで絞り、受信箱に3件まで出す","採用・見送りの理由を次の提案に生かす"],never:"記事カードは作らない（決めるのは運営者）"},
   writer:{l:"記事作成",kinds:["article","update"],trig:"writerTriggerId",desc:"一次情報で裏を取り、計算で確かめて稿と直しの案を書く",when:"6〜23時 毎時:23＋依頼",pc:"sky",ic:"doc",manual:"article-manual.md",yen:150,tasks:["一次情報を開いて確かめ、sky.py で時刻・方角を計算して稿を書く","記事に入れる図（タイムライン・方角・距離）を作る","査読の指摘で書き直す（最大5回）","公開済み記事の直しの案（延期・直前更新・点検の指摘）を作る"],never:"体験の創作・確かめていない数字・WordPress への書き込みはしない"},
   reviewer:{l:"査読",kinds:["review"],trig:"reviewerTriggerId",desc:"別のセッションで主張を確かめ直し、A〜Dで判定する",when:"6〜23時 毎時:53＋依頼",pc:"launch",ic:"check",manual:"review-manual.md",yen:120,tasks:["稿の主張を全部抜き出し、別のセッションで一次情報と計算で確かめ直す","A〜Dで判定（合格はAだけ）。不合格なら修正案つきで差し戻す","公開中のページの点検（3か月ごと・依頼）"],never:"本文を自分で書き換えない・基準を緩めない"},
-  designer:{l:"アイキャッチ",kinds:["eyecatch"],trig:"designerTriggerId",desc:"査読でAになった記事だけ、記事を読んでアイキャッチを作る",when:"依頼（査読A）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、見出し・英語の一文・背景を決める","直近の記事と背景がかぶらないように描き分ける","できた画像を自分で確かめ、だめなら作り直す（作り直しの依頼も受ける）"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
+  designer:{l:"画像",kinds:["eyecatch","snsimage"],trig:"designerTriggerId",desc:"査読でAになった記事のアイキャッチと、審査を通ったSNS投稿の画像を作る",when:"依頼（査読A・SNS審査OK）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、アイキャッチ（見出し・英語の一文・背景）を作る","審査を通ったSNS投稿に、X（横長）・Instagram（縦長）の画像を作る","直近と背景がかぶらないよう描き分け、できた画像を自分で確かめる"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
   eventfetch:{l:"イベント取得",kinds:["eventfetch"],trig:"eventFetchTriggerId",desc:"公式の予定表から新しい打ち上げ・天体イベントを見つけ、イベントに足す",when:"月・木 6:47＋依頼",pc:"spot",ic:"cal",manual:"event-fetch-manual.md",yen:60,tasks:["JAXA・スペースワン・インターステラの打ち上げ予定と、国立天文台・IMO の天体の暦を読む","まだ無いイベントを、公式の日時と出典つきでイベントに足す（重複は足さない）","日付が未発表のものは「日付未定」で足す。迷うものは受信箱へ"],never:"既にあるイベントの日時・状況は変えない（それは公式ウォッチ）・推測の日付を作らない"},
   watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
-  sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"公開済みの記事から X・Instagram の告知文を下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:40,tasks:["公開済みの記事から X・Instagram の告知文を下書きする","公開・T−7・前日・当日・結果の型で、3日以内の分だけ作る"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
+  sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"記事の告知・イベント情報・今夜の空・コラムを X・Instagram 用に下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:50,tasks:["新しい記事、14日以内のイベント（記事が無くても）、今夜の空、ちょっとしたコラムを下書きする","事実は一次情報で、空の時刻・方角は計算で確かめる","画像の指示を付けて審査へ（画像は画像担当が作る）"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
   snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","文字数・ハッシュタグ数・禁止表現・安全のひとことを確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・告知文を自分で書き換えない（SNSアカウントの準備ができるまで停止中）"},
   audit:{l:"点検",kinds:["audit"],trig:"auditTriggerId",desc:"公開中のページを見回り、止まった依頼を片付ける",when:"毎朝 5:37＋依頼",pc:"spot",ic:"scan",manual:"audit-manual.md",yen:60,tasks:["公開中の記事を毎朝開き、リンク切れ・最終確認の古さ・部品の抜けを探す","止まった依頼を片付ける（自己修復）","週1回、サイトの基本（サイトマップ・運営者情報など）を点検"],never:"サイトの設定や記事は変えない・停止中の役割を起こさない"}
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={eventfetch:"イベント取得",eyecatch:"アイキャッチ",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
+const KIND_L={eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -1072,7 +1084,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview"]};
+const AG_SCOPE={all:["planner","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview","designer"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
@@ -1463,7 +1475,7 @@ const FORMS={
     ["url","公開URL","url","wide"],["lastVerified","最終確認日","date"],["note","メモ","textarea","wide"]]},
   post:{col:"posts",title:"SNS投稿",fields:[
     ["date","投稿日","date"],["time","時刻","text"],["channel","媒体","select",["X","Instagram","両方"]],["status","状態","select",Object.keys(POST_STATUS)],
-    ["text","本文","textarea","wide"],["imageUrl","画像のURL（Instagram は必須。WordPress のメディアなど公開されている URL）","url","wide"],["imageNote","画像のメモ","text","wide"],["articleId","関連記事","article","wide"]]},
+    ["text","本文","textarea","wide"],["imageUrl","画像のURL（Instagram は必須。画像担当の画像を WordPress のメディアなどに上げた URL）","url","wide"],["imageNote","画像のメモ（作り直すときの指示もここに）","text","wide"],["articleId","関連記事","article","wide"]]},
   kpi:{col:"kpi",title:"KPI（月）",fields:[["month","月（例：2026-12）","text","wide"],...KPI_DEF.map(d=>[d.k,`${d.l}（${d.u}）`,"number"])]}
 };
 const listFor=k=>({event:S.events,article:S.articles,post:S.posts,kpi:S.kpi}[k]);

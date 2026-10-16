@@ -11,6 +11,9 @@ spec.json の例:
 
 - title: 記事のタイトルをそのまま。先頭の【…】は小見出しに、「｜」より後ろは副題になる
 - category: launch（打ち上げ）| sky（天体）| spot（宇宙スポット）| gear（機材）
+- format: eyecatch（1200×630。標準）| x（X の投稿画像 1200×675）| ig（Instagram の投稿画像 1080×1350）
+- label: 左上の英字ラベル（省略するとカテゴリ。SNS では EVENT・COLUMN・TONIGHT など）
+- bigdate / bigdate_sub: イベントの日付を大きく（例 "10.20" / "TUE 04:41 JST"）。handle: 下に小さく入るアカウント名
 - en: 英語の一文（短く。標準の型では見出しの上に斜体で小さく入る）
 - layout: cinema（標準。下に大きく見出し）| panel（右に黒い帯）| transit（英字の一文・明朝の縦書き）
 - 背景はフィルム調の色・かすみ・光漏れ（film: false で無し）。composition の項目は ops/article-manual.md の 5-5
@@ -953,7 +956,16 @@ def render_transit(spec, bg, cat, main, sub, kicker):
     cg = font("mono", 9); spaced(d, (W - M - int(textlen_spaced(d, "CG ILLUSTRATION", cg, .14)), H - 34 * S), "CG ILLUSTRATION", cg, (255, 255, 255, 120), .14)
 
 
+FORMATS = {"eyecatch": (1200, 630), "x": (1200, 675), "ig": (1080, 1350)}  # アイキャッチ／X（16:9）／Instagram（4:5）
+
+
+def set_size(fmt):
+    global OUT_W, OUT_H, W, H
+    OUT_W, OUT_H = FORMATS.get(fmt, FORMATS["eyecatch"]); W, H = OUT_W * S, OUT_H * S
+
+
 def render(spec, out):
+    fmt = spec.get("format", "eyecatch"); set_size(fmt); tall = fmt == "ig"
     cat = spec.get("category", "launch") if spec.get("category") in SCENES else "launch"
     seed = int(spec.get("seed", 1)); layout = spec.get("layout", "cinema")
     scene = spec.get("scene") or SCENES[cat][seed % len(SCENES[cat])]
@@ -1009,31 +1021,44 @@ def render(spec, out):
         grad[..., 3] = a[:, None].astype(np.uint8); bg.alpha_composite(Image.fromarray(grad, "RGBA"))
         d = ImageDraw.Draw(bg)
         d.rectangle((M, 56 * S, M + 9 * S, 65 * S), fill=ORANGE)
-        x = spaced(d, (M + 20 * S, 52 * S), LABEL[cat], mono_s, (255, 255, 255))
+        x = spaced(d, (M + 20 * S, 52 * S), spec.get("label") or LABEL[cat], mono_s, (255, 255, 255))
         if kicker: spaced(d, (x + 14 * S, 52 * S), kicker, mono_s, (255, 255, 255, 160))
-        f, ls, sz = fit(main, "black", (66, 60, 56, 52, 48, 44), 800, 2, d)
-        foot = 64 * S + (40 * S if spec.get("date") or spec.get("time") else 0)
-        fs = font("medium", 22)
-        subh = int(fs.size * 1.5) if sub else 0
+        f, ls, sz = fit(main, "black", (84, 76, 68, 60, 54, 48) if tall else (66, 60, 56, 52, 48, 44), 840 if tall else 800, 3 if tall else 2, d)
+        foot = 64 * S + (40 * S if spec.get("date") or spec.get("time") else 0) + (30 * S if spec.get("handle") else 0)
+        fs = font("medium", 26 if tall else 22)
+        subl = []
+        if sub:
+            fs, subl, _ = fit(sub, "medium", (26, 24, 22) if tall else (22, 20, 19), 900 if tall else 1000, 2, d)
+        subh = int(fs.size * 1.5) * len(subl)
         lh = int(f.size * 1.18); y = H - foot - subh - lh * len(ls) - (14 * S if sub else 0)
         en = (spec.get("en") or "").replace("\n", " ").strip()
         if en:  # 英語の一文（TRANSIT のような斜体のセリフ）を見出しの上に小さく
             fe = font("serif_i", 34, 400)
             while d.textlength(en, font=fe) > 760 * S and fe.size > 24 * S: fe = fe.font_variant(size=int(fe.size * .94))
             ye = y - int(fe.size * 1.30)
+        bd = spec.get("bigdate")
+        if bd:  # イベントの日付を大きく（SNS 画像）
+            fb = font("mono", 120 if tall else 70); yb = (ye if en else y) - int(fb.size * 1.25)
         def title(dd, col):
+            if bd:
+                x2 = dd.textlength(bd, font=fb) + M + 18 * S
+                dd.text((M - 4 * S, yb), bd, font=fb, fill=col or (255, 255, 255))
+                if spec.get("bigdate_sub"):
+                    dd.text((x2, yb + int(fb.size * .58)), spec["bigdate_sub"], font=font("mono", 26 if tall else 18), fill=col or ORANGE)
             if en: dd.text((M + 2 * S, ye), en, font=fe, fill=col or (255, 244, 228, 235))
             yy = y
             for ln in ls:
                 dd.text((M, yy), ln, font=f, fill=col or (255, 255, 255)); yy += lh
-            if sub:
-                dd.text((M, yy + 14 * S), sub if dd.textlength(sub, font=fs) < 900 * S else sub[:40] + "…", font=fs, fill=col or (255, 255, 255, 220))
+            yy += 14 * S
+            for sl in subl:
+                dd.text((M, yy), sl, font=fs, fill=col or (255, 255, 255, 220)); yy += int(fs.size * 1.5)
         shadowed(bg, title)
         d = ImageDraw.Draw(bg)
         if spec.get("date") or spec.get("time"):
             x = M
             if spec.get("date"): x = spaced(d, (M, H - 92 * S), spec["date"], mono_l, (255, 255, 255), .12) + 14 * S
             if spec.get("time"): spaced(d, (x, H - 92 * S), spec["time"], mono_l, ORANGE, .12)
+        if spec.get("handle"): spaced(d, (M, H - 58 * S), spec["handle"], font("mono", 13), (255, 255, 255, 190), .10)
         lg = logo_white(22); bg.alpha_composite(lg, (W - M - lg.width, H - 84 * S))
         cg = font("mono", 10); spaced(d, (W - M - int(textlen_spaced(d, "CG ILLUSTRATION", cg, .14)), H - 40 * S), "CG ILLUSTRATION", cg, (255, 255, 255, 140), .14)
     bg.convert("RGB").resize((OUT_W, OUT_H), Image.LANCZOS).save(out, quality=88, optimize=True, progressive=True)

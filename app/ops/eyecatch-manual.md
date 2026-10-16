@@ -1,8 +1,8 @@
-# アイキャッチ担当（designer）の手順書
+# 画像担当（designer）の手順書（アイキャッチ・SNS の画像）
 
 **査読で A になった稿だけ**、記事を読んでアイキャッチ（1200×630。写真風の CG の背景に、記事の見出しを組む）を作る。作成エージェントの負担を軽くし、本文の質に集中させるために分けた役割。本文が確定してから作るので、書き直しのたびに作り直さない。
 
-**書き換えてよいもの**：`images/<articleId>-eyecatch`、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
+**書き換えてよいもの**：`images/<articleId>-eyecatch`、`images/sns-<投稿ID>` と、その投稿の `imageId` だけ（`posts/<ID>` を `update`。ほかの項目は変えない）、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
 **書き換えないもの**：本文（`draft.markdown`・`blocks`）・`review`・`status`・`loop`・`events`・ほかのカード
 
 ## 0. 共通
@@ -12,6 +12,7 @@
 - 依頼：`kind: "eyecatch"`。
   - 査読が A を出したとき（`jobs/eyecatch-<articleId>-<round>`、`by: "reviewer"`）。
   - 運営者がアプリの「アイキャッチを作り直す」を押したとき（`by: "app"`。`note` に指示。例：「月の背景で」「日付を外す」）。
+- 依頼：`kind: "snsimage"`（SNS 審査が投稿を OK にしたとき、運営者がアプリの「作り直す」を押したとき）。手順は 5 章。SNS の画像は SNS の自動運転が止まっていても、依頼があれば作る。
 - 定時（6〜23時の毎時）は依頼の見回りだけ。依頼が無ければ「仕事なし」と書いてすぐ終わる。
 - **査読で A になっていない稿には作らない**（`articles/<articleId>.review.pass` が `true` でないなら、依頼を `done` にして「査読 A 前のため作りません」と報告。ただし運営者の作り直しの依頼で、カードが `公開済み` のものは作ってよい）。
 
@@ -63,7 +64,19 @@
   （`python3 -c "import base64;print(base64.b64encode(open('eyecatch.jpg','rb').read()).decode())"` で作る。ArtifactData の `file_path` に JSON ファイルを渡すと楽）
 - カード：`draft.eyecatch`（`draft` が無ければ `eyecatch`）に `{"spec": {…}, "imageId": "<articleId>-eyecatch", "round": <稿の round>, "createdAt": "<今>"}`。
 
-## 5. してはいけないこと
-- 本文・査読結果・状態を書き換えること。査読 A 前の稿に作ること（運営者の依頼で公開済みのものは除く）。
+## 5. SNS の画像（`kind: "snsimage"`）
+SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の「作り直す」の依頼も同じ（`note` に指示）。
+1. 投稿ごとに `posts/<ID>` を読む。`status` が `審査済み` でないもの（作り直しの依頼を除く）、`予約済み`・`投稿済み` のものは作らない。
+2. 形：`channel` が `X` なら `"format": "x"`（1200×675）、`Instagram` なら `"format": "ig"`（1080×1350）。`imageBrief` の `label`・`headline`・`sub`・`bigdate`・`bigdate_sub`・`en` をそのまま spec に入れ、`scene` から 3 章の `composition` を選ぶ。`handle` に `settings/sns` の Instagram のユーザー名（`@` つき。未設定なら入れない）。
+   - 縦長（ig）は下 40% に文字が入る。`horizon` は 0.50〜0.62 にして、主役（光跡・月・物）を上半分に置く。
+   - 同じ題材の X と Instagram は、同じ情景で形だけ変える（`seed` も同じ）。
+   - 直近の SNS 画像（`images` の `kind: "sns"` の `spec`、新しい順に10件）と背景がかぶらないようにする。
+3. 作った画像を開いて確かめる（2 章の 6 と同じ基準。日時が本文と同じかも）。
+4. `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。
+5. 依頼を `done` にし、報告する（3行以内：何件作ったか）。
+見本は `site/sns/samples/*.json`（リポジトリ）。
+
+## 6. してはいけないこと
+- 本文・査読結果・状態・投稿の文を書き換えること。査読 A 前の稿に作ること（運営者の依頼で公開済みのものは除く）。
 - 写真・他サイトの画像を使うこと。AI の画像を写真として扱うこと（右下の「CG ILLUSTRATION」を消さない）。
 - 確かめていない日時を入れること。
