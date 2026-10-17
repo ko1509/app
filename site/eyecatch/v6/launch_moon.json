@@ -1,0 +1,1 @@
+{"title":"月とロケットの光跡","category":"launch","headline":"月の前を上がる光","sub":"月が明るい夜の打ち上げ","kicker":"MOONLIT LAUNCH","en":"A line drawn across the moon.","seed":93,"composition":{"tone":"moonlit","ground":"sea","horizon":0.80,"motifs":[{"type":"moon","cx":0.70,"cy":0.36,"r":120},{"type":"trail","x":0.56,"height":0.62,"curve":0.32}]}}

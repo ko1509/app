@@ -363,6 +363,34 @@ class Scene:
         img = img * (1 - disk[..., None]) + disk[..., None] * (tex[..., None] * col)
         return img + (np.exp(-np.clip(dd - r, 0, None) / (r * .8)) * (dd > r))[..., None] * col * 0.35
 
+    def m_eclipse(self, img, cx=.70, cy=.30, r=90, sequence=False):
+        """皆既月食：赤銅色の月。sequence なら、欠けていく月を弧に並べた合成（連続写真のように）"""
+        y, x = np.mgrid[0:H, 0:W].astype(np.float32)
+        def moon(img, mx, my, rr, shadow):  # shadow：0（満月）〜1（皆既）
+            dd = np.sqrt((x - mx) ** 2 + (y - my) ** 2); disk = np.clip(rr - dd, 0, 1)
+            tex = .82 + .18 * self.noise((30, 12, 5), (1, .6, .4)) if not hasattr(self, "_mtex") else self._mtex
+            self._mtex = tex
+            sx = mx + rr * 2.2 * (1 - shadow) - rr * .2  # 地球の影（大きな円）が左から重なる
+            inshadow = np.clip((rr * 1.9 - np.sqrt((x - sx) ** 2 + (y - my) ** 2)) / (rr * .25), 0, 1)
+            lit = np.array([1, .96, .86]); red = np.array([.62, .22, .10]) * (.55 + .45 * shadow)
+            col = lit[None, None, :] * (1 - inshadow[..., None]) + red[None, None, :] * inshadow[..., None]
+            img = img * (1 - disk[..., None]) + disk[..., None] * tex[..., None] * col
+            return img + (np.exp(-np.clip(dd - rr, 0, None) / (rr * .6)) * (dd > rr) * (.35 if shadow < .9 else .12))[..., None] * col.mean(axis=(0, 1))
+        if not sequence: return moon(img, W * cx, H * cy, r, 1.0)
+        for i, sh in enumerate((0, .25, .5, .75, 1, 1, .75)):
+            t = i / 6; img = moon(img, W * (.30 + .55 * t), H * (.55 - .32 * np.sin(np.pi * (.15 + .7 * t))), r * .55, sh)
+        return img
+
+    def m_comet(self, img, cx=.68, cy=.30, angle=-35, length=.30):
+        """彗星：明るい頭、扇形に広がる黄色いちりの尾、まっすぐで細い青いイオンの尾"""
+        y, x = np.mgrid[0:H, 0:W].astype(np.float32); hx, hy = W * cx, H * cy
+        th = np.radians(angle); ux, uy = np.cos(th), np.sin(th)  # 尾の向き
+        u = (x - hx) * ux + (y - hy) * uy; v = -(x - hx) * uy + (y - hy) * ux; L = W * length
+        dust = np.exp(-(v - u * .12) ** 2 / (2 * (12 + u * .16) ** 2)) * np.clip(u / L * 4, 0, 1) * np.exp(-np.clip(u, 0, None) / (L * .55)) * (u > 0)
+        ion = np.exp(-v ** 2 / (2 * (3 + u * .02) ** 2)) * np.exp(-np.clip(u, 0, None) / (L * .9)) * (u > 0)
+        head = np.exp(-((x - hx) ** 2 + (y - hy) ** 2) / (2 * 6 ** 2)) * 2.5 + np.exp(-np.sqrt((x - hx) ** 2 + (y - hy) ** 2) / 28) * .5
+        return img + dust[..., None] * np.array([1, .9, .7]) * .55 + ion[..., None] * np.array([.55, .75, 1]) * .45 + head[..., None] * np.array([.85, 1, .9])
+
     def m_planets(self, img, cx=.68, cy=.42):
         for (dx, dy, col, rr) in ((0, 0, (1, .97, .9), 9), (70, 38, (1, .55, .35), 7)):
             lay = np.zeros((H, W), np.float32); lay[int(H * cy + dy), int(W * cx + dx)] = 1
@@ -664,6 +692,38 @@ class Scene:
             img = img + l[..., None] * np.array([1, .75, .45])
         return img
 
+    def m_lighthouse(self, img, hz, x=.78, size=1.0, beam=-1):
+        """岬の灯台：崖の上の白い塔と、海へのびる光の帯"""
+        cx = W * x; k = size * S / 2; gy = H * hz
+        xs = np.arange(cx - 320 * k, W + 12, 6); top_y = gy - 70 * k
+        prof = top_y + np.clip((cx - 120 * k - xs) / (200 * k), 0, 1) ** 1.5 * 110 * k + 10 * k * np.sin(xs / 23) + 7 * k * np.sin(xs / 9 + 1) + np.clip((xs - cx - 220 * k) / (W * .3), 0, 1) * 40 * k
+        prof[0] = gy + 4
+        cliff = self._mask(lambda d: d.polygon([(float(xs[0]), H)] + [(float(a), float(b)) for a, b in zip(xs, prof)] + [(W + 12, H)], fill=255), 1)
+        img = self.put(img, cliff, (.008, .009, .014), sky=(.10, .12, .18))
+        top = gy - 70 * k - 230 * k; lx, ly = cx, top + 18 * k
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        ang = np.arctan2(y - ly, (xx - lx) * beam); bw = np.exp(-((ang - .06) / .05) ** 2) * (xx * beam < lx * beam) ** 0 * ((xx - lx) * beam > 0)
+        dist = np.sqrt((xx - lx) ** 2 + (y - ly) ** 2); img = img + (bw * np.exp(-dist / (W * .5)) * .45)[..., None] * np.array([1, .96, .85])
+        tower = self._mask(lambda d: (d.polygon([(cx - 26 * k, gy - 70 * k), (cx + 26 * k, gy - 70 * k), (cx + 17 * k, top + 36 * k), (cx - 17 * k, top + 36 * k)], fill=255),
+                                      d.rectangle((cx - 22 * k, top + 6 * k, cx + 22 * k, top + 36 * k), fill=255), d.pieslice((cx - 18 * k, top - 16 * k, cx + 18 * k, top + 20 * k), 180, 360, fill=255)), .7)
+        shade = np.clip(.35 + .5 * (cx - xx) / (26 * k), .15, .85)
+        img = img * (1 - tower[..., None]) + (tower * shade)[..., None] * np.array([.75, .78, .85])
+        return img + (np.exp(-((xx - lx) ** 2 + (y - ly) ** 2) / (2 * (10 * k) ** 2)) * 2.2 + np.exp(-dist / (40 * k)) * .5)[..., None] * np.array([1, .93, .7])
+
+    def m_tent(self, img, hz, x=.74, size=1.0, base=.90):
+        """星の下のテント：中の明かりで布がやわらかく光る"""
+        cx = W * x; by = H * base; w = 260 * size * S / 2; h = 190 * size * S / 2
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        body = self._mask(lambda d: d.polygon([(cx - w, by), (cx, by - h), (cx + w, by)], fill=255), .8)
+        glow = np.clip(1 - np.sqrt(((xx - cx) / w) ** 2 + ((y - by + h * .35) / h) ** 2), 0, 1)
+        fab = (.25 + .9 * glow)[..., None] * np.array([1, .66, .30])
+        img = img * (1 - body[..., None]) + body[..., None] * fab
+        door = self._mask(lambda d: d.polygon([(cx - w * .18, by), (cx, by - h * .62), (cx + w * .18, by)], fill=255), .6)
+        img = img + door[..., None] * np.array([1, .8, .45]) * .8
+        pool = np.exp(-(((xx - cx) / (w * 1.6)) ** 2 + ((y - by - 8) / (h * .25)) ** 2)) * (y > by - 4) * .35
+        lines = self._mask(lambda d: [d.line([(cx + sx * w * .3, by - h * .7), (cx + sx * w * 1.6, by + 6)], fill=150, width=3) for sx in (-1, 1)], .5)
+        return img + pool[..., None] * np.array([1, .6, .25]) - lines[..., None] * .05
+
     def m_deck(self, img, hz, people=3):
         """展望デッキ：手前に手すり、海を見る人の影（特定の人ではない）"""
         fy = H * .84
@@ -778,6 +838,8 @@ class Scene:
             elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"), mo.get("lines", False))
             elif k in ("moon", "bigmoon"): img = self.m_moon(img, mo.get("cx", .72), mo.get("cy", .28 if k == "moon" else hz - .12), mo.get("r", 110 if k == "moon" else 260), k == "bigmoon")
             elif k == "planets": img = self.m_planets(img, mo.get("cx", .68), mo.get("cy", .42))
+            elif k == "eclipse": img = self.m_eclipse(img, mo.get("cx", .70), mo.get("cy", .30), mo.get("r", 90), mo.get("sequence", False))
+            elif k == "comet": img = self.m_comet(img, mo.get("cx", .68), mo.get("cy", .30), mo.get("angle", -35), mo.get("length", .30))
             elif k == "iss": img = self.m_straight(img, (mo.get("x0", .30), mo.get("y0", .62)), (mo.get("x1", .95), mo.get("y1", .12)))
             elif k == "starlink": img = self.m_straight(img, (mo.get("x0", .40), mo.get("y0", .20)), (mo.get("x1", .90), mo.get("y1", .38)), dots=True)
         trail_x = None
@@ -833,6 +895,8 @@ class Scene:
             elif k == "observatory": img = self.m_observatory(img, hz, mo.get("x", .72), mo.get("size", 1.0))
             elif k == "planetarium": img = self.m_planetarium(img, hz, mo.get("x", .68), mo.get("size", 1.0))
             elif k == "deck": img = self.m_deck(img, hz, mo.get("people", 3))
+            elif k == "lighthouse": img = self.m_lighthouse(img, hz, mo.get("x", .78), mo.get("size", 1.0), mo.get("beam", -1))
+            elif k == "tent": img = self.m_tent(img, hz, mo.get("x", .74), mo.get("size", 1.0), mo.get("y", .90))
         if gear: img = self.m_gear(img, sorted(gear, key=lambda m: m["type"] != "bench"), hz, lamp)
         return img
 
