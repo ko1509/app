@@ -376,10 +376,35 @@ class Scene:
             col = lit[None, None, :] * (1 - inshadow[..., None]) + red[None, None, :] * inshadow[..., None]
             img = img * (1 - disk[..., None]) + disk[..., None] * tex[..., None] * col
             return img + (np.exp(-np.clip(dd - rr, 0, None) / (rr * .6)) * (dd > rr) * (.35 if shadow < .9 else .12))[..., None] * col.mean(axis=(0, 1))
-        if not sequence: return moon(img, W * cx, H * cy, r, 1.0)
+        if not sequence: return self.blood_moon(img, W * cx, H * cy, r)
         for i, sh in enumerate((0, .25, .5, .75, 1, 1, .75)):
             t = i / 6; img = moon(img, W * (.30 + .55 * t), H * (.55 - .32 * np.sin(np.pi * (.15 + .7 * t))), r * .55, sh)
         return img
+
+    def blood_moon(self, img, mx, my, r):
+        """皆既中の月（写真のように）：赤銅色、海（暗い模様）が見え、影の中心から遠い側の縁が明るく、わずかに青白い帯"""
+        y, x = np.mgrid[0:H, 0:W].astype(np.float32); dx, dy = (x - mx) / r, (y - my) / r; rr = np.sqrt(dx ** 2 + dy ** 2)
+        disk = np.clip((1 - rr) * r, 0, 1)
+        # 月の海：大きな低周波の暗い斑点（月面の模様のように）
+        # 実際の月の表側に似た配置（左上に広い嵐の大洋・雨の海、右上に晴れの海・静かの海・危難の海、下半分は明るい高地）
+        blob = np.zeros_like(rr); edge_n = self.noise((10, 5), (1, .5))
+        for ox, oy, sx_, sy_ in ((-.48, -.10, .22, .38), (-.22, -.38, .20, .15), (.10, -.36, .12, .11), (.24, -.12, .13, .14), (.55, -.20, .09, .08),
+                                 (.36, .18, .10, .14), (-.05, .02, .10, .08), (-.30, .30, .14, .10), (.10, .30, .07, .06)):
+            blob = np.maximum(blob, np.exp(-(((dx - ox) / (sx_ * 1.35)) ** 2 + ((dy - oy) / (sy_ * 1.35)) ** 2) / 2))
+        maria = self.blur(np.clip((blob + (edge_n - .5) * .4 - .35) * 2.2, 0, 1), r * .04) * .5
+        tycho = np.exp(-((dx + .12) ** 2 + (dy - .62) ** 2) / (2 * .025 ** 2)) * .5
+        fine = self.noise((14, 6, 3), (1, .6, .4))
+        alb = np.clip(1 - maria + tycho, .3, 1.3) * (.82 + .18 * fine)
+        # 影の中心は右下寄り。そこから遠い左上の縁ほど明るい
+        lim = np.clip((-.55 * dx - .65 * dy + 1) / 2, 0, 1) ** 2.2
+        limb = 1 - .35 * rr ** 2  # 周辺減光
+        col = np.array([.50, .16, .07])[None, None, :] * (.35 + 1.7 * lim[..., None]) + np.array([.98, .60, .28])[None, None, :] * (lim[..., None] ** 3) * 1.1
+        col = col * (alb * limb)[..., None]
+        edge = np.exp(-((rr - .97) / .04) ** 2) * lim ** 1.5  # 縁のかすかな青白い帯（オゾン層を通った光）
+        col = col + edge[..., None] * np.array([.35, .45, .55]) * .35
+        img = img * (1 - disk[..., None]) + disk[..., None] * col
+        glow = np.exp(-np.clip(rr - 1, 0, None) / .35) * (rr > 1) * .10
+        return img + glow[..., None] * np.array([.8, .35, .2])
 
     def m_comet(self, img, cx=.68, cy=.30, angle=-35, length=.30):
         """彗星：明るい頭、扇形に広がる黄色いちりの尾、まっすぐで細い青いイオンの尾"""
