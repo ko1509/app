@@ -15,7 +15,7 @@ spec.json の例:
 - label: 左上の英字ラベル（省略するとカテゴリ。SNS では EVENT・COLUMN・TONIGHT など）
 - bigdate / bigdate_sub: イベントの日付を大きく（例 "10.20" / "TUE 04:41 JST"）。handle: 下に小さく入るアカウント名
 - en: 英語の一文（短く。標準の型では見出しの上に斜体で小さく入る）
-- layout: cinema（標準。下に大きく見出し）| panel（右に黒い帯）| transit（英字の一文・明朝の縦書き）
+- layout: cinema（標準。下に大きく日本語の見出し）| panel（右に黒い帯）。transit（英語を大きく組む型）は使わない（指定しても cinema になる）
 - 背景はフィルム調の色・かすみ・光漏れ（film: false で無し）。composition の項目は ops/article-manual.md の 5-5
 - scene: 省略するとカテゴリで決まる。sea（海辺の長時間露光）| startrail（星の軌跡）| dawn（夜明け前の丘）
          | meteor（流星）| moon（月）| observatory（天文台のドーム）| tripod（三脚と星空）
@@ -442,6 +442,7 @@ class Scene:
         a = np.clip((n - (1 - dens)) * 3.2, 0, 1) * band * alpha
         under = np.clip((self.yy - y0) / max(y1 - y0, .01), 0, 1)
         col = np.array(lit)[None, None, :] * (1 - under[..., None] * .6) * (.35 + .65 * n[..., None])
+        self._cloud_a = a
         return img * (1 - a[..., None]) + col * a[..., None] * .55 + img * a[..., None] * .25
 
     def ridge_profile(self, base, rough, seed_shift=0, step=6):
@@ -495,7 +496,72 @@ class Scene:
         img = img + strength * (a[..., None] * np.array([1, .93, .8]) + self.blur(a, 9)[..., None] * np.array([1, .5, .16]) * 1.8 + self.blur(a, 46)[..., None] * np.array([1, .42, .12]) * 1.5)
         y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
         base = np.exp(-(((xx - x) / (W * .05)) ** 2 + ((y - hzp) / (H * .05)) ** 2))
+        self._trail = pts
         return img + (base * .55 * strength)[..., None] * np.array([1, .55, .25]), pts[-1]
+
+    def separation(self, img, pts):
+        """固体ロケットブースターの分離：光跡の上のほうから、2つの小さな光が離れて落ちていく"""
+        n = len(pts); x0, y0 = pts[int(n * .55)]; lay = np.zeros((H, W), np.float32)
+        for dx, dy in ((-150, 230), (-70, 300)):
+            for k in range(30):
+                t = k / 29; xx, yy = int(x0 + dx * t), int(y0 + dy * t * t)
+                if 0 <= yy < H and 0 <= xx < W: lay[yy, xx] = max(lay[yy, xx], (1 - t) * .9)
+        lay = np.maximum(lay, np.roll(lay, 1, 0))
+        return img + (self.blur(lay, 2) * 30 + self.blur(lay, 8) * 14)[..., None] * np.array([1, .7, .4])
+
+    def smoke(self, img, hz, x0=.58, side=1, height=.72, curve=.22, drift=.06, width=1.0):
+        """昼の打ち上げ：日に照らされた白い噴煙の柱。下ほど太く、風で流れる。先に小さく明るい炎"""
+        hzp = H * hz; x = W * x0
+        pts = self.bez((x, hzp), (x + side * W * .015, hzp - H * height * .45), (x + side * W * .07, hzp - H * height * .85), (x + side * W * curve, hzp - H * height), 300)
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m); n = len(pts)
+        for i, (px, py) in enumerate(pts):
+            t = i / (n - 1); r = (70 * (1 - t) ** 1.6 + 7) * width * S / 2 * (1 + .25 * self.rng.random())
+            px = px - (1 - t) ** 2 * W * drift  # 下のほうの煙ほど風で流れる
+            d.ellipse((px - r, py - r * .8, px + r, py + r * .8), fill=int(170 + 85 * t))
+        a = np.asarray(m.filter(ImageFilter.GaussianBlur(10))).astype(np.float32) / 255
+        tex = .72 + .28 * self.noise((40, 18, 8), (1, .6, .4))
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        lit = np.clip(.75 + .35 * (xx - x) / (W * .12), .55, 1.1)  # 日の当たる側が明るい
+        col = (tex * lit)[..., None] * np.array([.97, .96, .93])
+        img = img * (1 - a[..., None] * .92) + col * a[..., None] * .92
+        tx, ty = pts[-1]; fl = np.exp(-((xx - tx) ** 2 + (y - ty) ** 2) / (2 * (5 * S) ** 2))
+        return img + (fl * 2.5 + np.exp(-np.sqrt((xx - tx) ** 2 + (y - ty) ** 2) / 40) * .35)[..., None] * np.array([1, .85, .55])
+
+    def liftoff(self, img, hz, x=.66, scale=1.0, rise=.35, tone="night"):
+        """発射の瞬間を近くから：射点から上がるロケット（一般的な形）、強い炎、横に広がる地上の煙"""
+        cx = W * x; gy = H * hz + 4; k = scale * S / 2
+        rh, rw = 230 * k, 20 * k; by = gy - H * rise; ty = by - rh  # by：ロケットの底
+        fs = 1.6 if tone == "day" else 1.0
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        # 空を照らす光
+        img = img + (np.exp(-np.sqrt(((xx - cx) / (W * .22)) ** 2 + ((y - by) / (H * .45)) ** 2) * 2.2) * .7)[..., None] * np.array([1, .6, .28])
+        # 炎（ロケットの下から地面へ）
+        fm = Image.new("L", (W, H), 0); fd = ImageDraw.Draw(fm)
+        fd.polygon([(cx - rw * .45, by), (cx + rw * .45, by), (cx + rw * .9, gy - 10), (cx - rw * .9, gy - 10)], fill=255)
+        fa = np.asarray(fm.filter(ImageFilter.GaussianBlur(6 * k))).astype(np.float32) / 255
+        core = np.asarray(fm.filter(ImageFilter.GaussianBlur(2 * k))).astype(np.float32) / 255 * np.clip(1 - (y - by) / (gy - by), 0, 1)
+        img = img + fa[..., None] * np.array([1, .62, .25]) * 1.6 * fs + core[..., None] * np.array([1, .95, .8]) * 2.2 * fs + self.blur(fa, 30)[..., None] * np.array([1, .5, .2]) * 1.4
+        img = np.where(core[..., None] > .5, np.maximum(img, np.array([1.0, .82, .45]) * 1.15), img)
+        # 地上の煙（炎に下から照らされる）
+        sm = Image.new("L", (W, H), 0); sd = ImageDraw.Draw(sm)
+        for _ in range(90):
+            ox = self.rng.normal(0, W * .11); oy = -abs(self.rng.normal(0, H * .05)); r = self.rng.uniform(40, 120) * k * (1 + abs(ox) / (W * .25))
+            sd.ellipse((cx + ox - r, gy + oy - r * .75, cx + ox + r, gy + oy + r * .35), fill=int(self.rng.uniform(120, 230)))
+        sa = np.asarray(sm.filter(ImageFilter.GaussianBlur(14 * k))).astype(np.float32) / 255
+        tex = .65 + .35 * self.noise((50, 20, 8), (1, .6, .4))
+        warm = np.exp(-np.sqrt(((xx - cx) / (W * .14)) ** 2 + ((y - gy) / (H * .10)) ** 2))
+        base = np.array([.30, .30, .34]) if tone != "day" else np.array([.85, .85, .86])
+        scol = tex[..., None] * (base * (1 - warm[..., None]) + np.array([1, .62, .3]) * 1.3 * warm[..., None])
+        img = img * (1 - sa[..., None] * .95) + scol * sa[..., None] * .95
+        # 発射塔（影）とロケット
+        tw = self._mask(lambda d: (d.rectangle((cx - rw * 3.6, gy - rh * 1.25, cx - rw * 2.4, gy + 10), fill=255),
+                                   [d.line([(cx - rw * 2.4, gy - rh * (.2 + .25 * j)), (cx - rw * 1.2, gy - rh * (.2 + .25 * j))], fill=255, width=int(4 * k)) for j in range(4)]), .8)
+        img = self.put(img, tw, (.02, .018, .02), sky=(.25, .14, .08))
+        body = self._mask(lambda d: (d.rectangle((cx - rw / 2, ty + rw * .9, cx + rw / 2, by), fill=255),
+                                     d.polygon([(cx - rw / 2, ty + rw * .9), (cx, ty), (cx + rw / 2, ty + rw * .9)], fill=255),
+                                     [d.rectangle((cx + sx * rw * .78 - rw * .2, by - rh * .38, cx + sx * rw * .78 + rw * .2, by), fill=255) for sx in (-1, 1)]), .7)
+        shade = np.clip(.45 + .55 * (cx - xx + rw * .3) / rw, .25, 1) * np.clip(.6 + .5 * (y - ty) / rh, .6, 1.1)
+        return img * (1 - body[..., None]) + (body * shade)[..., None] * np.array([.98, .9, .78])
 
     def jellyfish(self, img, cx, cy, size=300, col=(.75, .88, 1)):
         """明け方の打ち上げで、日が当たった噴煙が広がって光る現象（模式的に）"""
@@ -686,6 +752,12 @@ class Scene:
             img = np.where((t < .55)[..., None], self.lerp((.015, .03, .09), (.05, .15, .30), t / .55), self.lerp((.05, .15, .30), (.62, .46, .52), (t - .55) / .45))
         elif tone == "bluehour":
             img = self.lerp((.01, .02, .07), (.10, .22, .42), np.clip(self.yy / hz, 0, 1) ** 1.3)
+        elif tone == "day":  # 昼の打ち上げ：青空と白い噴煙
+            t = np.clip(self.yy / hz, 0, 1)
+            img = self.lerp((.07, .22, .52), (.48, .64, .82), t ** 1.25)
+            if c.get("sun"):
+                sx, sy = c["sun"]; y, x = np.mgrid[0:H, 0:W].astype(np.float32); d = np.sqrt(((x - W * sx) / W) ** 2 + ((y - H * sy) / W) ** 2)
+                img = img + (np.exp(-d * 12) * .30 + np.exp(-d * 70) * .8)[..., None] * np.array([1, .95, .82])
         elif tone == "moonlit":
             img = self.lerp((.02, .04, .09), (.13, .20, .32), np.clip(self.yy / hz, 0, 1) ** 1.2)
         else:
@@ -696,7 +768,7 @@ class Scene:
         else:
             if dark and c.get("milky", True):
                 mw = c.get("milkyway", {}); img = self.milky_real(img, mw.get("cx", .45), mw.get("cy", .30), mw.get("angle", -62), mw.get("width", .17), strength=.6 if tone == "moonlit" else 1)
-            img = self.stars_real(img, c.get("stars", {"night": 5200, "moonlit": 1800, "bluehour": 900, "dusk": 700, "dawn": 1800}[tone]), hz, 1.0 if dark else .7)
+            img = self.stars_real(img, c.get("stars", {"night": 5200, "moonlit": 1800, "bluehour": 900, "dusk": 700, "dawn": 1800, "day": 0}[tone]), hz, 1.0 if dark else .7)
         if dark: img = self.airglow(img, hz)
         if c.get("glow") is not None: img = self.lightdome(img, c["glow"], hz, c.get("glowStrength", 1.0))
         # 空のモチーフ
@@ -714,9 +786,17 @@ class Scene:
                 img, tip = self.trail_real(img, hz, mo.get("x", .60), mo.get("side", 1), mo.get("height", .74), mo.get("strength", 1.0), mo.get("curve", .33))
                 trail_x = W * mo.get("x", .60)
                 if mo.get("plume"): img = self.jellyfish(img, tip[0], tip[1], mo.get("plumeSize", 320))
+                if mo.get("separation"): img = self.separation(img, self._trail)
+            elif mo["type"] == "smoke":
+                img = self.smoke(img, hz, mo.get("x", .58), mo.get("side", 1), mo.get("height", .72), mo.get("curve", .22), mo.get("drift", .06), mo.get("width", 1.0))
+                trail_x = W * mo.get("x", .58)
             # 何本ものロケットが同時に上がる絵は描かない（ありえないため）。軌跡は1本だけ
         if c.get("clouds"):
-            cl = c["clouds"]; img = self.clouds(img, cl.get("y0", hz - .16), cl.get("y1", hz - .02), tuple(cl.get("lit", (.9, .6, .45) if tone in ("dawn", "dusk") else (.35, .4, .5))), cl.get("density", .55))
+            cl = c["clouds"]; img = self.clouds(img, cl.get("y0", hz - .16), cl.get("y1", hz - .02), tuple(cl.get("lit", (.9, .6, .45) if tone in ("dawn", "dusk") else (.95, .97, 1) if tone == "day" else (.35, .4, .5))), cl.get("density", .55))
+            if cl.get("litByTrail") and getattr(self, "_trail", None):  # 光跡が雲の中を通り、雲が内側から照らされる
+                m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).line(self._trail, fill=255, width=60)
+                g = np.asarray(m.filter(ImageFilter.GaussianBlur(70))).astype(np.float32) / 255; glow = np.clip(g / max(g.max(), 1e-6) * 1.6, 0, 1.2)
+                img = img + (glow * np.clip(self._cloud_a * 2.2, 0, 1) * .7)[..., None] * np.array([1, .55, .22])
         # 地上
         g = c.get("ground", "hills")
         if g in ("sea", "island", "lake"):
@@ -741,6 +821,8 @@ class Scene:
             img = self.mountains(img, hz, 3, c.get("rough", 170), trees=(g == "forest"))
         else:
             img = self.mountains(img, hz, 2, 60)
+        for mo in motifs:
+            if mo["type"] == "liftoff": img = self.liftoff(img, hz, mo.get("x", .66), mo.get("scale", 1.0), mo.get("rise", .35), tone)
         lamp = next(((W * m.get("x", .7) + 34, H * m.get("y", .99) - 15, tuple(m.get("color", (1, .12, .06))), m.get("strength", 1.0))
                      for m in motifs if m["type"] == "headlamp"), None)
         gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp")]
@@ -981,6 +1063,7 @@ def render(spec, out):
         bg = sc.finish(img).convert("RGBA")
     kicker0, main, sub = split_title(spec["title"])
     main = spec.get("headline") or summarize(main)
+    if not re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", main): main = summarize(split_title(spec["title"])[1])  # 見出しは日本語に統一
     if "sub" in spec: sub = spec["sub"]
     elif len(sub) > 30: sub = summarize(sub, 30)
     kicker = spec.get("kicker") or kicker0
@@ -989,7 +1072,7 @@ def render(spec, out):
         tw = bd.textlength(str(spec["bignum"]), font=bf)
         bd.text((W - tw - 30 * S, H * .02), str(spec["bignum"]), font=bf, fill=(0, 0, 0, 0), stroke_width=2 * S, stroke_fill=(255, 255, 255, 46))
         bg.alpha_composite(bn)
-    if layout == "transit":
+    if layout == "transit" and spec.get("allowTransit"):  # 英語を大きく組む型は使わない（見出しは日本語に統一）
         render_transit(spec, bg, cat, main, sub, kicker)
         bg.convert("RGB").resize((OUT_W, OUT_H), Image.LANCZOS).save(out, quality=88, optimize=True, progressive=True)
         return

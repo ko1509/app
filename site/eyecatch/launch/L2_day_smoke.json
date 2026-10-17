@@ -1,0 +1,1 @@
+{"title":"昼の打ち上げは白い噴煙を見る","category":"launch","headline":"昼の打ち上げは噴煙を見る","sub":"青空にのびる白い柱・双眼鏡があると見やすい","kicker":"DAYTIME LAUNCH","en":"A white line across the blue.","seed":82,"composition":{"tone":"day","sun":[0.88,0.14],"ground":"island","horizon":0.78,"clouds":{"y0":0.55,"y1":0.70,"density":0.35},"motifs":[{"type":"smoke","x":0.46,"height":0.66,"curve":0.24,"drift":0.08}]}}

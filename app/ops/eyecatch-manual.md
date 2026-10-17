@@ -32,8 +32,9 @@
 
 ## 3. アイキャッチの決まり
 - 先に `pip install budoux`（文節で改行するため）。書体とロゴは初回に自動で取ってくる。
-- 文字とレイアウトは標準の型（`layout: "cinema"`：左上に英字のカテゴリ、下に大きな見出しと副題、右下にロゴ）。背景はフィルム調（自動）。
-- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`・`site/eyecatch/v4/*.json`（リポジトリ。流星・施設・持ち物は v4 が新しい）と同じ形。
+- 文字とレイアウトは標準の型（`layout: "cinema"`：左上に英字のカテゴリ、下に大きな見出しと副題、右下にロゴ）。**`layout` は指定しない（`transit` などの英語を大きく組む型は使わない）。** 背景はフィルム調（自動）。
+- **見出し（`headline`）と副題（`sub`）は日本語。** 英語は `en`（見出しの上の小さな一文）と `kicker`（左上の小さなラベル）だけ。見出しに日本語が無いと、ツールが記事のタイトルから日本語の見出しを作り直す。
+- **背景は記事ごとに描き分ける。豊富さをいちばん大事にする。** 直近の公開記事・稿と、`tone`・`ground`・主なモチーフの組み合わせが同じにならないようにする（`articles` の `draft.eyecatch.spec` を見て確かめる）。見本は `site/eyecatch/v3/*.json`・`site/eyecatch/v4/*.json`・`site/eyecatch/launch/*.json`（リポジトリ。流星・施設・持ち物は v4、打ち上げは launch が新しい）と同じ形。
   ```json
   {"title": "<記事のタイトル>", "category": "launch",
    "headline": "H3ロケット10号機を見る", "sub": "家の近くの空・中継・種子島", "kicker": "H3 F10 / MMX",
@@ -45,10 +46,22 @@
   - `en`：**英語の一文（必ず入れる）**。見出しの上に斜体で小さく入る（雑誌 TRANSIT のような味つけ）。記事の情景や気分を短く（40字まで）。例：`Before the dawn, look south.`／`A night of falling stars.`。事実と違うこと（青空でないのに blue sky など）や、宣伝の言い方は書かない。
   - `headline`：**記事のタイトルを要約した見出し（16字まで）**。長いタイトルをそのまま入れない。`sub`：副題（30字まで）。`kicker`：英字の小見出し。
   - `composition`（背景。記事の中身に合わせて選ぶ）
-    - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）
+    - `tone`：`night`（天の川の夜）・`moonlit`（月明かりの夜）・`bluehour`（夕方・明け方の青い時間）・`dusk`（夕焼けの残り）・`dawn`（夜明け前）・`day`（昼の青空。`sun: [x, y]` で太陽の位置）
     - `ground`：`sea`（海辺）・`island`（島と町の灯り）・`lake`（湖と山と木）・`mountains`（重なる山。`rough` で険しさ）・`forest`（山と木）・`city`（街）・`hills`（低い丘）
     - `clouds`：薄い雲（`y0`〜`y1` の高さ、`density`）。`glow`：街明かりのドームの横位置（0〜1）。`milkyway`：天の川の位置と傾き（`cx`・`cy`・`angle`・`width`）。`milky: false` で天の川を消す
     - `motifs`（複数可）：`trail`（ロケットの光跡。`x`・`height`・`side`（1 右へ／-1 左へ）・`curve`。明け方の打ち上げは `plume: true` で日が当たった噴煙。**ロケットの光跡は1本だけ**。何本も同時に上がる絵はありえないので描かない）、`pad`（照明に照らされて射点に立つロケット。打ち上げ前・予定の記事に。`x`・`scale`）、`startrail`（星の軌跡）、`meteors`（流星。`rx`・`ry` は放射点、`n` は**1〜3本**。写真のように細く、尾から頭へ明るくなって消える。たくさん降る絵にしない）、`constellation`（`name`：`orion`・`gemini`・`leo`。写真に線は写らないので星だけ。線や放射点の丸は描かない）、`moon`・`bigmoon`（`cx`・`cy`・`r`）、`planets`（接近する2つの惑星）、`iss`（光の線）、`starlink`（並んだ光点）、`dome`（天文台の影）、`tripod`・`phone`（三脚とカメラ／スマホ）
+    - **打ち上げ（`category: "launch"`）は、次の型から記事に合うものを選び、直近の打ち上げ記事と同じ型を続けない**：
+      | 型 | 組み合わせの例 | 合う記事 |
+      |---|---|---|
+      | 遠くの光跡 | `trail`（`dawn`・`night`。海・島・湖） | 家や遠くの見学場から見る |
+      | 明け方の噴煙 | `trail` に `plume: true`（`dawn`。雲を足す） | 明け方・夕方の打ち上げ |
+      | 街の上の光跡 | `trail`（`city`。低く短く。`height` 0.4 前後） | 家の近くの空から見る |
+      | 雲の中の光 | `trail` ＋ `clouds` に `litByTrail: true` | 曇りの日・天気の記事 |
+      | 分離の光 | `trail` に `separation: true` | 見どころ・光跡の見分け方 |
+      | 昼の噴煙 | `tone: "day"` ＋ `smoke`（`x`・`height`・`curve`・`drift`：風で流れる量） | 昼の打ち上げ |
+      | 発射の瞬間 | `liftoff`（`x`・`scale`・`rise`：地面からの高さ。昼も夜も） | 射点近くの見学場・迫力を伝える |
+      | 射点に立つ機体 | `pad`（`bluehour`・`dusk`。海の向こう） | 打ち上げ前・予定・延期の記事 |
+      | 見学場の人々 | `deck` ＋ 遠くの `pad` か `trail` | 見学場のガイド |
     - 施設紹介（`category: "spot"`）：`observatory`（スリットが開いて中が赤く灯る天文台。`x`・`size`）、`planetarium`（ドームのある科学館。窓と街灯の明かり）、`deck`（展望デッキの手すりと、海を見る人の影。`people`：1〜4）。見学場なら `deck` と遠くの `pad` を合わせる
     - 持ち物紹介（`category: "gear"`）：手前に物を置く。`chair`（折りたたみ椅子）・`backpack`・`thermos`（水筒）・`mug`（湯気の立つカップ）・`binoculars`（こちらを向いた双眼鏡）・`bench`（`x0` から右へのベンチ。物を上に置くときは同じ `y`）・`headlamp`（赤いライト。まわりの物の縁を赤く照らす。`color` で色）。それぞれ `x`・`y`（置く高さ）・`size`。**物は右半分（`x` 0.55〜0.92）に置き、`y` は 0.72〜0.86**（下は見出しと重なるため）。`horizon` は 0.62〜0.66 に上げる
   - `bignum`：号機・年など大きく見せたい数字（無くてもよい）。`date`・`time` は日時が公式に確定しているイベントだけ。

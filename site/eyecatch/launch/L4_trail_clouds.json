@@ -1,0 +1,1 @@
+{"title":"曇りの日の打ち上げはどう見える？","category":"launch","headline":"雲の中を上がる光","sub":"薄い雲なら、雲が内側から明るく光る","kicker":"THROUGH THE CLOUDS","en":"The clouds glow from within.","seed":84,"composition":{"tone":"bluehour","ground":"sea","horizon":0.78,"stars":500,"clouds":{"y0":0.30,"y1":0.55,"density":0.6,"litByTrail":true},"motifs":[{"type":"trail","x":0.55,"height":0.70,"curve":0.28}]}}
