@@ -1,0 +1,71 @@
+<script>
+(function(){
+  var L=[
+ {
+  "n": "H3／HTV-X2（宇宙ステーションへの補給）",
+  "s": "種子島",
+  "t": null,
+  "o": "",
+  "u": "/rockets/h3/",
+  "ul": "H3ロケットを図解で見る",
+  "note": "日程は2026年度中。発表され次第、記事とここを更新します",
+  "d": "2026年度中"
+ },
+ {
+  "n": "イプシロンS 実証機",
+  "s": "内之浦（推測）",
+  "t": null,
+  "o": "",
+  "u": "",
+  "ul": "",
+  "note": "",
+  "d": "2026年度後半"
+ },
+ {
+  "n": "カイロス4号機",
+  "s": "スペースポート紀伊",
+  "t": null,
+  "o": "",
+  "u": "",
+  "ul": "",
+  "note": "見学は有料・事前購入",
+  "d": "未定（約2か月前に発表）"
+ }
+];
+  var END=6*36e5,W=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var aside=document.querySelector('.mg-next'),el=document.getElementById('mgCount'); if(!aside||!el) return;
+  var q=function(c){return aside.querySelector(c)};
+  var nm=q('.mg-next__name'),sb=q('.mg-next__sub'),dt=q('.mg-next__date'),nt=document.getElementById('mgCountNote')||q('.mg-next__note'),lk=q('.mg-next__link'),lb=q('.mg-next__label');
+  var u={d:el.querySelector('[data-u=d]'),h:el.querySelector('[data-u=h]'),m:el.querySelector('[data-u=m]'),s:el.querySelector('[data-u=s]')};
+  function p(n){return (n<10?'0':'')+n}
+  function official(o){return o?' 最新の日時は <a href="'+o+'" target="_blank" rel="noopener">公式</a> で確認を。':''}
+  function pick(){
+    var now=Date.now(),dated=L.filter(function(e){return e.t}).map(function(e){e.ms=new Date(e.t).getTime();return e}).sort(function(a,b){return a.ms-b.ms});
+    for(var i=0;i<dated.length;i++) if(now<dated[i].ms+END) return dated[i];
+    return L.filter(function(e){return !e.t})[0]||null;
+  }
+  var cur=null;
+  function show(e){
+    cur=e;
+    if(!e){nm.textContent='次の打ち上げは未発表';sb.textContent='';dt.textContent='日程の発表待ち';nt.innerHTML='日程が出たらここに表示します。';
+      u.d.textContent=u.h.textContent=u.m.textContent=u.s.textContent='—';return}
+    nm.textContent=e.n;sb.textContent=e.s||'';
+    if(e.t){var j=new Date(e.ms+9*36e5);dt.textContent=j.getUTCFullYear()+'.'+p(j.getUTCMonth()+1)+'.'+p(j.getUTCDate())+' '+W[j.getUTCDay()]+' — '+p(j.getUTCHours())+':'+p(j.getUTCMinutes())+' JST'}
+    else dt.textContent=(e.d||'日程の発表待ち');
+    nt.innerHTML=(e.note?e.note+'。':'')+(e.t?'天候などで延期されることがあります。':e.note?'':'日程が出たらここに表示します。')+official(e.o);
+    if(lk&&e.u){lk.setAttribute('href',e.u);lk.innerHTML=(e.ul||'くわしく見る')+'<span>→</span>'}
+    if(!e.t) u.d.textContent=u.h.textContent=u.m.textContent=u.s.textContent='—';
+  }
+  function tick(){
+    var now=Date.now();
+    if(cur&&cur.t&&now>=cur.ms+END||!cur&&L.length) show(pick());
+    if(cur&&cur.t){
+      var x=cur.ms-now;
+      if(x<=0){u.d.textContent=u.h.textContent=u.m.textContent=u.s.textContent='00';nt.innerHTML='予定時刻を過ぎました。結果・延期は'+(cur.o?' <a href="'+cur.o+'" target="_blank" rel="noopener">公式</a> で':'公式で')+'確認を。（約'+END/36e5+'時間後に次の打ち上げへ切り替わります）'}
+      else{u.d.textContent=p(Math.floor(x/864e5));u.h.textContent=p(Math.floor(x/36e5)%24);u.m.textContent=p(Math.floor(x/6e4)%60);u.s.textContent=p(Math.floor(x/1e3)%60)}
+    }
+    setTimeout(tick,1000-(Date.now()%1000));
+  }
+  show(pick());tick();
+})();
+</script>

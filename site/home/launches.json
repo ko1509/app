@@ -1,0 +1,75 @@
+[
+ {
+  "date": "",
+  "dateText": "2026年度後半",
+  "pillar": "launch",
+  "place": "内之浦（推測）",
+  "status": "予定",
+  "time": "",
+  "title": "イプシロンS 実証機",
+  "rank": 2
+ },
+ {
+  "checkedAt": "2026-10-21T03:09:00Z",
+  "date": "2026-10-20",
+  "dateText": "",
+  "history": [
+   {
+    "at": "2026-10-21T03:09:00Z",
+    "from": {
+     "date": "2026-10-20",
+     "status": "確定",
+     "time": "4:41"
+    },
+    "source": "https://www.jaxa.jp/press/2026/10/20261020-1_j.html",
+    "summary": "打ち上げ実施・MMX正常分離を確認",
+    "to": {
+     "date": "2026-10-20",
+     "status": "終了",
+     "time": "4:41"
+    }
+   }
+  ],
+  "pillar": "launch",
+  "place": "種子島宇宙センター",
+  "status": "終了",
+  "time": "4:41",
+  "title": "H3ロケット10号機（火星衛星探査機MMX）",
+  "guide": "/rockets/h3/",
+  "guideLabel": "H3ロケットを図解で見る",
+  "official": "https://fanfun.jaxa.jp/countdown/mmx_h3f10/index.html"
+ },
+ {
+  "date": "",
+  "dateText": "2026年度中",
+  "pillar": "launch",
+  "place": "種子島",
+  "status": "予定",
+  "time": "",
+  "title": "H3／HTV-X2（宇宙ステーションへの補給）",
+  "guide": "/rockets/h3/",
+  "guideLabel": "H3ロケットを図解で見る",
+  "rank": 1,
+  "publicNote": "日程は2026年度中。発表され次第、記事とここを更新します"
+ },
+ {
+  "date": "",
+  "dateText": "未定（約2か月前に発表）",
+  "pillar": "launch",
+  "place": "スペースポート紀伊",
+  "status": "予定",
+  "time": "",
+  "title": "カイロス4号機",
+  "rank": 3,
+  "publicNote": "見学は有料・事前購入"
+ },
+ {
+  "date": "",
+  "dateText": "2027年度末が目標",
+  "pillar": "launch",
+  "place": "北海道大樹町",
+  "status": "推測",
+  "time": "",
+  "title": "ZERO 初号機"
+ }
+]
