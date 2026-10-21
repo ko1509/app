@@ -177,17 +177,17 @@ P0 が1つでもあれば C 以下。判定は件数で機械的に行い、甘�
    - `reviewHistory`: これまでの配列に `{"round", "grade", "p0", "p1", "p2", "at"}` を足す（消さない）
 2. 合格（`pass: true`）のとき：
    - `status: "公開待ち"`（`"公開済み"` のカードは変えない）
-   - 差し替え稿（`loop.replace` が `true`、またはカードが `公開済み`・`要更新`）なら、`status` は変えず、受信箱に `inbox/replace-<articleId>-<round>` を `{"kind": "change", "title": "<記事名>：差し替え稿が査読Aになりました", "body": "WordPress の編集画面で本文を差し替えてください（アプリの稿の画面の「WordPress 用にコピー」）。アイキャッチはアイキャッチ担当が作ります（できたらこの項目に1行足されます）。主な変更点：…（3〜5行）", "reason": "公開中の記事は運営者が差し替えるため", "articleId", "status": "open", "by": "reviewer", "createdAt"}` で出す
+   - 差し替え稿（`loop.replace` が `true`、またはカードが `公開済み`・`要更新`）なら、`status` は変えない。**受信箱には出さない**（アイキャッチのあと、入稿エージェントが WordPress に自動で反映する。失敗したときだけ入稿が受信箱に出す）。
    - `loop: {"state": "passed", "round", "max", "updatedAt"}`
    - **アイキャッチ担当に渡す**：`jobs/eyecatch-<articleId>-<round>` を `{"kind": "eyecatch", "articleId", "round", "title", "status": "queued", "message": "アイキャッチを待っています", "by": "reviewer", "createdAt": "<今>", "updatedAt": "<今>"}` で書き、アイキャッチ担当を起動する（`ops/agent-jobs.md` の 6。trigger ID は `settings/background.designerTriggerId`）。不合格のときは渡さない
 3. 不合格のとき：
-   - `round < maxRounds`（既定5。`settings/reviewLoop.maxRounds`）なら、`status: "執筆中"`（公開済みのカードは変えない）・`loop.state: "writing"`（`loop.replace` はそのまま）にし、`jobs/article-<articleId>-<round+1>` を次の形で書いて（差し替え稿なら `"replace": true` も付ける）、作成の Routine を起動する（`ops/agent-jobs.md` の 6）：
+   - `round - (loop.base || 0) < maxRounds`（既定5。`settings/reviewLoop.maxRounds`。運営者が止まった記事をもう一度書かせたときは `loop.base` に、そのときの回数が入る＝そこから5回数え直す）なら、`status: "執筆中"`（公開済みのカードは変えない）・`loop.state: "writing"`（`loop.replace` はそのまま）にし、`jobs/article-<articleId>-<round+1>` を次の形で書いて（差し替え稿なら `"replace": true` も付ける）、作成の Routine を起動する（`ops/agent-jobs.md` の 6）：
      ```json
      {"kind": "article", "articleId": "…", "round": <round+1>, "rewrite": true, "title": "…",
       "withExperience": <元の依頼と同じ>, "status": "queued", "message": "書き直しを待っています", "by": "loop",
       "createdAt": "<今>", "updatedAt": "<今>"}
      ```
-   - `round >= maxRounds` なら、`status: "執筆中"`（公開済みのカードは変えない）・`loop.state: "failed"`（運営者の判断待ち）。書き直しは依頼しない。受信箱に出す：`inbox/loop-<articleId>-<round>` を `{"kind": "loopFailed", "title": "<記事名>：<maxRounds>回でAになりませんでした", "body": "残っている P0・P1 の一覧（短く）と、運営者が選べる道（もう一度書かせる／この稿で公開待ちにする／常設ガイドの一節にする／見送る）", "reason": "書き直しの上限に達したため", "articleId", "status": "open", "by": "reviewer", "createdAt"}` で `set`。
+   - `round - (loop.base || 0) >= maxRounds` なら、`status: "執筆中"`（公開済みのカードは変えない）・`loop.state: "failed"`（運営者の判断待ち）。書き直しは依頼しない。受信箱に出す：`inbox/loop-<articleId>-<round>` を `{"kind": "loopFailed", "title": "<記事名>：<maxRounds>回でAになりませんでした", "body": "残っている P0・P1 の一覧（短く）と、運営者が選べる道（もう一度書かせる／この稿で公開待ちにする／常設ガイドの一節にする／見送る）", "reason": "書き直しの上限に達したため", "articleId", "status": "open", "by": "reviewer", "createdAt"}` で `set`。
 4. 教訓：「作成エージェントへの教訓」を `settings/writerLessons.items` に足す。
    - 形は `{"text", "from": "<articleId> の <round> 回目の査読", "at"}`。
    - 同じ趣旨のもの、手順書に既にあるものは足さない。

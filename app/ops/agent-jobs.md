@@ -15,6 +15,7 @@
 | `watch` | 公式ウォッチ | 1日4回＋依頼 | `ops/watch-manual.md` | `watch` |
 | `sns` | SNS | 依頼だけ（SNS アカウントができるまで停止） | `ops/sns-manual.md` | `sns` |
 | `snsreview` | SNS 審査 | 依頼だけ（同上） | `ops/sns-review-manual.md` | `snsreview` |
+| `publisher` | 入稿 | 6〜23時の毎時（8分）＋依頼（アイキャッチができたとき） | `ops/publish-manual.md` | `publish`（**査読 A の稿**を、アイキャッチごと WordPress に入稿。新しい記事・差し替え） |
 | `siteupdate` | サイト更新 | 毎朝（5時台）＋依頼 | `ops/site-manual.md` | `siteupdate`（ホームの NEXT LAUNCH・ティッカー・UPCOMING を events に合わせて更新） |
 | `audit` | 点検 | 毎朝＋依頼 | `ops/audit-manual.md` | `audit` |
 
@@ -30,10 +31,11 @@
   - `ops/md2blocks.py` … Markdown を WordPress のブロックに変換する
   - `ops/figures.py` … 記事の図（タイムライン・方角と高さ・距離）を SVG で作る
   - `ops/site_home.py`・`ops/home_countdown.py` … ホームの更新（サイト更新だけが使う）
+  - `ops/publish_wp.py` … 査読に通った稿を、アイキャッチごと WordPress に入稿する（入稿だけが使う）
   - `ops/eyecatch.py` … アイキャッチ（写真風の CG＋記事のタイトル）を作る
   - 読んだファイルは保存先が表示される。`.py` はその保存先のまま `python3` で実行する（中身を書き写さない）。
 - db（アプリの共有データ）の読み書きは **ArtifactData** ツール。
-- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。WordPress への書き込みは、認証情報（環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`。値は表示・記録しない）を使い、各手順書で決めた範囲と手順で行う（いまはサイト更新が、ホームの決まった3か所を `ops/site_home.py` で書き換える）。書く前に元の内容を退避し、書いたあとに公開ページで確かめる。
+- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。WordPress への書き込みは、認証情報（環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`。値は表示・記録しない）を使い、各手順書で決めた範囲と手順で行う（いまは、サイト更新がホームの決まった3か所を `ops/site_home.py` で、入稿が査読 A の稿を `ops/publish_wp.py` で書く）。書く前に元の内容を退避し、書いたあとに公開ページで確かめる。
 
 ## 0. 停止の確認（最初に必ず）
 
@@ -78,7 +80,7 @@
 
 ### `jobs/<ID>`（依頼）
 ```json
-{"kind": "article|update|eyecatch|snsimage|review|plan|select|watch|sns|snsreview|siteupdate|audit", "mode": "draft|update|recheck（review のとき）",
+{"kind": "article|update|eyecatch|snsimage|publish|review|plan|select|watch|sns|snsreview|siteupdate|audit", "mode": "draft|update|recheck（review のとき）",
  "articleId": "a01", "eventId": "", "pillar": "（plan の補充のとき）", "from": "", "to": "", "count": 0, "postIds": ["（snsimage のとき）"], "round": 1, "title": "対象の名前",
  "withExperience": false, "note": "運営者や前のエージェントからの指示", "rewrite": false,
  "status": "queued|running|done|waiting|error", "message": "", "step": "", "agent": "", "session": "",
@@ -92,6 +94,7 @@
 - 企画が書く：`plan`（優先度・理由など。カードを作るときだけ）。記事選定が書く：`assess`（査定）・`selection`（選んだ記録）
 - 作成が書く：`draft`（稿）・`draftPrev`（1つ前の稿）・`updateDraft`（公開済み記事の直し）
 - 査読が書く：`review`・`reviewHistory`・`recheck`（公開済みの点検結果）
+- 入稿が書く：`site`（`postId`・`mediaId`・`link`・`draftRound`・`draftCreatedAt`・`publishedAt`。WordPress に反映した稿の記録）・`status`（`公開済み`）・`url`
 - 作成と査読が書く：`loop`：`{"state": "writing|reviewing|passed|failed", "round": 1, "max": 5, "updatedAt": ""}`
 
 ### `events/<ID>`（打ち上げ・天体・展示の日付）
@@ -115,7 +118,7 @@
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム`）・`text`・`articleId`・`eventId`・`kind`・`imageBrief`（SNS が書く画像の指示）・`imageId`（画像担当が書く）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
-- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
+- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "publisherTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
 - `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）
@@ -129,6 +132,7 @@
   - 作成 → 査読：`review-<articleId>-<round>`（`mode: "draft"`）、直しなら `review-<articleId>-u<YYYYMMDDHHMM>`（`mode: "update"`）
   - 査読 → 作成（書き直し）：`article-<articleId>-<round+1>`
   - 査読（A のとき）→ アイキャッチ：`eyecatch-<articleId>-<round>`
+  - アイキャッチ → 入稿（アイキャッチができたとき）：`publish-<articleId>-<round>`
   - 公式ウォッチ・点検 → 作成（直し）：`update-<articleId>-<YYYYMMDDHHMM>`
   - 点検 → 査読（公開済みの点検）：`recheck-<articleId>-<YYYYMMDD>`
   - SNS 審査（OK のとき）→ 画像：`snsimage-<YYYYMMDDHHMM>`（`postIds` に投稿の ID）

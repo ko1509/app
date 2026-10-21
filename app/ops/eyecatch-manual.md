@@ -27,7 +27,7 @@
    - 記事の中身と絵が合っていない（例：昼の施設なのに打ち上げの光跡、明け方の打ち上げなのに真夜中）
    - 3 章の「描かないもの」が入っている
 7. 4 章の形で保存する。
-8. 差し替え稿（カードが `公開済み`・`要更新`）で、`inbox/replace-<articleId>-<round>` が `open` なら、その `body` の末尾に「アイキャッチができました（アプリの稿の画面からダウンロード）」と1行足す。
+8. **入稿に渡す**：`jobs/publish-<articleId>-<round>`（`kind: "publish"`, `articleId`, `round`, `title`, `by: "designer"`, `status: "queued"`, `message: "入稿を待っています"`）を書き、入稿を起動する（`settings/background.publisherTriggerId`。`ops/agent-jobs.md` の 6）。アイキャッチの作り直しの依頼（運営者の指示）のときも、反映済みの記事なら同じ依頼を書く（アイキャッチを差し替えるため）。同じ依頼が `queued`・`running` なら作らない。
 9. 依頼を `done` にし、報告する（3行以内：どの記事に、どんな背景で作ったか）。
 
 ## 3. アイキャッチの決まり
