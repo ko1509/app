@@ -174,6 +174,8 @@ def check(a, b):
         if da != db: raise ValueError(f"検査に失敗：<{tag}> の開きと閉じのずれが {da} → {db} に変わりました")
     if len(re.findall(r"<style", a)) != len(re.findall(r"<style", b)): raise ValueError("検査に失敗：style の数が変わりました")
     if abs(len(b) - len(a)) > 0.3 * len(a): raise ValueError("検査に失敗：変更が大きすぎます（30%超）")
+    sc = [m.group(0) for m in re.finditer(r"<script>.*?</script>", b, re.S) if "getElementById('mgCount')" in m.group(0)][0]
+    if "&" in sc.replace("</script>", ""): raise ValueError("検査に失敗：script に & があります（WordPress が &#038; に書き換えて壊れるため使えません）")
     if re.search(r"/\*.*?\*/|<!--", re.search(r"<script>.*?</script>", b, re.S).group(0), re.S) and False: pass
 
 
@@ -200,10 +202,17 @@ def home_id():
     raise RuntimeError("ホームの固定ページが見つかりません（MIAGETABI_WP_HOME_ID を設定してください）")
 
 
-def public_ok(expect_count):
+def _script(html):
+    m = [x.group(0) for x in re.finditer(r"<script>.*?</script>", html, re.S) if "getElementById('mgCount')" in x.group(0)]
+    return m[0] if len(m) == 1 else None
+
+
+def public_ok(expected_html):
+    """公開ページの script が、書いたものと一字一句同じか（WordPress が書き換えていないか）を確かめる"""
     req = urllib.request.Request(BASE + "/?_=" + str(int(dt.datetime.now().timestamp())), headers={"User-Agent": "Mozilla/5.0"})
     s = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
-    return "id=\"mgCount\"" in s and "getElementById('mgCount')" in s and expect_count in s
+    want = _script(expected_html)
+    return want is not None and want in s and 'id="mgCount"' in s
 
 
 def main():
@@ -225,8 +234,8 @@ def main():
         if new == raw: print("変更なし"); return
         json.dump({"id": pid, "raw": raw, "at": dt.datetime.now(JST).isoformat()}, open("home-backup.json", "w", encoding="utf-8"), ensure_ascii=False)
         wp("POST", f"/wp/v2/pages/{pid}", {"content": new})
-        if not public_ok("mg-next"):  # 公開ページで、script が残っているか確かめる（権限で <script> が削られる場合がある）
-            wp("POST", f"/wp/v2/pages/{pid}", {"content": raw}); raise RuntimeError("保存後の確認に失敗したので、元に戻しました（<script> が削られた可能性。管理者の権限が要ります）")
+        if not public_ok(new):  # 公開ページで、script が残っているか確かめる（権限で <script> が削られる場合がある）
+            wp("POST", f"/wp/v2/pages/{pid}", {"content": raw}); raise RuntimeError("保存後の確認に失敗したので、元に戻しました（公開ページの <script> が、書いたものと違います。削られた・書き換えられた可能性）")
         print(json.dumps({"ok": True, "pageId": pid, **info}, ensure_ascii=False))
         return
     raise SystemExit(__doc__)
