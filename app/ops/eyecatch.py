@@ -735,6 +735,39 @@ class Scene:
         img = img * (1 - tower[..., None]) + (tower * shade)[..., None] * np.array([.75, .78, .85])
         return img + (np.exp(-((xx - lx) ** 2 + (y - ly) ** 2) / (2 * (10 * k) ** 2)) * 2.2 + np.exp(-dist / (40 * k)) * .5)[..., None] * np.array([1, .93, .7])
 
+    def m_antenna(self, img, hz, x=.70, size=1.0, tilt=35):
+        """大きなパラボラアンテナ（JAXA の通信所のような施設。一般的な形）：空を向いた皿と台座、施設の明かり"""
+        cx = W * x; gy = H * hz + 6; k = size * S / 2; R = 230 * k; th = np.radians(tilt)
+        hub = (cx, gy - 330 * k)
+        def dish(d):
+            d.polygon([(cx - 110 * k, gy + 10), (cx - 60 * k, gy - 250 * k), (cx + 60 * k, gy - 250 * k), (cx + 110 * k, gy + 10)], fill=255)  # 台座
+            d.rectangle((cx - 150 * k, gy - 60 * k, cx + 150 * k, gy + 10), fill=255)
+            # 皿（傾けた楕円）を多角形で
+            pts = [(hub[0] + R * np.cos(t) * np.cos(th) - R * .35 * np.sin(t) * np.sin(th), hub[1] - R * np.cos(t) * np.sin(th) * .9 - R * .35 * np.sin(t) * np.cos(th)) for t in np.linspace(0, 2 * np.pi, 120)]
+            d.polygon(pts, fill=255)
+            fx, fy = hub[0] - R * .55 * np.sin(th), hub[1] - R * .55 * np.cos(th) - 40 * k  # 焦点（副反射鏡）
+            for t in (0, 2.1, 4.2):
+                d.line([(hub[0] + R * .8 * np.cos(t) * np.cos(th), hub[1] - R * .8 * np.cos(t) * np.sin(th) * .9 - R * .28 * np.sin(t)), (fx, fy)], fill=255, width=max(2, int(5 * k)))
+            d.ellipse((fx - 16 * k, fy - 12 * k, fx + 16 * k, fy + 12 * k), fill=255)
+        a = self._mask(dish, .8)
+        img = self.put(img, a, (.03, .033, .045), sky=(.30, .34, .45), rim=4)
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        lights = np.zeros((H, W), np.float32)
+        for j in range(14): lights[int(gy - 20 * k - self.rng.uniform(0, 30) * k), int(cx - 140 * k + j * 21 * k)] = 1
+        red = np.zeros((H, W), np.float32); red[int(hub[1] - R * .55 - 50 * k), int(hub[0] - R * .55 * np.sin(th))] = 1
+        return img + self.blur(lights, 1.6)[..., None] * 22 * np.array([1, .78, .45]) + self.blur(red, 2)[..., None] * 40 * np.array([1, .1, .05])
+
+    def rain(self, img, amount=.6, angle=12):
+        """雨：細い斜めの筋、かすみ、明かりのにじみ（延期・天候待ちの記事）"""
+        img = img * (1 - .25 * amount) + np.array([.10, .11, .13]) * .25 * amount
+        m = Image.new("L", (W, H), 0); d = ImageDraw.Draw(m); th = np.radians(angle)
+        for _ in range(int(5200 * amount)):
+            x0, y0 = self.rng.uniform(0, W), self.rng.uniform(0, H); L = self.rng.uniform(30, 90)
+            d.line([(x0, y0), (x0 + np.sin(th) * L, y0 + np.cos(th) * L)], fill=int(self.rng.uniform(70, 200)), width=2)
+        a = np.asarray(m.filter(ImageFilter.GaussianBlur(.8))).astype(np.float32) / 255
+        bright = np.clip(img.max(axis=2) - .4, 0, 1)
+        return img + a[..., None] * (.30 + 1.2 * self.blur(bright, 40)[..., None]) * np.array([.85, .9, 1]) + self.blur(bright, 30)[..., None] * np.array([1, .8, .6]) * .5 * amount
+
     def m_tent(self, img, hz, x=.74, size=1.0, base=.90):
         """星の下のテント：中の明かりで布がやわらかく光る"""
         cx = W * x; by = H * base; w = 260 * size * S / 2; h = 190 * size * S / 2
@@ -803,11 +836,19 @@ class Scene:
                     top = base; d.rectangle((W * it.get("x0", .40), top, W * 1.02, top + 26), fill=255)
                     d.rectangle((W * it.get("x0", .40), top + 34, W * 1.02, top + 50), fill=255)
                     for lx in (W * (it.get("x0", .40) + .05), W * .92): d.rectangle((lx, top, lx + 22, H), fill=255)
+                elif k == "sheet":  # 地面に敷いたレジャーシート（遠近）と、丸めた毛布
+                    w = sz * .55
+                    d.polygon([(X - w * .30, base - sz * .07), (X + w * .40, base - sz * .07), (X + w * .70, base), (X - w * .65, base)], fill=255)
+                    d.ellipse((X + w * .02, base - sz * .085, X + w * .30, base - sz * .045), fill=255)
                 elif k == "headlamp":
                     d.rounded_rectangle((X - 34, base - 30, X + 34, base), radius=10, fill=255)
                     d.arc((X - 90, base - 60, X + 90, base + 30), 160, 20, fill=255, width=10)
             a = self._mask(shp, .8)
             img = self.put(img, a, lamp=lamp, sky=(.22, .26, .36) if k != "bench" else (.34, .38, .48))
+            if k == "sheet":  # シートの格子柄（うっすら）
+                w = sz * .55; y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+                stripes = (np.sin((xx - X + (y - base) * 1.4) / 14) > .55).astype(np.float32) * a * (y > base - sz * .07)
+                img = img + stripes[..., None] * np.array([.035, .02, .02])
             if k == "binoculars":
                 r = sz * .075; y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
                 for cxl in (X - r * 1.12, X + r * 1.12):
@@ -912,7 +953,7 @@ class Scene:
             if mo["type"] == "liftoff": img = self.liftoff(img, hz, mo.get("x", .66), mo.get("scale", 1.0), mo.get("rise", .35), tone)
         lamp = next(((W * m.get("x", .7) + 34, H * m.get("y", .99) - 15, tuple(m.get("color", (1, .12, .06))), m.get("strength", 1.0))
                      for m in motifs if m["type"] == "headlamp"), None)
-        gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp")]
+        gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp", "sheet")]
         for mo in motifs:
             k = mo["type"]
             if k in ("dome", "tripod", "phone"): img = self.m_object(img, k, hz, mo.get("x", .72))
@@ -921,8 +962,10 @@ class Scene:
             elif k == "planetarium": img = self.m_planetarium(img, hz, mo.get("x", .68), mo.get("size", 1.0))
             elif k == "deck": img = self.m_deck(img, hz, mo.get("people", 3))
             elif k == "lighthouse": img = self.m_lighthouse(img, hz, mo.get("x", .78), mo.get("size", 1.0), mo.get("beam", -1))
+            elif k == "antenna": img = self.m_antenna(img, hz, mo.get("x", .70), mo.get("size", 1.0), mo.get("tilt", 35))
             elif k == "tent": img = self.m_tent(img, hz, mo.get("x", .74), mo.get("size", 1.0), mo.get("y", .90))
-        if gear: img = self.m_gear(img, sorted(gear, key=lambda m: m["type"] != "bench"), hz, lamp)
+        if gear: img = self.m_gear(img, sorted(gear, key=lambda m: (m["type"] != "bench", m["type"] != "sheet")), hz, lamp)
+        if c.get("rain"): img = self.rain(img, c["rain"].get("amount", .6), c["rain"].get("angle", 12))
         return img
 
     def startrail_sky(self):
