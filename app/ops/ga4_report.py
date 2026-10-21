@@ -51,7 +51,15 @@ def main():
     if not prop or not raw:
         print("GA4_PROPERTY_ID / GA4_SERVICE_ACCOUNT_JSON が未設定です", file=sys.stderr)
         sys.exit(2)
-    tok = token(json.loads(raw))
+    if not raw.startswith("{"):  # 環境変数に外側の { } を含めずに入れた場合
+        raw = "{" + raw.rstrip().rstrip(",") + "}"
+    sa = json.loads(raw, strict=False)
+    if "client_email" not in sa:  # 鍵の行だけ入れた場合は、別の環境変数のメールを使う
+        sa["client_email"] = os.environ.get("GA4_CLIENT_EMAIL", "").strip()
+    if not sa["client_email"] or "private_key" not in sa:
+        print("鍵に client_email か private_key がありません（GA4_CLIENT_EMAIL を足すか、JSON全体を入れ直す）", file=sys.stderr)
+        sys.exit(2)
+    tok = token(sa)
     by = lambda n: [{"order_by": 0}]
     tot = report(tok, prop, days, [], ["activeUsers", "sessions", "screenPageViews", "newUsers", "engagementRate"])
     daily = report(tok, prop, days, ["date"], ["activeUsers", "screenPageViews"], 400,
