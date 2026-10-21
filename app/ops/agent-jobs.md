@@ -15,6 +15,7 @@
 | `watch` | 公式ウォッチ | 1日4回＋依頼 | `ops/watch-manual.md` | `watch` |
 | `sns` | SNS | 依頼だけ（SNS アカウントができるまで停止） | `ops/sns-manual.md` | `sns` |
 | `snsreview` | SNS 審査 | 依頼だけ（同上） | `ops/sns-review-manual.md` | `snsreview` |
+| `siteupdate` | サイト更新 | 毎朝（5時台）＋依頼 | `ops/site-manual.md` | `siteupdate`（ホームの NEXT LAUNCH・ティッカー・UPCOMING を events に合わせて更新） |
 | `audit` | 点検 | 毎朝＋依頼 | `ops/audit-manual.md` | `audit` |
 
 運営者（この db の持ち主）が最終判断をする。判断が要るものは、すべて**受信箱（`inbox`）**に出す。エージェントは判断を推測で埋めない。
@@ -28,10 +29,11 @@
   - `ops/sky.py` … 天体の計算（方角・高さ・月の出入り・曜日・世界時の変換）。使う前に `pip install ephem==4.2`
   - `ops/md2blocks.py` … Markdown を WordPress のブロックに変換する
   - `ops/figures.py` … 記事の図（タイムライン・方角と高さ・距離）を SVG で作る
+  - `ops/site_home.py`・`ops/home_countdown.py` … ホームの更新（サイト更新だけが使う）
   - `ops/eyecatch.py` … アイキャッチ（写真風の CG＋記事のタイトル）を作る
   - 読んだファイルは保存先が表示される。`.py` はその保存先のまま `python3` で実行する（中身を書き写さない）。
 - db（アプリの共有データ）の読み書きは **ArtifactData** ツール。
-- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。**WordPress に書き込まない**（サーバーは海外からの REST API を止めている）。
+- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。**WordPress に書き込まない。ただし例外が1つだけ**：サイト更新エージェントは、`ops/site-manual.md` の決まりで、ホームの決まった3か所だけを `ops/site_home.py` で書き換えてよい（ほかのエージェントは書かない）。
 
 ## 0. 停止の確認（最初に必ず）
 
@@ -40,7 +42,7 @@
 ## 1. ジョブ
 
 1. 追加テキストに `job:<ID>` があれば、その `jobs/<ID>` だけを処理する。無ければ（定時の見回り）、`jobs` を `query`（`where: [["status","==","queued"]]`）して、自分の受け持つ `kind` のものを `createdAt` の古い順に **1 件だけ**選ぶ。
-   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・点検）は手順書の「定時の仕事」をする。査読・画像は、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。作成は、`status` が `執筆中`（旧名 `下書き`）で `draft` が無く、`article` の依頼が `queued`・`running` でないカードがあれば、いちばん古いもの1件に `jobs/article-<articleId>-1`（`by: "schedule"`, `note`: 「執筆中に入った企画」）を作って、それを処理する。それも無ければ「仕事なし」と書いてすぐ終わる。
+   - 1 件も無いとき：定時の仕事がある役割（企画・公式ウォッチ・SNS・サイト更新・点検）は手順書の「定時の仕事」をする。査読・画像は、ほかは何も読まずに「仕事なし」とだけ書いて**すぐ終わる**（費用を使わない）。作成は、`status` が `執筆中`（旧名 `下書き`）で `draft` が無く、`article` の依頼が `queued`・`running` でないカードがあれば、いちばん古いもの1件に `jobs/article-<articleId>-1`（`by: "schedule"`, `note`: 「執筆中に入った企画」）を作って、それを処理する。それも無ければ「仕事なし」と書いてすぐ終わる。
 2. `status` が `"queued"` でなければ何もしないで終わる（二重起動の防止）。
 3. 始めたら `update` で `status: "running"`・`agent`（自分の役割）・`session`（環境変数 `CLAUDE_CODE_REMOTE_SESSION_ID`。無ければ省く）・`startedAt`・`updatedAt`・`message: "取りかかりました"`。
 4. 進んだら `message`（日本語で短く。アプリにそのまま出る）・`step`・`updatedAt` を更新する。10 分に 1 回以上。
@@ -76,7 +78,7 @@
 
 ### `jobs/<ID>`（依頼）
 ```json
-{"kind": "article|update|eyecatch|snsimage|review|plan|select|watch|sns|snsreview|audit", "mode": "draft|update|recheck（review のとき）",
+{"kind": "article|update|eyecatch|snsimage|review|plan|select|watch|sns|snsreview|siteupdate|audit", "mode": "draft|update|recheck（review のとき）",
  "articleId": "a01", "eventId": "", "pillar": "（plan の補充のとき）", "from": "", "to": "", "count": 0, "postIds": ["（snsimage のとき）"], "round": 1, "title": "対象の名前",
  "withExperience": false, "note": "運営者や前のエージェントからの指示", "rewrite": false,
  "status": "queued|running|done|waiting|error", "message": "", "step": "", "agent": "", "session": "",
@@ -113,7 +115,7 @@
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム`）・`text`・`articleId`・`eventId`・`kind`・`imageBrief`（SNS が書く画像の指示）・`imageId`（画像担当が書く）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
-- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
+- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
 - `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）
@@ -131,6 +133,7 @@
   - 点検 → 査読（公開済みの点検）：`recheck-<articleId>-<YYYYMMDD>`
   - SNS 審査（OK のとき）→ 画像：`snsimage-<YYYYMMDDHHMM>`（`postIds` に投稿の ID）
   - SNS → SNS 審査：`snsreview-<YYYYMMDDHHMM>`、SNS 審査 → SNS（書き直し）：`sns-<articleId>-r<YYYYMMDDHHMM>`
+  - 公式ウォッチ・イベント取得 → サイト更新（日付・状況が変わったとき）：`siteupdate-<YYYYMMDDHHMM>`
   - 記事選定 → 作成（選んだとき）：`article-<articleId>-1`
   - 記事選定 → 企画（カテゴリの補充）：`plan-<pillar>-<YYYYMMDD>`
   - 企画 → 作成（運営者が「すぐ書かせる」を選んだとき、アプリが書く）：`article-<articleId>-1`

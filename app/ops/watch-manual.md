@@ -42,7 +42,8 @@ SNS（JAXA の公式 X など）は手がかりにだけ使う。**公式サイ�
        "proposal": {"from": {"date": "", "time": "", "status": ""}, "to": {"date": "", "time": "", "status": ""}, "source": "URL", "articles": ["a01"]}}
       ```
       同じイベントの同じ変化の `open` があれば作らない。
-   3. そのイベントを題材にした記事（`articles` で `eventDate` か `title` が一致し、`status` が `公開済み`・`要更新`・`公開待ち`）ごとに、作成へ `jobs/update-<articleId>-<YYYYMMDDHHMM>` を依頼（`kind: "update"`、`note` に「急ぎ：<発表の要点>（URL）。inboxId: <上のID>」）。`公開待ち` の記事は `kind: "article"` の書き直し（`round` は `loop.round + 1`）にする。
+   3. **サイト更新に渡す**：`jobs/siteupdate-<YYYYMMDDHHMM>`（`kind: "siteupdate"`, `note`: 「<イベント名>の日付・状況が変わった」, `by: "watch"`）を `queued` で書き、サイト更新を起動する（`settings/background.siteUpdateTriggerId`。`ops/agent-jobs.md` の 6）。同じ依頼が `queued`・`running` なら作らない。ホームのカウントダウン・ティッカー・UPCOMING は、サイト更新が直す（運営者が貼り替えるのは、サイト更新が WordPress に書けなかったときだけ）。
+   4. そのイベントを題材にした記事（`articles` で `eventDate` か `title` が一致し、`status` が `公開済み`・`要更新`・`公開待ち`）ごとに、作成へ `jobs/update-<articleId>-<YYYYMMDDHHMM>` を依頼（`kind: "update"`、`note` に「急ぎ：<発表の要点>（URL）。inboxId: <上のID>」）。`公開待ち` の記事は `kind: "article"` の書き直し（`round` は `loop.round + 1`）にする。
 4. **変化がなければ**：`events/<ID>` の `checkedAt` だけ更新する。
 5. **直前更新の依頼（6時台の回だけ）**：公開済みの記事で、題材のイベントが今日から見て T−7・T−3・T−1・当日（T−0）・翌日（T+1）にあたるものに、作成へ `jobs/update-<articleId>-<YYYYMMDD>` を依頼（`note` に「直前更新 T−3：<ops/site-rules.md の 8 のその日の作業>。draft.updateChecklist の T−3 の項目」）。同じ記事の `update` が `queued`・`running` なら作らない。
 6. 依頼を `done` にし、報告する（3行以内：変化があったもの、受信箱に出したもの、積んだ直し）。変化が無ければ「変化なし（○件確認）」の1行。
@@ -55,5 +56,5 @@ SNS（JAXA の公式 X など）は手がかりにだけ使う。**公式サイ�
 
 ## 5. してはいけないこと
 - 報道や SNS のうわさで、イベントの日時・状況を書き換えること。
-- 記事・ホーム・図鑑を自分で直すこと（案は作成エージェント、直すのは運営者）。
+- 記事・図鑑・ホームを自分で直すこと（記事の案は作成エージェント、直すのは運営者。ホームの3か所だけはサイト更新が直す）。
 - 1つの変化で、受信箱に何件も出すこと（1つのイベントの1つの変化に1件）。

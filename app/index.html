@@ -296,6 +296,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .ag-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .ag-tiles.n1{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ag-tiles.n4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.ag-tiles.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .sel-card{padding:12px 14px;margin:0 0 12px} .sel-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px} .sel-f{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--label-2)} .sel-f select,.sel-f input[type=number]{font:inherit;padding:5px 8px;border-radius:10px;border:1px solid var(--sep,rgba(0,0,0,.15));background:transparent;color:var(--label)} .sel-f input[type=number]{width:64px} .sel-chk input{accent-color:var(--brand)}
 .sel-stock{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:8px;font-size:13px} .sel-stock>span[class^=cat-]{display:inline-flex;align-items:center;gap:5px;font-weight:600} .sel-stock i{width:8px;height:8px;border-radius:50%;background:var(--cat,#888)} .sel-stock .low{color:var(--bad,#d33)}
 .sv-ximg{margin:8px 0 0;border-radius:14px;overflow:hidden;border:1px solid var(--sep,rgba(0,0,0,.1))} .sv-ximg img{display:block;width:100%;height:auto}
@@ -543,6 +544,7 @@ const IC={
   archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',
   inbox:'<path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
   target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.3 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.3-3.8-8.5S9.4 5.9 12 3.5z"/>',
   image:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M4 17l5-5 4 4 2.5-2.5L20 17"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   idea:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
@@ -716,7 +718,7 @@ function viewHome(tasks){
 function viewEvents(){
   const f=S.filter.pillar,mode=S.evMode||"list";
   const list=S.events.filter(e=>f==="all"||e.pillar===f).sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999"));
-  return `${agentsCard("events")}<div class="d-actions">${seg()}<span style="flex:1"></span><div class="d-seg" role="group" aria-label="表示">${[["list","リスト"],["cal","カレンダー"]].map(([k,l])=>`<button type="button" data-evmode="${k}" aria-pressed="${mode===k}">${l}</button>`).join("")}</div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="watch">${ic("eye")}公式を確認</button>`:""}${addBtn("event","イベントを追加")}</div>
+  return `${agentsCard("events")}<div class="d-actions">${seg()}<span style="flex:1"></span><div class="d-seg" role="group" aria-label="表示">${[["list","リスト"],["cal","カレンダー"]].map(([k,l])=>`<button type="button" data-evmode="${k}" aria-pressed="${mode===k}">${l}</button>`).join("")}</div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="watch">${ic("eye")}公式を確認</button><button type="button" class="d-btn small secondary" data-job="siteupdate">${ic("globe")}サイトを更新</button>`:""}${addBtn("event","イベントを追加")}</div>
   ${mode==="cal"?evCalendar(list):evList(list)}`;
 }
 function evList(list){
@@ -986,11 +988,12 @@ const AG={
   watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
   sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"記事の告知・イベント情報・今夜の空・コラムを X・Instagram 用に下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:50,tasks:["新しい記事、14日以内のイベント（記事が無くても）、今夜の空、ちょっとしたコラムを下書きする","事実は一次情報で、空の時刻・方角は計算で確かめる","画像の指示を付けて審査へ（画像は画像担当が作る）"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
   snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","文字数・ハッシュタグ数・禁止表現・安全のひとことを確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・告知文を自分で書き換えない（SNSアカウントの準備ができるまで停止中）"},
+  siteupdate:{l:"サイト更新",kinds:["siteupdate"],trig:"siteUpdateTriggerId",desc:"ホームのカウントダウン・ティッカー・UPCOMING を、イベントに合わせて自動で更新する",when:"毎朝 5:23＋依頼（日程が変わったとき）",pc:"launch",ic:"globe",manual:"site-manual.md",yen:50,tasks:["日程が変わったら、トップの NEXT LAUNCH・ティッカー・UPCOMING を直す","過ぎたイベントを表から外し、決まったものを足す","WordPress に書けないときは、貼り替え用の差分を受信箱へ"],never:"ホームの3か所以外は触らない・公式で確かめていない日時は入れない・認証情報は残さない"},
   audit:{l:"点検",kinds:["audit"],trig:"auditTriggerId",desc:"公開中のページを見回り、止まった依頼を片付ける",when:"毎朝 5:37＋依頼",pc:"spot",ic:"scan",manual:"audit-manual.md",yen:60,tasks:["公開中の記事を毎朝開き、リンク切れ・最終確認の古さ・部品の抜けを探す","止まった依頼を片付ける（自己修復）","週1回、サイトの基本（サイトマップ・運営者情報など）を点検"],never:"サイトの設定や記事は変えない・停止中の役割を起こさない"}
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
+const KIND_L={siteupdate:"サイト更新",select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -1062,7 +1065,7 @@ async function setPause(role,paused){
 }
 // 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
 // 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
-const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","eventfetch","watch","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","eventfetch","watch","siteupdate","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
 function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
 const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
 function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
@@ -1151,7 +1154,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","eventfetch","watch","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch"],sns:["sns","snsreview","designer"]};
+const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","eventfetch","watch","siteupdate","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer"],archive:["watch","writer","reviewer","designer","audit"],events:["eventfetch","watch","siteupdate"],sns:["sns","snsreview","designer"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
