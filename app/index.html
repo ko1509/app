@@ -320,7 +320,8 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .ag-ic{--c:var(--sky);flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;
   background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px color-mix(in srgb,var(--c) 35%,transparent)}
 .ag-ic svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-.ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)}
+.ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)} .ag-access{--c:var(--gear)}
+.ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 0;font-size:14px}.ac-row b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-row .bar{grid-column:1/-1;height:4px;border-radius:2px;background:var(--fill,rgba(128,128,128,.18))}.ac-row .bar i{display:block;height:100%;border-radius:2px;background:var(--accent,#0a84ff)}.ac-chart{width:100%;height:120px}
 .ag-detail{display:grid;gap:6px;padding:12px 14px;border-radius:16px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);min-width:0}
 .ag-dhead{display:flex;gap:8px;align-items:center} .ag-dhead b{font-size:15px;flex:1;min-width:0}
 .ag-detail dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:13px} .ag-detail dt{color:var(--label-2)} .ag-detail dd{margin:0;overflow-wrap:anywhere}
@@ -531,6 +532,7 @@ const IC={
   cal:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   doc:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
   sns:'<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9a3 3 0 0 1 0 6M7 14l1 5h3"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M16 5a3 3 0 0 1 0 6M18 14c2 .6 3 2.6 3 6"/>',
   kpi:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   ai:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
   launch:'<path d="M12 3c3 2.5 4.5 6 4.5 10l-2 3h-5l-2-3c0-4 1.5-7.5 4.5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 16l-1.5 4M14.5 16l1.5 4"/>',
@@ -594,10 +596,11 @@ const TABS=[
   {id:"events",l:"イベント",ic:"cal",en:"EVENTS",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
   {id:"agents",l:"編集部",ic:"agent",en:"NEWSROOM",eyebrow:"AIエージェント",title:"編集部"},
   {id:"sns",l:"SNS",ic:"sns",en:"SOCIAL",eyebrow:"X・Instagram",title:"告知の予定"},
+  {id:"access",l:"アクセス",ic:"users",en:"ACCESS",eyebrow:"サイトの来訪者（GA4）",title:"アクセス"},
   {id:"kpi",l:"KPI",ic:"kpi",en:"KPI",eyebrow:"3か月後の判断",title:"KPI"}
 ];
 
-const S={events:[],articles:[],posts:[],kpi:[],checks:{},inbox:[],tab:"home",hist:[],db:null,canWrite:true,ready:false,
+const S={analytics:null,events:[],articles:[],posts:[],kpi:[],checks:{},inbox:[],tab:"home",hist:[],db:null,canWrite:true,ready:false,
   filter:{pillar:"all"},inputs:{},chainSel:null,agRole:null,
   jobs:[],bg:{},pause:{},pauseRaw:{},snsConf:{},lessons:[],plannerLog:[],loopConf:{enabled:true,maxRounds:5,pass:"A"},mcp:null,kicked:new Set()};
 const $=s=>document.querySelector(s);
@@ -671,7 +674,7 @@ function render(){
   const head=`<div class="d-head"><p><span class="en">${esc(T.en)}</span><span class="num mono hd-date">${fmt(today())}</span></p><h1>${esc(T.title)}</h1></div>`;
   if(!S.ready){$("#page").innerHTML=head+`<div class="d-card d-empty">データを読み込んでいます。</div>`;return}
   renderIsland();
-  const body={home:viewHome,inbox:viewInbox,events:viewEvents,articles:viewArticles,archive:viewArchive,agents:viewAgents,sns:viewSns,kpi:viewKpi}[S.tab](tasks);
+  const body={home:viewHome,inbox:viewInbox,events:viewEvents,articles:viewArticles,archive:viewArchive,agents:viewAgents,sns:viewSns,access:viewAccess,kpi:viewKpi}[S.tab](tasks);
   $("#page").innerHTML=head+body;
   bind();
 }
@@ -967,6 +970,22 @@ function kpiTiles(k,limit){
     return `<div class="d-stat ${cls}"><span class="k">${d.l}</span><span class="v">${val.toLocaleString()}<small>${d.u}</small></span>
       <div class="d-bar"><i style="width:${Math.min(100,val/d.good*100).toFixed(0)}%"></i></div><span class="s">合格 ${d.pass.toLocaleString()}・好調 ${d.good.toLocaleString()}</span></div>`}).join("")}</div>`;
 }
+function acList(title,rows,unit){
+  const mx=Math.max(1,...(rows||[]).map(r=>r.users));
+  return `<div class="d-card"><h3 style="margin:0 0 6px;font-size:15px">${title}</h3>${rows&&rows.length?rows.map(r=>`<div class="ac-row"><b>${esc(r.name||"(不明)")}</b><span class="num">${r.users.toLocaleString()}${unit||"人"}</span><span class="bar"><i style="width:${(r.users/mx*100).toFixed(0)}%"></i></span></div>`).join(""):`<div class="d-empty">データなし</div>`}</div>`}
+function viewAccess(){
+  const a=S.analytics;
+  if(!a) return `<div class="d-card"><h3 style="margin:0 0 8px">まだ計測が始まっていません</h3><p style="margin:0 0 8px;font-size:14px;color:var(--label-2)">サイトに Google アナリティクス（GA4）を入れ、読み取りの設定をすると、毎朝ここに「何人が・どこから・何で」見に来たかが出ます。</p><ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:var(--label-2)"><li>analytics.google.com で GA4 のプロパティを作る（ウェブ・https://miagetabi.space）</li><li>測定ID（G-から始まる）を、サイトの &lt;head&gt; に入れる（ConoHa のWordPress →「Site Kit」か、SWELL の「高度な設定→headに出力するコード」）</li><li>Google Cloud でサービスアカウントを作り、JSONの鍵を取る → GA4「管理→アクセス管理」で、その メールを「閲覧者」に追加</li><li>実行環境の環境変数に <code>GA4_PROPERTY_ID</code>（数字）と <code>GA4_SERVICE_ACCOUNT_JSON</code>（鍵の中身）を入れる（チャットには貼らない）</li><li>下の「いま更新」を押す</li></ol></div>${accessBtn()}`;
+  const t=a.totals||{},d=a.daily||[],mx=Math.max(1,...d.map(x=>x.views));
+  const W=600,H=110,n=Math.max(1,d.length),bw=W/n;
+  const chart=d.length?`<svg class="ac-chart" viewBox="0 0 ${W} ${H+16}" preserveAspectRatio="none" role="img" aria-label="日ごとの閲覧数">${d.map((x,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-x.views/mx*H).toFixed(1)}" width="${Math.max(1,bw-2).toFixed(1)}" height="${(x.views/mx*H).toFixed(1)}" rx="1.5" fill="var(--accent,#0a84ff)"><title>${esc(x.date)} 閲覧${x.views}・利用者${x.users}</title></rect>`).join("")}</svg>`:"";
+  const tile=(k,v,u)=>`<div class="d-stat"><span class="k">${k}</span><span class="v">${Number(v||0).toLocaleString()}<small>${u}</small></span></div>`;
+  const err=a.status==="error"?`<div class="d-card" style="color:var(--bad,#d70015)">前回の取得に失敗しました：${esc(a.error||"")}（数字は前回のまま）</div>`:"";
+  return `${err}<div><div class="d-sec"><h2>直近${a.days||28}日</h2><p>更新：${esc((a.at||"").replace("T"," ").slice(0,16))}</p></div><div class="d-stats">${tile("利用者",t.users,"人")}${tile("新しい人",t.newUsers,"人")}${tile("訪問回数",t.sessions,"回")}${tile("閲覧数",t.views,"PV")}${tile("よく見た率",t.engagement,"%")}</div></div>
+  <div class="d-card"><h3 style="margin:0 0 6px;font-size:15px">日ごとの閲覧数</h3>${chart||`<div class="d-empty">まだ日ごとの数字がありません</div>`}</div>
+  <div class="ac-grid">${acList("どこから（国・地域）",a.regions)}${acList("何で（端末）",a.devices)}${acList("ブラウザ",a.browsers)}${acList("OS",a.os)}${acList("どうやって（流入の種類）",a.channels)}${acList("どのサイトから",a.sources)}</div>
+  ${acList("人気のページ",a.pages)}${accessBtn()}`}
+function accessBtn(){return S.canWrite?`<div style="margin-top:12px"><button type="button" class="d-btn small secondary" data-job="access">いま更新</button></div>`:""}
 function viewKpi(){
   const list=[...S.kpi].sort((a,b)=>a._id.localeCompare(b._id)),k=latestKpi();
   return `<div><div class="d-sec"><h2>${k?esc(k._id)+" の記録":"最新の記録"}</h2><p>判断日：2027/1/12</p></div>${kpiTiles(k)}</div>
@@ -991,11 +1010,12 @@ const AG={
   snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","文字数・ハッシュタグ数・禁止表現・安全のひとことを確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・告知文を自分で書き換えない（SNSアカウントの準備ができるまで停止中）"},
   publisher:{l:"入稿",kinds:["publish"],trig:"publisherTriggerId",desc:"査読に通った稿を、アイキャッチごと WordPress に自動で入稿する",when:"6〜23時 毎時:08＋依頼（アイキャッチができたとき）",pc:"sky",ic:"upload",manual:"publish-manual.md",yen:60,tasks:["査読A・アイキャッチができた稿を、新しい記事は公開し、公開中の記事は差し替える","本文・図・タイトル・カテゴリ・タグ・アイキャッチを反映し、公開ページで確かめる","失敗したら元に戻し、理由を受信箱へ。入稿後に事実が古そうなら更新を頼む"],never:"査読Aでない稿・運営者が止めた稿は入稿しない・稿の中身は直さない・アイキャッチ無しでは入稿しない"},
   siteupdate:{l:"サイト更新",kinds:["siteupdate"],trig:"siteUpdateTriggerId",desc:"ホームのカウントダウン・ティッカー・UPCOMING を、イベントに合わせて自動で更新する",when:"毎朝 5:23＋依頼（日程が変わったとき）",pc:"launch",ic:"globe",manual:"site-manual.md",yen:50,tasks:["日程が変わったら、トップの NEXT LAUNCH・ティッカー・UPCOMING を直す","過ぎたイベントを表から外し、決まったものを足す","WordPress に書けないときは、貼り替え用の差分を受信箱へ"],never:"ホームの3か所以外は触らない・公式で確かめていない日時は入れない・認証情報は残さない"},
+  access:{l:"計測",kinds:["access"],trig:"accessTriggerId",desc:"サイトのアクセス記録（GA4）を取り出して、アプリの「アクセス」タブに載せる",when:"毎朝 6:21＋依頼",pc:"gear",ic:"scan",manual:"access-manual.md",yen:30,tasks:["GA4 から直近28日の来訪者・地域・端末・流入元・人気ページを読む","集計を analytics/summary に書く"],never:"サイトや GA4 の設定は変えない・鍵やIDを表示しない"},
   audit:{l:"点検",kinds:["audit"],trig:"auditTriggerId",desc:"公開中のページを見回り、止まった依頼を片付ける",when:"毎朝 5:37＋依頼",pc:"spot",ic:"scan",manual:"audit-manual.md",yen:60,tasks:["公開中の記事を毎朝開き、リンク切れ・最終確認の古さ・部品の抜けを探す","止まった依頼を片付ける（自己修復）","週1回、サイトの基本（サイトマップ・運営者情報など）を点検"],never:"サイトの設定や記事は変えない・停止中の役割を起こさない"}
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={publish:"入稿",siteupdate:"サイト更新",select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",audit:"点検"};
+const KIND_L={publish:"入稿",siteupdate:"サイト更新",select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",access:"計測",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -1067,7 +1087,7 @@ async function setPause(role,paused){
 }
 // 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
 // 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
-const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
 function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
 const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
 function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
@@ -1156,7 +1176,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer","publisher"],archive:["watch","writer","reviewer","designer","publisher","audit"],events:["eventfetch","watch","siteupdate"],sns:["sns","snsreview","designer"]};
+const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer","publisher"],archive:["watch","writer","reviewer","designer","publisher","audit"],events:["eventfetch","watch","siteupdate"],sns:["sns","snsreview","designer"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
@@ -1620,6 +1640,7 @@ function bind(){
   const pg=$("#page");
   pg.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",e=>{if(e.target.closest("a"))return;openSheet(el.dataset.edit,el.dataset.id)}));
   pg.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>openSheet(b.dataset.add,null));
+  pg.querySelectorAll("[data-job]").forEach(b=>b.onclick=()=>requestJob(b.dataset.job));
   pg.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>{const g=b.dataset.auto,st=groupState(g);
     // オフにするときだけ、もう一度押して確かめる（4秒以内）
     if(st==="on"&&b.dataset.armed!=="1"){b.dataset.armed="1";toast(`もう一度押すと${GROUPS[g].l}をオフにします`);setTimeout(()=>{b.dataset.armed=""},4000);return}
@@ -1682,7 +1703,7 @@ render();requestAnimationFrame(()=>placeLens(false));
   S.db=db;
   try{const user=await api.use("user");if(user){const ed=await user.canEdit();if(ed===false)S.canWrite=false}}catch(_){}
   setConn("on",S.canWrite?"共有データに保存":"閲覧のみ");
-  const pending=new Set(["events","articles","posts","kpi","checks","jobs","settings","inbox"]);
+  const pending=new Set(["analytics","events","articles","posts","kpi","checks","jobs","settings","inbox"]);
   const done=n=>{pending.delete(n);if(!pending.size){S.ready=true;kickQueued()}render()};
   api.use("mcp").then(m=>{S.mcp=m;if(S.ready)kickQueued();render()}).catch(()=>{});
   const sub=(col,fn)=>db.collection(col).onSnapshot(s=>{fn(s.docs.map(d=>({...d.data(),_id:d.id})));done(col)},()=>setConn("off","接続が切れました。再読み込みしてください"));
@@ -1690,6 +1711,7 @@ render();requestAnimationFrame(()=>placeLens(false));
   sub("articles",l=>S.articles=l);
   sub("posts",l=>S.posts=l);
   sub("kpi",l=>S.kpi=l);
+  sub("analytics",l=>{S.analytics=l.find(x=>x._id==="summary")||null});
   sub("checks",l=>{S.checks={};for(const c of l)S.checks[c._id]=c.done||{}});
   sub("inbox",l=>S.inbox=l);
   sub("jobs",l=>{S.jobs=l.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));if(S.ready)kickQueued()});
