@@ -33,7 +33,7 @@
   - `ops/eyecatch.py` … アイキャッチ（写真風の CG＋記事のタイトル）を作る
   - 読んだファイルは保存先が表示される。`.py` はその保存先のまま `python3` で実行する（中身を書き写さない）。
 - db（アプリの共有データ）の読み書きは **ArtifactData** ツール。
-- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。**WordPress に書き込まない。ただし例外が1つだけ**：サイト更新エージェントは、`ops/site-manual.md` の決まりで、ホームの決まった3か所だけを `ops/site_home.py` で書き換えてよい（ほかのエージェントは書かない）。
+- 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。WordPress への書き込みは、認証情報（環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`。値は表示・記録しない）を使い、各手順書で決めた範囲と手順で行う（いまはサイト更新が、ホームの決まった3か所を `ops/site_home.py` で書き換える）。書く前に元の内容を退避し、書いたあとに公開ページで確かめる。
 
 ## 0. 停止の確認（最初に必ず）
 
