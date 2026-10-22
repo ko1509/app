@@ -18,8 +18,10 @@
 | `publisher` | 入稿 | 6〜23時の毎時（8分）＋依頼（アイキャッチができたとき） | `ops/publish-manual.md` | `publish`（**査読 A の稿**を、アイキャッチごと WordPress に入稿。新しい記事・差し替え） |
 | `siteupdate` | サイト更新 | 毎朝（5時台）＋依頼 | `ops/site-manual.md` | `siteupdate`（ホームの NEXT LAUNCH・ティッカー・UPCOMING を events に合わせて更新） |
 | `audit` | 点検 | 毎朝＋依頼 | `ops/audit-manual.md` | `audit` |
+| `access` | 計測 | 毎朝＋依頼 | `ops/access-manual.md` | `access` |
+| `steward` | 受信箱担当 | 6〜23時の毎時＋依頼 | `ops/inbox-manual.md` | `steward` |
 
-運営者（この db の持ち主）が最終判断をする。判断が要るものは、すべて**受信箱（`inbox`）**に出す。エージェントは判断を推測で埋めない。
+このサイトは**自動運転が基本**。エージェントが決められないこと・失敗は、**受信箱（`inbox`）**に出す。受信箱担当（`ops/inbox-manual.md`）が1件ずつ自動で処理して閉じる。運営者の判断に残るのは、エージェントにできないこと（認証情報・お金・契約・サーバーや外部サービスの設定）だけ（`ownerOnly: true`）。エージェントは判断を推測で埋めない。受信箱に出すときは、**何が起きたか・どうすれば直るか**を具体的に書く（担当が処理できるように）。
 
 ## 道具と資料
 
@@ -100,7 +102,7 @@
 ### `events/<ID>`（打ち上げ・天体・展示の日付）
 `title`・`pillar`・`date`（YYYY-MM-DD、未定なら空）・`time`・`dateText`・`place`・`status`（`確定|予定|推測|延期|中止|終了`）・`source`・`note`・`history`（変更の記録の配列）・`by`・`addedAt`。**新しく足してよいのはイベント取得だけ**（`ops/event-fetch-manual.md`）、**既にあるものを書き換えてよいのは公式ウォッチだけ**（`ops/watch-manual.md`）。
 
-### `inbox/<ID>`（受信箱。運営者の判断が要るもの）
+### `inbox/<ID>`（受信箱。受信箱担当が処理する。運営者に残るのは `ownerOnly` だけ）
 ```json
 {"kind": "idea|planReview|change|loopFailed|question|audit|recheck|other",
  "title": "一言で（40字まで）", "body": "Markdown。判断に要ることを全部。根拠のURLつき",
@@ -109,6 +111,7 @@
  "proposal": {"…kind ごとの中身（各手順書）": ""},
  "status": "open", "by": "<役割>", "createdAt": "<今>"}
 ```
+受信箱担当が書く項目：`handledBy: "steward"`、`ownerOnly`（運営者にしかできないときだけ `true`）、`ownerReason`（運営者がすること）。
 運営者がアプリで答えると `status` が `done`（対応した）か `dismissed`（見送り）になり、`answer`・`answeredAt` が入る。エージェントは `open` のものを書き換えない（自分が出したものの追記だけ、`body` の末尾に足すのは可）。同じ対象・同じ趣旨の `open` があれば新しく作らない。
 
 ### `images/<ID>`（画像。大きいので記事カードとは別に置く）
@@ -118,7 +121,7 @@
 `date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム`）・`text`・`articleId`・`eventId`・`kind`・`imageBrief`（SNS が書く画像の指示）・`imageId`（画像担当が書く）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
-- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "publisherTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId"}`
+- `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "publisherTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId", "accessTriggerId", "stewardTriggerId"}`
 - `settings/agentPause`：`{"roles": {"<役割>": {"paused": false, "at": "", "by": "owner|auto"}}, "auto": true}`（`by: "auto"` はアプリの「自動運用」のオフで止まったもの）
 - `settings/reviewLoop`：`{"enabled": true, "maxRounds": 5, "pass": "A"}`（無ければこの値。A になるまで最大5回書き直し、超えたら受信箱へ）
 - `settings/writerLessons`：`{"items": [{"text", "from", "at"}]}`（査読が足す。30 件まで）

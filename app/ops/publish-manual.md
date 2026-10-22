@@ -32,8 +32,10 @@
    5. `backup`（差し替え前の WordPress の内容）を `sitebackups/post-<ID>-<YYYYMMDDHHMM>` に `set`：`{"kind": "post", "articleId", "postId", "backup": <backup-<ID>.json の中身>, "at", "note"}`。
    6. 受信箱に `open` の `replace-<ID>-…` があれば、`answer: "入稿エージェントが反映しました"`・`status: "done"` にする。
 4. **鮮度の確認（入稿のあと、記事ごとに）**：稿の「最終確認」が7日より前、または `eventDate` が今日より前なら、**事実が古い可能性がある**。`jobs/update-<ID>-<YYYYMMDDHHMM>`（`kind: "update"`, `note`: 「入稿した稿の最終確認が<日付>で、<理由>。今の公式で確かめ直して直しの案を」, `by: "publisher"`）を `queued` で書き、作成を起動する（`settings/background.writerTriggerId`。`ops/agent-jobs.md` の 6）。
-5. **失敗したとき**（`NG:` が出た）：ツールが元に戻している。**同じ失敗を繰り返さない**（1回だけやり直してよい）。受信箱 `inbox/publish-<ID>-<YYYYMMDDHHMM>` を `set`：`{"kind": "other", "title": "<記事名>：サイトに反映できませんでした", "body": "どの段階で・何が起きたか（NG の文言。認証情報の値は書かない）／WordPress の状態（元に戻した）／運営者にしてほしいこと", "reason": "自動で反映できなかったため", "articleId", "status": "open", "by": "publisher", "createdAt"}`。
+5. **失敗したとき**（`NG:` が出た）：ツールが元に戻している。**同じ失敗を繰り返さない**（1回だけやり直してよい）。受信箱 `inbox/publish-<ID>`（**記事ごとに1件。同じ ID に `set` して上書き**。時刻を ID に付けない）を `set`：`{"kind": "other", "title": "<記事名>：サイトに反映できませんでした", "body": "どの段階で・何が起きたか（NG の文言。認証情報の値は書かない）／WordPress の状態（元に戻した）／運営者にしてほしいこと", "reason": "自動で反映できなかったため", "articleId", "status": "open", "by": "publisher", "createdAt"}`。
 6. 依頼を `done`（反映した・待つだけだった）か `waiting`（受信箱に出した。`inboxId`）にし、報告する（3行以内：反映した記事と新規／差し替え、待っている記事、受信箱に出したもの）。
+
+**同じ失敗を毎時くり返さない**：`articles/<ID>` に対応する `jobs/publish-…` の直近が `error` で、画像（`images/<ID>-eyecatch`）の `createdAt` も稿（`draft.createdAt`）もそのときから変わっていなければ、その記事は今回は入稿しない（受信箱担当が画像の作り直しなどを回す）。
 
 ## 3-2. アイキャッチのアップロードが 403 で止まるとき（実際に起きたこと）
 - 原因の1つは、**画像の中身がサーバーの WAF の規則に引っかかる誤検知**。JPEG は中身がランダムなバイト列で、`/*` から約1.3KB 以内に `*/`（SQL のコメントの形）が偶然並ぶと、WAF が止める（2026-10-21 のふたご座流星群の画像で確認。成功した画像は、その間隔が 2.7KB 以上だった）。ファイル名や認証は関係ない。

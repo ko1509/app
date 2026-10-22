@@ -320,7 +320,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .ag-ic{--c:var(--sky);flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;
   background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px color-mix(in srgb,var(--c) 35%,transparent)}
 .ag-ic svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-.ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)} .ag-access{--c:var(--gear)}
+.ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)} .ag-access{--c:var(--gear)} .ag-steward{--c:var(--launch)}
 .ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 0;font-size:14px}.ac-row b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-row .bar{grid-column:1/-1;height:4px;border-radius:2px;background:var(--fill,rgba(128,128,128,.18))}.ac-row .bar i{display:block;height:100%;border-radius:2px;background:var(--accent,#0a84ff)}.ac-chart{width:100%;height:120px}
 .ag-detail{display:grid;gap:6px;padding:12px 14px;border-radius:16px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);min-width:0}
 .ag-dhead{display:flex;gap:8px;align-items:center} .ag-dhead b{font-size:15px;flex:1;min-width:0}
@@ -1011,11 +1011,12 @@ const AG={
   publisher:{l:"入稿",kinds:["publish"],trig:"publisherTriggerId",desc:"査読に通った稿を、アイキャッチごと WordPress に自動で入稿する",when:"6〜23時 毎時:08＋依頼（アイキャッチができたとき）",pc:"sky",ic:"upload",manual:"publish-manual.md",yen:60,tasks:["査読A・アイキャッチができた稿を、新しい記事は公開し、公開中の記事は差し替える","本文・図・タイトル・カテゴリ・タグ・アイキャッチを反映し、公開ページで確かめる","失敗したら元に戻し、理由を受信箱へ。入稿後に事実が古そうなら更新を頼む"],never:"査読Aでない稿・運営者が止めた稿は入稿しない・稿の中身は直さない・アイキャッチ無しでは入稿しない"},
   siteupdate:{l:"サイト更新",kinds:["siteupdate"],trig:"siteUpdateTriggerId",desc:"ホームのカウントダウン・ティッカー・UPCOMING を、イベントに合わせて自動で更新する",when:"毎朝 5:23＋依頼（日程が変わったとき）",pc:"launch",ic:"globe",manual:"site-manual.md",yen:50,tasks:["日程が変わったら、トップの NEXT LAUNCH・ティッカー・UPCOMING を直す","過ぎたイベントを表から外し、決まったものを足す","WordPress に書けないときは、貼り替え用の差分を受信箱へ"],never:"ホームの3か所以外は触らない・公式で確かめていない日時は入れない・認証情報は残さない"},
   access:{l:"計測",kinds:["access"],trig:"accessTriggerId",desc:"サイトのアクセス記録（GA4）を取り出して、アプリの「アクセス」タブに載せる",when:"毎朝 6:21＋依頼",pc:"gear",ic:"scan",manual:"access-manual.md",yen:30,tasks:["GA4 から直近28日の来訪者・地域・端末・流入元・人気ページを読む","集計を analytics/summary に書く"],never:"サイトや GA4 の設定は変えない・鍵やIDを表示しない"},
+  steward:{l:"受信箱担当",kinds:["steward"],trig:"stewardTriggerId",desc:"受信箱に出たものを1件ずつ自動で処理して閉じる（運営者にしかできないことだけ残す）",when:"6〜23時 毎時:40＋依頼",pc:"launch",ic:"inbox",manual:"inbox-manual.md",yen:60,tasks:["入稿の失敗・点検・公式の変化・査読で止まった記事・企画案を、手順の表どおりに処理する","公開中の記事の直しは、全文の差し替え稿にして査読→アイキャッチ→入稿の流れに乗せる","認証情報・お金・サーバー設定など運営者にしかできないものだけ残す"],never:"稿やサイトを直接書き換えない・運営者の判断を推測で埋めない"},
   audit:{l:"点検",kinds:["audit"],trig:"auditTriggerId",desc:"公開中のページを見回り、止まった依頼を片付ける",when:"毎朝 5:37＋依頼",pc:"spot",ic:"scan",manual:"audit-manual.md",yen:60,tasks:["公開中の記事を毎朝開き、リンク切れ・最終確認の古さ・部品の抜けを探す","止まった依頼を片付ける（自己修復）","週1回、サイトの基本（サイトマップ・運営者情報など）を点検"],never:"サイトの設定や記事は変えない・停止中の役割を起こさない"}
 };
 const ROLES=Object.keys(AG);
 const roleOf=kind=>ROLES.find(r=>AG[r].kinds.includes(kind))||"writer";
-const KIND_L={publish:"入稿",siteupdate:"サイト更新",select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",access:"計測",audit:"点検"};
+const KIND_L={publish:"入稿",siteupdate:"サイト更新",select:"記事選定",eventfetch:"イベント取得",eyecatch:"アイキャッチ",snsimage:"SNS画像",article:"作成",update:"直し",review:"査読",plan:"企画",watch:"公式ウォッチ",sns:"SNS",snsreview:"SNS審査",access:"計測",steward:"受信箱",audit:"点検"};
 const LOOP={writing:["執筆中","info"],reviewing:["査読中","info"],passed:["合格","good"],failed:["判断待ち","bad"]};
 const JOB_ST={queued:["順番待ち","mute"],running:["作業中","good"],done:["完了","info"],waiting:["判断待ち","warn"],error:["失敗","bad"]};
 const iso=()=>new Date().toISOString();
@@ -1087,7 +1088,7 @@ async function setPause(role,paused){
 }
 // 自動運転（一部停止のときに押すと全員オン、オンのときは2回押すとオフ）：記事（企画・作成・査読・イベント取得・公式ウォッチ・点検）と SNS（SNS・SNS審査）を別々に切り替える。
 // 両方オンのときだけ「完全自動運転」（ヘッダーのフチがオレンジに光る）
-const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
+const GROUPS={article:{l:"記事の自動運転",en:"ARTICLE AUTOPILOT",roles:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","steward","audit"]},sns:{l:"SNSの自動運転",en:"SOCIAL AUTOPILOT",roles:["sns","snsreview"]}};
 function groupState(g){const R=GROUPS[g].roles,on=R.filter(r=>!S.pause[r]).length;return on===R.length?"on":on?"part":"off"}
 const fullAuto=()=>S.ready&&!!S.db&&groupState("article")==="on"&&groupState("sns")==="on";
 function renderAuto(){const nb=$(".navbar");if(nb)nb.classList.toggle("is-autopilot",fullAuto())}
@@ -1176,7 +1177,7 @@ function roleState(role){
   if(last&&last.status==="error") return {k:"失敗",c:"bad",run,last};
   return {k:"待機",c:"mute",run,last};
 }
-const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer","publisher"],archive:["watch","writer","reviewer","designer","publisher","audit"],events:["eventfetch","watch","siteupdate"],sns:["sns","snsreview","designer"]};
+const AG_SCOPE={all:["planner","selector","writer","reviewer","designer","publisher","eventfetch","watch","siteupdate","access","steward","sns","snsreview","audit"],article:["planner","selector","writer","reviewer","designer","publisher"],archive:["watch","writer","reviewer","designer","publisher","audit"],events:["eventfetch","watch","siteupdate"],sns:["sns","snsreview","designer"]};
 const AG_TITLE={all:"AI編集部",article:"記事のエージェント",archive:"公開済み記事を育てるエージェント",events:"イベントのエージェント",sns:"SNS のエージェント"};
 const agIc=(r,cls="")=>`<span class="ag-ic ag-${r} ${cls}">${ic(AG[r].ic,"")}</span>`;
 function elapsed(t){const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${m}分`:m?`${m}分`:`${s}秒`}
@@ -1318,11 +1319,13 @@ function bindAgents(pg){
 const IB_KIND={planReview:["企画の見直し","warn","idea"],change:["公式の変化","bad","eye"],loopFailed:["査読で止まった記事","bad","check"],recheck:["公開済みの点検","warn","scan"],question:["エージェントからの質問","warn","doc"],idea:["記事の企画案","info","idea"],audit:["点検の結果","warn","scan"],other:["そのほか","mute","inbox"]};
 const IB_EN={planReview:"PLAN REVIEW",change:"OFFICIAL UPDATE",loopFailed:"NEEDS DECISION",recheck:"RECHECK",question:"QUESTION",idea:"IDEAS",audit:"AUDIT",other:"OTHER"};
 const IB_ORDER=["change","loopFailed","recheck","question","planReview","idea","audit","other"];
-const openInbox=()=>S.inbox.filter(i=>!i.status||i.status==="open").sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+const isOpenIb=i=>!i.status||i.status==="open";
+const autoInbox=()=>S.inbox.filter(i=>isOpenIb(i)&&!i.ownerOnly).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+const openInbox=()=>S.inbox.filter(i=>isOpenIb(i)&&i.ownerOnly).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
 const inVal=id=>S.inputs[id]||"";
 function inboxPeek(){
   const list=openInbox();if(!list.length) return "";
-  return `<div><div class="d-group-title"><span>受信箱（あなたの判断待ち）</span><span class="num">${list.length}件</span></div>
+  return `<div><div class="d-group-title"><span>受信箱（あなたにしかできないこと）</span><span class="num">${list.length}件</span></div>
   <div class="d-group">${list.slice(0,5).map(it=>{const K=IB_KIND[it.kind]||IB_KIND.other;return `<button type="button" class="d-row" data-go="inbox"><span class="d-picto pc-${K[1]==="bad"?"launch":K[1]==="info"?"sky":"gear"}">${ic(K[2],"")}</span>
     <div class="d-main"><div class="d-t">${esc(it.title||"（無題）")}</div><div class="d-sub">${esc(K[0])}・${esc(AG[it.by]?AG[it.by].l:"")}</div></div><div class="d-when">${it.createdAt?ago(it.createdAt):""}</div></button>`}).join("")}</div></div>`;
 }
@@ -1351,9 +1354,11 @@ function inboxCard(it){
 }
 function viewInbox(){
   const open=openInbox(),closed=S.inbox.filter(i=>i.status&&i.status!=="open").sort((a,b)=>(b.answeredAt||"").localeCompare(a.answeredAt||"")).slice(0,20);
-  const groups=IB_ORDER.map(k=>[k,open.filter(i=>(IB_KIND[i.kind]?i.kind:"other")===k)]).filter(([,l])=>l.length);
-  return `${groups.length?groups.map(([k,l])=>`<section><div class="d-sec"><h2><span class="en-l">${esc(IB_EN[k])}</span>${esc(IB_KIND[k][0])}</h2><p class="num">${l.length}件</p></div><div class="ib-list">${l.map(inboxCard).join("")}</div></section>`).join("")
-    :`<div class="d-card d-empty">判断が要るものはありません。</div>`}
+  const groups=IB_ORDER.map(k=>[k,open.filter(i=>(IB_KIND[i.kind]?i.kind:"other")===k)]).filter(([,l])=>l.length),auto=autoInbox();
+  const autoBox=`<div class="d-card"><div class="ag-head"><div class="d-main"><div class="d-t">エージェントが自動で処理しています</div><div class="d-sub">${auto.length?`処理待ち ${auto.length}件（毎時40分に受信箱担当が片づけます）`:"処理待ちはありません"}。あなたの判断に残るのは、認証情報・お金・サーバー設定など、エージェントにできないことだけです。</div></div>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="steward">いま処理</button>`:""}</div>
+    ${auto.length?`<details class="ib-more" style="margin-top:8px"><summary>処理待ちの中身（${auto.length}件）</summary><div class="ib-list" style="margin-top:8px">${auto.map(inboxCard).join("")}</div></details>`:""}</div>`;
+  return `${autoBox}${groups.length?groups.map(([k,l])=>`<section><div class="d-sec"><h2><span class="en-l">${esc(IB_EN[k])}</span>${esc(IB_KIND[k][0])}</h2><p class="num">${l.length}件</p></div><div class="ib-list">${l.map(inboxCard).join("")}</div></section>`).join("")
+    :`<div class="d-card d-empty">あなたの判断が要るものはありません。</div>`}
   ${closed.length?`<details class="d-card"><summary style="cursor:pointer;font-weight:600">対応済み・見送り（直近${closed.length}件）</summary><div class="d-group" style="margin-top:10px">${closed.map(i=>`<div class="d-row"><span class="d-pill ${i.status==="done"?"good":"mute"}">${i.status==="done"?"対応済み":"見送り"}</span><div class="d-main"><div class="d-t" style="font-size:14px">${esc(i.title||"")}</div>${i.answer?`<div class="d-sub">${esc(i.answer)}</div>`:""}</div><div class="d-when">${i.answeredAt?ago(i.answeredAt):""}</div></div>`).join("")}</div></details>`:""}`;
 }
 async function markInbox(it,status,answer){
