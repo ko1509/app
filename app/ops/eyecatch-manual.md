@@ -80,17 +80,14 @@
   （`python3 -c "import base64;print(base64.b64encode(open('eyecatch.jpg','rb').read()).decode())"` で作る。ArtifactData の `file_path` に JSON ファイルを渡すと楽）
 - カード：`draft.eyecatch`（`draft` が無ければ `eyecatch`）に `{"spec": {…}, "imageId": "<articleId>-eyecatch", "round": <稿の round>, "createdAt": "<今>"}`。
 
-## 5. SNS の画像（`kind: "snsimage"`）
-SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の「作り直す」の依頼も同じ（`note` に指示）。
+## 5. SNS の画像（`kind: "snsimage"`）：図解だけ（写真風の絵は使わない）
+SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の「作り直す」の依頼も同じ（`note` に指示）。**アイキャッチの `eyecatch.py` の写真風の背景は SNS には使わない。** 道具は `ops/sns_cards.py`（`eyecatch.py` と同じフォルダに置いて実行）。夜空の黒 #0B0B10 の地に白い線と文字、強調はオレンジ #E8481C 1か所だけ、右下に「模式図」。
 1. 投稿ごとに `posts/<ID>` を読む。`status` が `審査済み` でないもの（作り直しの依頼を除く）、`予約済み`・`投稿済み` のものは作らない。
-2. 形：`channel` が `X` なら `"format": "x"`（1200×675）、`Instagram` なら `"format": "ig"`（1080×1350）。`imageBrief` の `label`・`headline`・`sub`・`bigdate`・`bigdate_sub`・`en` をそのまま spec に入れ、`scene` から 3 章の `composition` を選ぶ。`handle` に `settings/sns` の Instagram のユーザー名（`@` つき。未設定なら入れない）。
-   - 縦長（ig）は下 40% に文字が入る。`horizon` は 0.50〜0.62 にして、主役（光跡・月・物）を上半分に置く。
-   - 同じ題材の X と Instagram は、同じ情景で形だけ変える（`seed` も同じ）。
-   - 直近の SNS 画像（`images` の `kind: "sns"` の `spec`、新しい順に10件）と背景がかぶらないようにする。
-3. 作った画像を開いて確かめる（2 章の 6 と同じ基準。日時が本文と同じかも）。
-4. `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。
-5. 依頼を `done` にし、報告する（3行以内：何件作ったか）。
-見本は `site/sns/samples/*.json`（リポジトリ）。
+2. spec は投稿の `imageBrief` をほぼそのまま使う（`type`: `week`・`direction`・`slide`・`poll`、カルーセルは `slides`。形は `ops/sns-manual.md` の 5 章と `sns_cards.py` の先頭）。`format` は `channel` が `X` なら `"x"`（1200×675）、`Instagram` なら `"ig"`（1080×1350）。`imageBrief` に `type` が無い古い形（`scene`・`headline` など）のときは、本文の内容に合う `slide`（見出しと要点）か `direction` に直す。**`scene`（風景の指示）は使わない。**
+3. `python3 sns_cards.py spec.json out.jpg`（カルーセルは `out-1.jpg`・`out-2.jpg` … ができる）。
+4. **作った画像を自分で開いて確かめる**：文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
+5. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
+6. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
 
 ## 6. してはいけないこと
 - 本文・査読結果・状態・投稿の文を書き換えること。査読 A 前の稿に作ること（運営者の依頼で公開済みのものは除く）。

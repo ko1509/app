@@ -843,8 +843,9 @@ const relDay=d=>{if(!d)return "";const n=diff(d);return n===0?"今日":n===1?"�
 function postWhen(p){const d=parse(p.date),n=d?diff(d):null,past=n!=null&&n<0&&p.status!=="投稿済み";
   return `<div class="sv-when ${n===0?"today":""} ${past?"late":""}"><b class="num">${esc(p.time||"--:--")}</b><span>${d?fmt(d):"日付なし"}${d?" · "+relDay(d):""}</span><em>${esc(p.channel||"X")}${p.kind?"・"+esc(p.kind):""}</em></div>`}
 function postMeta(p){const a=S.articles.find(x=>x._id===p.articleId);
-  return `${mcAction(p)}<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.topic&&p.topic!=="記事"?`<span class="d-pill info">${esc(TOPIC_L[p.topic]||p.topic)}</span>`:""}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
-const TOPIC_L={"記事":"記事","イベント":"イベント","今夜の空":"今夜の空","コラム":"コラム"};
+  return `${mcAction(p)}<div class="sv-meta">${spill(p.status,POST_STATUS)}${p.topic&&p.topic!=="記事"?`<span class="d-pill info">${esc(TOPIC_L[p.topic]||p.topic)}</span>`:""}${p.kind?`<span class="d-pill mute">${esc(p.kind)}</span>`:""}${p.approval==="owner"?`<span class="d-pill warn" title="延期・結果・訂正・引用・写真の紹介は、運営者の確認のあとに予約します">運営者の確認が必要</span>`:""}${p.review&&p.review.grade?`<span class="d-pill ${p.review.grade==="OK"?"good":"bad"}" title="${esc((p.review.notes||[]).join(" / "))}">審査 ${esc(p.review.grade)}</span>`:""}${a?`<span class="d-sub sv-art">${esc(a.title)}</span>`:""}</div>`}
+const TOPIC_L={"記事":"記事","イベント":"イベント","今夜の空":"今夜の空","コラム":"コラム","予報":"見上げ予報","スポット":"スポット"};
+const KO_BRAND="7372301"; // KOAlilのブランド。ミアゲタビの投稿は絶対にここへ出さない
 // 画像担当が作った投稿画像（images/sns-<投稿ID>）。一度読んだら覚えておく
 // db の画像（images/<ID>）を一度だけ読んで覚えておく
 function dbImg(k){if(!k||!S.db)return "";S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
@@ -853,17 +854,18 @@ function postImg(p){if(/^https:\/\//.test(p.imageUrl||""))return p.imageUrl;cons
   S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
 function postImgBar(p){const g=!(/^https:\/\//.test(p.imageUrl||""))&&p.imageId&&(S.snsImg||{})[p.imageId];
-  return g?`<div class="sv-act"><span class="d-sub">${p.channel==="Instagram"?"予約には、この画像を WordPress のメディアなどに上げて URL を入れてください":"画像つきで予約するなら、上げた画像の URL を入れてください"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">画像を保存</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
+  return g?`<div class="sv-act"><span class="d-sub">${p.channel==="Instagram"?"予約には、この画像を WordPress のメディアなどに上げて URL を入れてください":"画像つきで予約するなら、上げた画像の URL を入れてください"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">${(p.imageIds||[]).length>1?`画像を保存（${p.imageIds.length}枚）`:"画像を保存"}</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
 function xCard(p){const n=xLen(p.text),d=parse(p.date);
   return `<button type="button" class="sv sv-x" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>ミアゲタビ</b><span>@${esc(xHandle())}</span></div><span class="sv-logo">𝕏</span></div>
     <div class="sv-text">${snsText(p.text)||'<span class="d-sub">（本文なし）</span>'}</div>
     ${(()=>{const u=postImg(p);return u?`<div class="sv-ximg"><img src="${esc(u)}" alt="" loading="lazy"></div>`:""})()}${postImgBar(p)}
+    ${p.replyText?`<div class="d-sub" style="margin:6px 0"><b>自分のリプライ（リンク）：</b>${snsText(p.replyText)}</div>`:""}
     <div class="sv-count ${n>280?"over":""}"><i style="--p:${Math.min(100,n/280*100)}%"></i><span class="num">${n}/280</span></div>${postMeta(p)}</button>`}
 function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length,d=parse(p.date),cap=String(p.text||"");
   return `<button type="button" class="sv sv-ig" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>${esc(igHandle())}</b><span>ミアゲタビ</span></div><span class="sv-logo ig">◎</span></div>
     <div class="sv-img">${(()=>{const u=postImg(p);return u?`<img src="${esc(u)}" alt="" loading="lazy">`:`<span>${p.imageId||p.status==="審査済み"?"画像担当が画像を作っています":esc(p.imageNote||"審査を通ると画像担当が画像を作ります")}<br><b>画像のURLを入れると予約できます</b></span>`})()}</div>${postImgBar(p)}
     <div class="sv-text"><b>${esc(igHandle())}</b> ${snsText(cap.length>150?cap.slice(0,150)+"…":cap)}${cap.length>150?' <span class="d-sub">もっと見る</span>':""}</div>
-    <div class="sv-count ${tags!==8&&tags?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/8</span></div>${postMeta(p)}</button>`}
+    <div class="sv-count ${tags>2?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/2</span></div>${postMeta(p)}</button>`}
 /* ---------- Metricool で予約（運営者がワンタップ。審査済みの投稿だけ） ---------- */
 const METRICOOL="Metricool Social Media Management";
 const MC_NET={X:"twitter",Instagram:"instagram"};
@@ -872,6 +874,7 @@ const igHandle=()=>(S.snsConf.igHandle||"").replace(/^@/,"")||"（未設定）";
 const mcPayload=r=>{let p=r&&(r.payload!==undefined?r.payload:r.json);if(typeof p==="string"){try{p=JSON.parse(p)}catch(_){}}return p};
 function mcProblems(p){const out=[],d=parse(p.date);
   if(!S.snsConf.brandId)out.push("Metricool のブランドが未設定（SNS タブの「アカウント」）");
+  if(String(S.snsConf.brandId)===KO_BRAND)out.push("このブランドは別事業（KOAlil）のものです。ミアゲタビのブランドを選んでください");
   if(p.channel==="両方")out.push("「両方」は予約できません。X と Instagram の投稿に分けてください");
   if(!d||!/^\d{1,2}:\d{2}$/.test(p.time||""))out.push("投稿日と時刻（例 19:00）が必要");
   else if(new Date(`${p.date}T${p.time.padStart(5,"0")}:00+09:00`)<new Date(Date.now()+5*6e4))out.push("投稿の時刻が過ぎています（5分以上先にしてください）");
@@ -942,12 +945,14 @@ function snsAccounts(){
       <p class="d-sub" style="margin:0">ミアゲタビ用のブランドを選んでください（KOAlil のブランドには予約しません）。</p></div></details>`;
 }
 function bindSns(pg){
-  pg.querySelectorAll("[data-snsdl]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsdl),u=p&&(S.snsImg||{})[p.imageId];if(u)saveImage(u,`miagetabi-${p._id}.jpg`)};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-snsdl]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsdl);if(!p)return;const ids=(p.imageIds&&p.imageIds.length>1)?p.imageIds:[p.imageId];
+      (async()=>{for(let i=0;i<ids.length;i++){let u=(S.snsImg||{})[ids[i]];if(!u){try{const sn=await S.db.doc("images/"+ids[i]).get(),im=sn&&(typeof sn.data==="function"?sn.data():sn);u=im&&im.dataUrl}catch(_){}}if(u)await saveImage(u,`miagetabi-${p._id}${ids.length>1?"-"+(i+1):""}.jpg`)}})()};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-snsre]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsre);if(!p)return;
     await requestJob("snsimage",{postIds:[p._id],title:"SNS画像の作り直し",note:`作り直し：${p._id}${p.imageNote?"／指示："+p.imageNote:""}`})};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-mc]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();if(!b.classList.contains("is-dis"))mcSchedule(b.dataset.mc)};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   const ld=$("#snsLoad");if(ld)ld.onclick=async()=>{try{S.mcBrands=(mcPayload(await S.mcp.callTool(METRICOOL,"getBrandSettings",{},{cache:false}))||{}).data||[];render();toast(`ブランドを${S.mcBrands.length}件読みました`)}catch(e){toast("読めませんでした："+mcErr(e))}};
   const sv=$("#snsSave");if(sv)sv.onclick=async()=>{const id=$("#snsBrand").value,b=(S.mcBrands||[]).find(x=>String(x.id)===id);
+    if(id===KO_BRAND){toast("このブランドは別事業（KOAlil）のものです。ミアゲタビ用のブランドを選んでください");return}
     if(id&&b&&/koa/i.test(b.label+JSON.stringify(b.networksData||{}))){toast("KOAlil のブランドは選べません。ミアゲタビ用のブランドを作ってください");return}
     try{await S.db.doc("settings/sns").set({...S.snsConf,xHandle:$("#snsX").value.trim().replace(/^@/,""),igHandle:$("#snsIg").value.trim().replace(/^@/,""),brandId:id,brandLabel:b?b.label:(S.snsConf.brandLabel||""),updatedAt:iso()});toast("保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
 }

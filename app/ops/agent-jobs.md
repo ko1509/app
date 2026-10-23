@@ -35,6 +35,7 @@
   - `ops/site_home.py`・`ops/home_countdown.py` … ホームの更新（サイト更新だけが使う）
   - `ops/publish_wp.py` … 査読に通った稿を、アイキャッチごと WordPress に入稿する（入稿だけが使う）
   - `ops/eyecatch.py` … アイキャッチ（写真風の CG＋記事のタイトル）を作る
+  - `ops/sns_cards.py` … SNS の図解カード（見上げ予報の表・方角図・カルーセル・投票）を作る（画像担当だけが使う）
   - 読んだファイルは保存先が表示される。`.py` はその保存先のまま `python3` で実行する（中身を書き写さない）。
 - db（アプリの共有データ）の読み書きは **ArtifactData** ツール。
 - 公開ページは GET で読んでよい（`curl -sL https://miagetabi.space/…`）。WordPress への書き込みは、認証情報（環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`。値は表示・記録しない）を使い、各手順書で決めた範囲と手順で行う（いまは、サイト更新がホームの決まった3か所を `ops/site_home.py` で、入稿が査読 A の稿を `ops/publish_wp.py` で書く）。書く前に元の内容を退避し、書いたあとに公開ページで確かめる。
