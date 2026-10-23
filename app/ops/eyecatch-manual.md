@@ -2,7 +2,7 @@
 
 **査読で A になった稿だけ**、記事を読んでアイキャッチ（1200×630。写真風の CG の背景に、記事の見出しを組む）を作る。作成エージェントの負担を軽くし、本文の質に集中させるために分けた役割。本文が確定してから作るので、書き直しのたびに作り直さない。
 
-**書き換えてよいもの**：`images/<articleId>-eyecatch`、`images/sns-<投稿ID>` と、その投稿の `imageId` だけ（`posts/<ID>` を `update`。ほかの項目は変えない）、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
+**書き換えてよいもの**：`images/<articleId>-eyecatch`、`images/sns-<投稿ID>` と、その投稿の `imageId`・`imageIds`・`imageUrl`・`imageUrls` だけ（SNS 用の画像を WordPress のメディアに上げるのも、この役割だけ）（`posts/<ID>` を `update`。ほかの項目は変えない）、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
 **書き換えないもの**：本文（`draft.markdown`・`blocks`）・`review`・`status`・`loop`・`events`・ほかのカード
 
 ## 0. 共通
@@ -87,7 +87,9 @@ SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の
 3. `python3 sns_cards.py spec.json out.jpg`（カルーセルは `out-1.jpg`・`out-2.jpg` … ができる）。
 4. **作った画像を自分で開いて確かめる**：文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
 5. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
-6. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
+6. **公開 URL にする（Instagram・Threads の投稿だけ。X は不要）**：Metricool は公開 URL しか受け取れないため、作った画像（`images/sns-<投稿ID>`。カルーセルは各枚）を WordPress のメディアに上げる。画像の db ドキュメントを `out_dir` つきの `get` で保存し、`python3 publish_wp.py snsmedia <保存した json> <投稿ID> "<alt 文：図の内容を1文>"`（`ops/publish_wp.py`。認証情報は環境変数。値は表示しない）。最後の行の `url` を、`posts/<ID>` の `imageUrl`（カルーセルは `imageUrls` に順番どおり。`imageUrl` は1枚目）に `update`（`if_version`）。**画像のバイトは自分で変えない**（403 が出たら `eyecatch.py` の `save_jpeg` が避ける作りになっている。それでも 403 なら `error` で止め、受信箱へ）。メディアに上げる以外の WordPress の書き込みはしない。
+7. **予約を頼む**：上げた投稿があれば、SNS エージェントを「予約だけ」で起動する（`jobs/sns-sched-<YYYYMMDDHHMM>`、`kind: "sns"`、`note: "予約だけ"`、`by: "designer"` を `queued` で書き、`settings/background.snsTriggerId` を `fire_trigger`。`ops/agent-jobs.md` の 6）。
+8. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
 
 ## 6. してはいけないこと
 - 本文・査読結果・状態・投稿の文を書き換えること。査読 A 前の稿に作ること（運営者の依頼で公開済みのものは除く）。

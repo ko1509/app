@@ -861,6 +861,11 @@ function xCard(p){const n=xLen(p.text),d=parse(p.date);
     ${(()=>{const u=postImg(p);return u?`<div class="sv-ximg"><img src="${esc(u)}" alt="" loading="lazy"></div>`:""})()}${postImgBar(p)}
     ${p.replyText?`<div class="d-sub" style="margin:6px 0"><b>自分のリプライ（リンク）：</b>${snsText(p.replyText)}</div>`:""}
     <div class="sv-count ${n>280?"over":""}"><i style="--p:${Math.min(100,n/280*100)}%"></i><span class="num">${n}/280</span></div>${postMeta(p)}</button>`}
+function thCard(p){const n=[...String(p.text||"")].length,tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length;
+  return `<button type="button" class="sv sv-x" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>ミアゲタビ</b><span>@${esc(thHandle())}</span></div><span class="sv-logo">@</span></div>
+    <div class="sv-text">${snsText(p.text)||'<span class="d-sub">（本文なし）</span>'}</div>
+    ${(()=>{const u=postImg(p);return u?`<div class="sv-ximg"><img src="${esc(u)}" alt="" loading="lazy"></div>`:""})()}${postImgBar(p)}
+    <div class="sv-count ${n>500||tags>1?"over":""}"><i style="--p:${Math.min(100,n/500*100)}%"></i><span class="num">${n}/500字 · タグ ${tags}/1</span></div>${postMeta(p)}</button>`}
 function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length,d=parse(p.date),cap=String(p.text||"");
   return `<button type="button" class="sv sv-ig" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>${esc(igHandle())}</b><span>ミアゲタビ</span></div><span class="sv-logo ig">◎</span></div>
     <div class="sv-img">${(()=>{const u=postImg(p);return u?`<img src="${esc(u)}" alt="" loading="lazy">`:`<span>${p.imageId||p.status==="審査済み"?"画像担当が画像を作っています":esc(p.imageNote||"審査を通ると画像担当が画像を作ります")}<br><b>画像のURLを入れると予約できます</b></span>`})()}</div>${postImgBar(p)}
@@ -868,20 +873,30 @@ function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)|
     <div class="sv-count ${tags>2?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/2</span></div>${postMeta(p)}</button>`}
 /* ---------- Metricool で予約（運営者がワンタップ。審査済みの投稿だけ） ---------- */
 const METRICOOL="Metricool Social Media Management";
-const MC_NET={X:"twitter",Instagram:"instagram"};
+const MC_NET={Instagram:"instagram",Threads:"threads"}; // X は Metricool に載せない（運営者が Chrome で予約）
 const xHandle=()=>(S.snsConf.xHandle||"").replace(/^@/,"")||"（未設定）";
+const thHandle=()=>(S.snsConf.threadsHandle||S.snsConf.igHandle||"").replace(/^@/,"")||"（未設定）";
 const igHandle=()=>(S.snsConf.igHandle||"").replace(/^@/,"")||"（未設定）";
 const mcPayload=r=>{let p=r&&(r.payload!==undefined?r.payload:r.json);if(typeof p==="string"){try{p=JSON.parse(p)}catch(_){}}return p};
 function mcProblems(p){const out=[],d=parse(p.date);
   if(!S.snsConf.brandId)out.push("Metricool のブランドが未設定（SNS タブの「アカウント」）");
   if(String(S.snsConf.brandId)===KO_BRAND)out.push("このブランドは別事業（KOAlil）のものです。ミアゲタビのブランドを選んでください");
-  if(p.channel==="両方")out.push("「両方」は予約できません。X と Instagram の投稿に分けてください");
+  if(p.channel==="両方")out.push("「両方」は予約できません。X・Instagram・Threads の投稿に分けてください");
+  if(p.channel==="X")out.push("X は Metricool に載せません（下書きを保存して、Chrome で X の予約に入れます）");
+  if(p.channel==="Threads"&&[...String(p.text||"")].length>500)out.push("Threads は500字までです");
+  if(p.approval==="owner"&&!p.ownerOk)out.push("運営者の確認が先です（延期・結果・訂正・引用）。確認したら「運営者が確認した」を押してください");
   if(!d||!/^\d{1,2}:\d{2}$/.test(p.time||""))out.push("投稿日と時刻（例 19:00）が必要");
   else if(new Date(`${p.date}T${p.time.padStart(5,"0")}:00+09:00`)<new Date(Date.now()+5*6e4))out.push("投稿の時刻が過ぎています（5分以上先にしてください）");
   if(p.channel==="Instagram"&&!/^https:\/\//.test(p.imageUrl||""))out.push("Instagram は画像の URL が必要");
   if(p.channel==="X"&&xLen(p.text)>280)out.push("X の文字数が280を超えています");
   return out}
 function mcAction(p){
+  if(p.channel==="X"){
+    if(p.status==="予約済み")return `<div class="sv-act"><span class="d-pill info">X で予約済み（手動）</span></div>`;
+    if(p.status!=="審査済み"||!S.canWrite)return "";
+    return `<div class="sv-act"><span class="d-sub">X は手動：上の「X の下書きを保存」で1週間分を渡します</span><span role="button" tabindex="0" class="d-btn small secondary" data-xdone="${esc(p._id)}">X で予約した</span></div>`;
+  }
+  if(p.approval==="owner"&&p.status==="審査済み"&&!p.ownerOk&&S.canWrite)return `<div class="sv-act"><span class="sv-warn">運営者の確認が先です（延期・結果・訂正・引用）</span><span role="button" tabindex="0" class="d-btn small secondary" data-ownerok="${esc(p._id)}">運営者が確認した</span></div>`;
   if(p.status==="予約済み"&&p.metricool)return `<div class="sv-act"><span class="d-pill info">Metricool に予約済み</span>${p.metricool.plannerUrl?`<a class="d-pill mute" href="${esc(p.metricool.plannerUrl)}" target="_blank" rel="noopener">Metricool で開く</a>`:""}</div>`;
   if(p.status!=="審査済み"||!S.canWrite)return "";
   const pr=mcProblems(p),busy=S.mcBusy===p._id,armed=S.mcArm===p._id;
@@ -909,7 +924,7 @@ async function mcSchedule(id){
     if(!dup){
       const info={autoPublish:true,draft:false,descendants:[],firstCommentText:"",hasNotReadNotes:false,media:/^https:\/\//.test(p.imageUrl||"")?[p.imageUrl]:[],mediaAltText:[],providers:[{network:net}],
         publicationDate:{dateTime:at+":00",timezone:"Asia/Tokyo"},shortener:false,smartLinkData:{ids:[]},text:p.text};
-      if(net==="twitter")info.twitterData={tags:[]};
+      if(net==="threads")info.threadsData={};
       if(net==="instagram")info.instagramData={type:"POST",isAiGenerated:false};
       const res=await S.mcp.callTool(METRICOOL,"createScheduledPost",{blogId:String(brand.id),date:at+":00+09:00",info:JSON.stringify(info)},{cache:false});
       const raw=JSON.stringify(res.payload??res.content??"");
@@ -949,6 +964,9 @@ function bindSns(pg){
       (async()=>{for(let i=0;i<ids.length;i++){let u=(S.snsImg||{})[ids[i]];if(!u){try{const sn=await S.db.doc("images/"+ids[i]).get(),im=sn&&(typeof sn.data==="function"?sn.data():sn);u=im&&im.dataUrl}catch(_){}}if(u)await saveImage(u,`miagetabi-${p._id}${ids.length>1?"-"+(i+1):""}.jpg`)}})()};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-snsre]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.snsre);if(!p)return;
     await requestJob("snsimage",{postIds:[p._id],title:"SNS画像の作り直し",note:`作り直し：${p._id}${p.imageNote?"／指示："+p.imageNote:""}`})};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-xdone]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();try{await S.db.doc("posts/"+b.dataset.xdone).update({status:"予約済み",xManual:true,updatedAt:iso()});toast("X で予約済みにしました")}catch(_){toast("保存できませんでした")}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-ownerok]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();try{await S.db.doc("posts/"+b.dataset.ownerok).update({ownerOk:true,ownerOkAt:iso(),updatedAt:iso()});toast("確認済みにしました")}catch(_){toast("保存できませんでした")}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-xexport]").forEach(b=>b.onclick=xExport);
   pg.querySelectorAll("[data-mc]").forEach(b=>{const go=e=>{e.stopPropagation();e.preventDefault();if(!b.classList.contains("is-dis"))mcSchedule(b.dataset.mc)};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   const ld=$("#snsLoad");if(ld)ld.onclick=async()=>{try{S.mcBrands=(mcPayload(await S.mcp.callTool(METRICOOL,"getBrandSettings",{},{cache:false}))||{}).data||[];render();toast(`ブランドを${S.mcBrands.length}件読みました`)}catch(e){toast("読めませんでした："+mcErr(e))}};
   const sv=$("#snsSave");if(sv)sv.onclick=async()=>{const id=$("#snsBrand").value,b=(S.mcBrands||[]).find(x=>String(x.id)===id);
@@ -960,9 +978,9 @@ function viewSns(){
   setTimeout(mcSync,0);
   const ch=S.snsCh||"all",list=[...S.posts].filter(p=>ch==="all"||(p.channel||"X")===ch||p.channel==="両方").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
   const days=[...new Set(list.map(p=>p.date||""))];
-  return `${agentsCard("sns")}<div class="d-actions"><div class="d-seg" role="group" aria-label="媒体">${[["all","すべて"],["X","X"],["Instagram","Instagram"]].map(([k,l])=>`<button type="button" data-ch="${k}" aria-pressed="${ch===k}">${l}</button>`).join("")}</div><span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-job="sns">${ic("sns")}告知文を頼む</button>`:""}${addBtn("post","投稿を追加")}</div>
+  return `${agentsCard("sns")}<div class="d-actions"><div class="d-seg" role="group" aria-label="媒体">${[["all","すべて"],["Instagram","Instagram"],["Threads","Threads"],["X","X"]].map(([k,l])=>`<button type="button" data-ch="${k}" aria-pressed="${ch===k}">${l}</button>`).join("")}</div><span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small secondary" data-xexport="1">${ic("doc")}X の下書きを保存</button><button type="button" class="d-btn small secondary" data-job="sns">${ic("sns")}告知文を頼む</button>`:""}${addBtn("post","投稿を追加")}</div>
   ${list.length?days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
-    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):xCard(p))).join("")}</div></section>`}).join("")
+    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):p.channel==="Threads"?thCard(p):xCard(p))).join("")}</div></section>`}).join("")
     :`<div class="d-card d-empty">投稿の予定はまだありません。</div>`}
   ${snsAccounts()}`;
 }
@@ -1011,8 +1029,8 @@ const AG={
   designer:{l:"画像",kinds:["eyecatch","snsimage"],trig:"designerTriggerId",desc:"査読でAになった記事のアイキャッチと、審査を通ったSNS投稿の画像を作る",when:"依頼（査読A・SNS審査OK）＋6〜23時 毎時:38",pc:"gear",ic:"image",manual:"eyecatch-manual.md",yen:40,tasks:["査読でAになった稿を読み、アイキャッチ（見出し・英語の一文・背景）を作る","審査を通ったSNS投稿に、X（横長）・Instagram（縦長）の画像を作る","直近と背景がかぶらないよう描き分け、できた画像を自分で確かめる"],never:"本文・査読結果は変えない・写真や他サイトの画像は使わない"},
   eventfetch:{l:"イベント取得",kinds:["eventfetch"],trig:"eventFetchTriggerId",desc:"公式の予定表から新しい打ち上げ・天体イベントを見つけ、イベントに足す",when:"月・木 6:47＋依頼",pc:"spot",ic:"cal",manual:"event-fetch-manual.md",yen:60,tasks:["JAXA・スペースワン・インターステラの打ち上げ予定と、国立天文台・IMO の天体の暦を読む","まだ無いイベントを、公式の日時と出典つきでイベントに足す（重複は足さない）","日付が未発表のものは「日付未定」で足す。迷うものは受信箱へ"],never:"既にあるイベントの日時・状況は変えない（それは公式ウォッチ）・推測の日付を作らない"},
   watch:{l:"公式ウォッチ",kinds:["watch"],trig:"watchTriggerId",desc:"延期・日程変更を公式の発表から見つけ、直す一覧を出す",when:"6:07・12:07・18:07・22:07＋依頼",pc:"launch",ic:"eye",manual:"watch-manual.md",yen:40,tasks:["JAXA・スペースワン・インターステラ・自治体の発表を1日4回見る","延期・日程変更を見つけたらイベントを直し、受信箱に直す一覧を出す","T−7・T−3・T−1・当日・翌日の直前更新を作成に頼む"],never:"報道やSNSのうわさだけでは書き換えない"},
-  sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"記事の告知・イベント情報・今夜の空・コラムを X・Instagram 用に下書きする",when:"毎朝 8:43＋依頼",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:50,tasks:["新しい記事、14日以内のイベント（記事が無くても）、今夜の空、ちょっとしたコラムを下書きする","事実は一次情報で、空の時刻・方角は計算で確かめる","画像の指示を付けて審査へ（画像は画像担当が作る）"],never:"投稿・予約はしない（SNSアカウントの準備ができるまで停止中）"},
-  snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","文字数・ハッシュタグ数・禁止表現・安全のひとことを確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・告知文を自分で書き換えない（SNSアカウントの準備ができるまで停止中）"},
+  sns:{l:"SNS",kinds:["sns"],trig:"snsTriggerId",desc:"Instagram・Threads・X の投稿を作り、Instagram・Threads は Metricool に予約する（X は下書きまで）",when:"毎朝 8:43・夕方 18:43＋依頼（毎週土曜に来週分）",pc:"sky",ic:"sns",manual:"sns-manual.md",yen:60,tasks:["見上げ予報・前日リマインド・図解・投票・紹介を、SNS ごとに書き分けて下書きする","事実は一次情報で、空の時刻・方角は計算で確かめる","審査と図解の画像のあと、Instagram・Threads は miagetabi ブランドに予約する（X は運営者が Chrome で予約）"],never:"X は Metricool に載せない・KOAlil（ko）ブランドを使わない・延期／結果／訂正／引用は運営者の確認まで予約しない"},
+  snsreview:{l:"SNS審査",kinds:["snsreview"],trig:"snsReviewTriggerId",desc:"告知文の日時・状況・文字数・言い回しを公式と記事で確かめて判定する",when:"依頼（SNS が下書きを書いたとき）＋毎朝 9:13",pc:"spot",ic:"check",manual:"sns-review-manual.md",yen:30,tasks:["告知文の日時・曜日・状況を公式ページと記事で確かめ直す","SNS ごとの文字数・ハッシュタグ・リンクの置き場所・禁止表現・図解の画像の指示を確かめる","OK なら「審査済み」、だめなら直し方つきで SNS に差し戻す（2回まで）"],never:"投稿・予約はしない・投稿の文を自分で書き換えない"},
   publisher:{l:"入稿",kinds:["publish"],trig:"publisherTriggerId",desc:"査読に通った稿を、アイキャッチごと WordPress に自動で入稿する",when:"6〜23時 毎時:08＋依頼（アイキャッチができたとき）",pc:"sky",ic:"upload",manual:"publish-manual.md",yen:60,tasks:["査読A・アイキャッチができた稿を、新しい記事は公開し、公開中の記事は差し替える","本文・図・タイトル・カテゴリ・タグ・アイキャッチを反映し、公開ページで確かめる","失敗したら元に戻し、理由を受信箱へ。入稿後に事実が古そうなら更新を頼む"],never:"査読Aでない稿・運営者が止めた稿は入稿しない・稿の中身は直さない・アイキャッチ無しでは入稿しない"},
   siteupdate:{l:"サイト更新",kinds:["siteupdate"],trig:"siteUpdateTriggerId",desc:"ホームのカウントダウン・ティッカー・UPCOMING を、イベントに合わせて自動で更新する",when:"毎朝 5:23＋依頼（日程が変わったとき）",pc:"launch",ic:"globe",manual:"site-manual.md",yen:50,tasks:["日程が変わったら、トップの NEXT LAUNCH・ティッカー・UPCOMING を直す","過ぎたイベントを表から外し、決まったものを足す","WordPress に書けないときは、貼り替え用の差分を受信箱へ"],never:"ホームの3か所以外は触らない・公式で確かめていない日時は入れない・認証情報は残さない"},
   access:{l:"計測",kinds:["access"],trig:"accessTriggerId",desc:"サイトのアクセス記録（GA4）を取り出して、アプリの「アクセス」タブに載せる",when:"毎朝 6:21＋依頼",pc:"gear",ic:"scan",manual:"access-manual.md",yen:30,tasks:["GA4 から直近28日の来訪者・地域・端末・流入元・人気ページを読む","集計を analytics/summary に書く"],never:"サイトや GA4 の設定は変えない・鍵やIDを表示しない"},
@@ -1493,6 +1511,26 @@ function mdHtml(md,fields,figs){
   return out.join("");
 }
 // 画像を保存（downloads が使えればそれで、無ければリンクで）
+async function saveFile(name,blob){
+  try{const dl=window.claude&&await window.claude.use("downloads");if(dl){await dl.save({filename:name,data:blob});return true}}catch(e){if(e&&e.code==="cancelled")return false}
+  const l=document.createElement("a");l.href=URL.createObjectURL(blob);l.download=name;document.body.appendChild(l);l.click();l.remove();return true;
+}
+// X は Metricool に載せない。来週1週間分の下書きを、決まった形の1ファイル（＋画像）にして渡す
+async function xExport(){
+  const t=iso().slice(0,10),pool=S.posts.filter(p=>p.channel==="X"&&p.status==="審査済み"&&(p.date||"")>=t&&(p.approval!=="owner"||p.ownerOk)).sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
+  if(!pool.length){toast("渡せる X の下書きがありません（審査済みで、日付が今日以降のもの）");return}
+  const d0=parse(pool[0].date),mon=new Date(d0);mon.setDate(d0.getDate()-((d0.getDay()+6)%7));const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const ymd=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"),dash=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0").replace(/^/,"");
+  const wk=pool.filter(p=>{const d=parse(p.date);return d>=mon&&d<=sun}),W=["日","月","火","水","木","金","土"],mk=ymd(mon);
+  const out=[],imgs=[];
+  wk.forEach((p,i)=>{const d=parse(p.date),link=(String(p.replyText||"").match(/https?:\/\/\S+/)||[""])[0];
+    const ids=(p.imageIds&&p.imageIds.length)?p.imageIds:(p.imageId?[p.imageId]:[]),names=ids.map((id,k)=>{const n=`x-${mk}-${i+1}${ids.length>1?"-"+(k+1):""}.jpg`;imgs.push([id,n]);return n});
+    out.push(`## ${i+1}. ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}（${W[d.getDay()]}）${(p.time||"").padStart(5,"0")}  ［型：${p.kind||p.topic||""}］\n本文：\n${p.text||""}\nリンク：${link||"なし"}${link?"（リプライに付ける。予約でできなければ本文末に入れる）":""}\n画像：${names.join("、")||"なし"}\n出典：${(p.sources||[]).join(" ")||"なし"}\nメモ：${p.xNote||"なし"}\n`)});
+  const head=`# X の下書き（${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,"0")}-${String(mon.getDate()).padStart(2,"0")} 〜 ${sun.getFullYear()}-${String(sun.getMonth()+1).padStart(2,"0")}-${String(sun.getDate()).padStart(2,"0")}）\n\nこの下書きを COWORK に貼り付けてください（画像は同じ名前で一緒に保存されます）。\n\n`;
+  await saveFile(`x-drafts-${mk}.md`,new Blob([head+out.join("\n")],{type:"text/markdown"}));
+  for(const [id,name] of imgs){let u=(S.snsImg||{})[id];if(!u){try{const sn=await S.db.doc("images/"+id).get(),im=sn&&(typeof sn.data==="function"?sn.data():sn);u=im&&im.dataUrl}catch(_){}}if(u)await saveImage(u,name)}
+  toast(`${wk.length}件の下書きを保存しました`);
+}
 async function saveImage(dataUrl,filename){
   try{const dl=window.claude&&await window.claude.use("downloads");
     if(dl){const bin=atob(dataUrl.split(",")[1]),u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
@@ -1594,7 +1632,7 @@ const FORMS={
     ["eventDate","イベント日（更新タスクの基準）","date"],["publishBy","公開期限（空なら自動）","date"],["monetize","収益化の導線","text","wide"],
     ["url","公開URL","url","wide"],["lastVerified","最終確認日","date"],["note","メモ","textarea","wide"]]},
   post:{col:"posts",title:"SNS投稿",fields:[
-    ["date","投稿日","date"],["time","時刻","text"],["channel","媒体","select",["X","Instagram","両方"]],["status","状態","select",Object.keys(POST_STATUS)],
+    ["date","投稿日","date"],["time","時刻","text"],["channel","媒体","select",["Instagram","Threads","X","両方"]],["status","状態","select",Object.keys(POST_STATUS)],
     ["text","本文","textarea","wide"],["imageUrl","画像のURL（Instagram は必須。画像担当の画像を WordPress のメディアなどに上げた URL）","url","wide"],["imageNote","画像のメモ（作り直すときの指示もここに）","text","wide"],["articleId","関連記事","article","wide"]]},
   kpi:{col:"kpi",title:"KPI（月）",fields:[["month","月（例：2026-12）","text","wide"],...KPI_DEF.map(d=>[d.k,`${d.l}（${d.u}）`,"number"])]}
 };

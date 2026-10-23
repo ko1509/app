@@ -5,6 +5,7 @@
   python3 publish_wp.py plan  article.json image.json            # 何をするか（新規／差し替え、カテゴリ、タグ、画像）を出すだけ。書かない
   python3 publish_wp.py apply article.json image.json            # 取得 → 検査 → 画像を上げる → 記事を保存（POST）→ 公開ページで確認（失敗なら元に戻す）
   python3 publish_wp.py rollback backup.json                     # 差し替え前に戻す
+  python3 publish_wp.py snsmedia image.json post-ID alt文           # SNS 用の図解画像（images/sns-…）をメディアに上げ、公開 URL を出す（画像担当が使う。記事は書かない）
 article.json … アプリの db の articles/<ID>（draft・review・wp・seo・status を持つもの）。image.json … images/<ID>-eyecatch（dataUrl を持つもの）。
 環境変数: MIAGETABI_WP_USER / MIAGETABI_WP_APP_PASSWORD
 結果は最後の行に JSON（ok・postId・link・mediaId・mode・backup のファイル名）。バックアップは backup-<記事ID>.json に書く。
@@ -120,6 +121,13 @@ def main():
     cmd = sys.argv[1]
     if cmd == "rollback":
         b = json.load(open(sys.argv[2], encoding="utf-8")); wp("POST", f"/wp/v2/posts/{b['id']}", body={k: b[k] for k in ("title", "content", "excerpt", "featured_media", "categories", "tags", "status")}); print("戻しました"); return
+    if cmd == "snsmedia":  # SNS 用の画像を公開 URL にする（Metricool は公開 URL しか受け取れない）
+        img = load(sys.argv[2]); pid = re.sub(r"[^A-Za-z0-9-]", "", sys.argv[3]); alt = sys.argv[4] if len(sys.argv) > 4 else "ミアゲタビの図"
+        if not img.get("dataUrl", "").startswith("data:image/jpeg;base64,"): raise ValueError("画像がありません")
+        b = base64.b64decode(img["dataUrl"].split(",", 1)[1])
+        m = wp("POST", "/wp/v2/media", raw=b, headers={"Content-Type": "image/jpeg", "Content-Disposition": f'attachment; filename="sns-{pid}-{time.strftime("%Y%m%d%H%M")}.jpg"'})
+        wp("POST", f"/wp/v2/media/{m['id']}", body={"alt_text": alt, "title": alt})
+        print(json.dumps({"ok": True, "mediaId": m["id"], "url": m["source_url"]}, ensure_ascii=False)); return
     card = load(sys.argv[2]); img = load(sys.argv[3]); aid = os.path.basename(sys.argv[2]).split(".")[0].split("-")[0]
     if cmd == "plan": print(json.dumps(plan(card, img), ensure_ascii=False, indent=1))
     elif cmd == "apply": print(json.dumps(apply(card, img, aid), ensure_ascii=False))
