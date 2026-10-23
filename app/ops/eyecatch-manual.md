@@ -2,7 +2,7 @@
 
 **査読で A になった稿だけ**、記事を読んでアイキャッチ（1200×630。写真風の CG の背景に、記事の見出しを組む）を作る。作成エージェントの負担を軽くし、本文の質に集中させるために分けた役割。本文が確定してから作るので、書き直しのたびに作り直さない。
 
-**書き換えてよいもの**：`images/<articleId>-eyecatch`、`images/sns-<投稿ID>` と、その投稿の `imageId`・`imageIds`・`imageUrl`・`imageUrls` だけ（SNS 用の画像を WordPress のメディアに上げるのも、この役割だけ）（`posts/<ID>` を `update`。ほかの項目は変えない）、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
+**書き換えてよいもの**：`images/<articleId>-eyecatch`、`images/sns-<投稿ID>` と、その投稿の `imageId`・`imageUrl`・`imageUrls` だけ（`posts/<ID>` を `update`。ほかの項目は変えない）、`articles/<articleId>` の `draft.eyecatch`（`draft` が無い公開済みのカードは `eyecatch`）だけ（`draft` の中のほかの項目は変えない。`draft` を丸ごと読み、`eyecatch` だけ差し替えて `draft` 全体を `update`、`if_version` を付ける）、差し替え稿の受信箱 `inbox/replace-<articleId>-<round>` の `body` の末尾への1行の追記、自分の `jobs/<ID>`
 **書き換えないもの**：本文（`draft.markdown`・`blocks`）・`review`・`status`・`loop`・`events`・ほかのカード
 
 ## 0. 共通
@@ -86,10 +86,9 @@ SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の
 2. spec は投稿の `imageBrief` をほぼそのまま使う（`type`: `week`・`direction`・`slide`・`poll`、カルーセルは `slides`。形は `ops/sns-manual.md` の 5 章と `sns_cards.py` の先頭）。`format` は `channel` が `X` なら `"x"`（1200×675）、`Instagram` なら `"ig"`（1080×1350）。`imageBrief` に `type` が無い古い形（`scene`・`headline` など）のときは、本文の内容に合う `slide`（見出しと要点）か `direction` に直す。**`scene`（風景の指示）は使わない。**
 3. `python3 sns_cards.py spec.json out.jpg`（カルーセルは `out-1.jpg`・`out-2.jpg` … ができる）。
 4. **作った画像を自分で開いて確かめる**：文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
-5. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
-6. **公開 URL にする（Instagram・Threads の投稿だけ。X は不要）**：Metricool は公開 URL しか受け取れないため、作った画像（`images/sns-<投稿ID>`。カルーセルは各枚）を WordPress のメディアに上げる。画像の db ドキュメントを `out_dir` つきの `get` で保存し、`python3 publish_wp.py snsmedia <保存した json> <投稿ID> "<alt 文：図の内容を1文>"`（`ops/publish_wp.py`。認証情報は環境変数。値は表示しない）。最後の行の `url` を、`posts/<ID>` の `imageUrl`（カルーセルは `imageUrls` に順番どおり。`imageUrl` は1枚目）に `update`（`if_version`）。**画像のバイトは自分で変えない**（403 が出たら `eyecatch.py` の `save_jpeg` が避ける作りになっている。それでも 403 なら `error` で止め、受信箱へ）。メディアに上げる以外の WordPress の書き込みはしない。
-7. （予約はアプリが行う。Metricool のツールは使わない。）
-8. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
+5. **WordPress のメディアに上げて、公開 URL を取る**（Instagram・Threads の予約と X の添付に使う）：できた画像ごとに、環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`（有無は `test -n` だけで確かめる。値は表示・記録しない）で `POST https://miagetabi.space/wp-json/wp/v2/media`（本文は JPEG のバイト、`Content-Type: image/jpeg`、`Content-Disposition: attachment; filename="sns-<投稿ID>[-<番号>]-<YYYYMMDDHHMM>.jpg"`）。返ってきた `id` に `POST /wp/v2/media/<id>`（`alt_text`・`title`：投稿の1行目）を送る。返ってきた `source_url` を控える（`ops/publish_wp.py` の `upload` と同じやり方。コマンドで足りる：画像の db ドキュメントを保存して `python3 publish_wp.py snsmedia <保存した json> <投稿ID> "<alt 文>"` → 最後の行の `url`）。上げられない・環境変数が無いときは、画像は db だけに保存し、受信箱に1件（`inbox/snsimage-wp`、`ownerOnly: true`、`ownerReason`：「WordPress の認証情報が実行環境に無いため、画像を上げられませんでした」）を出す。
+6. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` と、5 で得た `imageUrl`（カルーセルは `imageUrls` の配列も）を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
+7. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
 
 ## 6. してはいけないこと
 - 本文・査読結果・状態・投稿の文を書き換えること。査読 A 前の稿に作ること（運営者の依頼で公開済みのものは除く）。
