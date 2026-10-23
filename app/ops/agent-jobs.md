@@ -119,7 +119,7 @@
 `kind`（`eyecatch`・`sns`）・`articleId`・`postId`・`format`（`eyecatch`・`x`・`ig`）・`dataUrl`（`data:image/jpeg;base64,…`）・`spec`・`createdAt`。画像担当が書き、アプリが表示・ダウンロードする。ID はアイキャッチが `<articleId>-eyecatch`、SNS が `sns-<投稿ID>`。
 
 ### `posts/<ID>`（SNS の投稿案）
-`date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム`）・`text`・`articleId`・`eventId`・`kind`・`imageBrief`（SNS が書く画像の指示）・`imageId`（画像担当が書く）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
+`date`・`time`・`channel`（`X|Instagram`）・`status`（`下書き|差し戻し|審査済み|予約済み|投稿済み`）・`topic`（`記事|イベント|今夜の空|コラム|予報|スポット`）・`text`・`replyText`（X の自分のリプライ。URL）・`articleId`・`eventId`・`kind`（型：見上げ予報・前日リマインド・参加型・図解・投票・引用・カルーセル・記事紹介・延期告知・結果・訂正 など）・`approval`（`auto`＝審査OKで予約してよい／`owner`＝運営者の確認が先）・`imageBrief`（SNS が書く図解の指示）・`imageId`（画像担当が書く。カルーセルは1枚目）・`imageIds`（カルーセルの全部）・`imageUrl`（運営者が入れる公開 URL）・`imageNote`・`sources`・`review`（`{"grade": "OK|NG", "notes": ["…"], "round", "at"}`。SNS 審査が書く）・`by`・`createdAt`
 
 ### `settings/…`
 - `settings/background`：`{"server": "Claude Code Remote", "writerTriggerId", "reviewerTriggerId", "designerTriggerId", "selectorTriggerId", "siteUpdateTriggerId", "publisherTriggerId", "plannerTriggerId", "eventFetchTriggerId", "watchTriggerId", "snsTriggerId", "snsReviewTriggerId", "auditTriggerId", "accessTriggerId", "stewardTriggerId"}`
