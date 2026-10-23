@@ -19,6 +19,7 @@
 | `siteupdate` | サイト更新 | 毎朝（5時台）＋依頼 | `ops/site-manual.md` | `siteupdate`（ホームの NEXT LAUNCH・ティッカー・UPCOMING を events に合わせて更新） |
 | `audit` | 点検 | 毎朝＋依頼 | `ops/audit-manual.md` | `audit` |
 | `access` | 計測 | 毎朝＋依頼 | `ops/access-manual.md` | `access` |
+| `xpost` | X予約 | 依頼だけ（アプリの「Xの予約を頼む」。運営者のパソコンの Chrome） | `ops/x-schedule-manual.md` | `xschedule` |
 | `steward` | 受信箱担当 | 6〜23時の毎時＋依頼 | `ops/inbox-manual.md` | `steward` |
 
 このサイトは**自動運転が基本**。エージェントが決められないこと・失敗は、**受信箱（`inbox`）**に出す。受信箱担当（`ops/inbox-manual.md`）が1件ずつ自動で処理して閉じる。運営者の判断に残るのは、エージェントにできないこと（認証情報・お金・契約・サーバーや外部サービスの設定）だけ（`ownerOnly: true`）。エージェントは判断を推測で埋めない。受信箱に出すときは、**何が起きたか・どうすれば直るか**を具体的に書く（担当が処理できるように）。

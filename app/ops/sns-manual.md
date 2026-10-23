@@ -3,16 +3,16 @@
 Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の指示書は運営者の「ミアゲタビ SNS運用エージェント 指示書」（2026-10-23 改訂・Threads 追加・X は手動予約）で、この手順書がその実行版。
 
 **運用の形**
-- **Instagram と Threads**：Metricool 経由で自動運用（作成 → 審査 → 画像 → **予約**）。予約まで SNS エージェントがする（10 章）。
-- **X**：Metricool を**使わない**。X の下書きを作るところまで（運営者がアプリで1週間分の下書きファイルを保存して COWORK に貼り、COWORK が Chrome で X の予約機能に入れる）。エージェントは X の予約・投稿をしない。
+- **Instagram と Threads**：Metricool 経由で自動運用（作成 → 審査 → 画像と公開 URL → **予約**）。**予約はアプリが行う**（定時の実行環境には Metricool のコネクタが無いため）。アプリの SNS タブの「アカウント」で「自動で Metricool に予約する」をオンにすると、アプリを開いたとき、条件を満たした投稿が自動で予約される（オフなら、運営者が「Metricool に予約」を押す）。エージェントは Metricool のツールを使わない。
+- **X**：Metricool を**使わない**。エージェントは下書きを作るところまで。運営者がアプリの「X の下書きをまとめてコピー」で1週間分を渡すか、「X の予約を頼む」で X予約エージェント（`ops/x-schedule-manual.md`。運営者のパソコンの Chrome で X の予約機能に入れる）に頼む。
 - **延期・結果・訂正・公式投稿の引用・届いた写真の紹介**は、どの SNS でも下書きまで（`approval: "owner"`）。運営者の確認後に出す。
 
-**書き換えてよいもの**：`posts/<ID>`（自分が作った `下書き`・`差し戻し` のもの。予約のときの `status: "予約済み"`・`metricool` だけ、審査済みの自分の投稿で書く）、SNS 審査への依頼 `jobs/snsreview-…`、自分の `jobs/<ID>`、受信箱 `inbox/sns-…`
+**書き換えてよいもの**：`posts/<ID>`（自分が作った `下書き`・`差し戻し` のものだけ）、SNS 審査への依頼 `jobs/snsreview-…`、自分の `jobs/<ID>`、受信箱 `inbox/sns-…`
 **書き換えないもの**：運営者が作った投稿、`投稿済み` の投稿、`articles`、`events`、`images`
 
 ## 0. 最初に必ず守ること（安全ルール）
 1. **Metricool の投稿先は miagetabi ブランドだけ。** ブランド番号は `7609507`（ブランド名 miagetabi、Asia/Tokyo）。`settings/sns.brandId` もこの値であること。**KOAlil の「ko」ブランド（7372301）には絶対に投稿・予約しない。** Metricool のツールを呼ぶ前に、毎回ブランド番号が 7609507 か確かめる。
-2. 予約の前に `getBrandSettings` で、**7609507 に @miagetabi の Instagram・Threads がつながっている**ことを確かめる（`networksData` の `instagramData`・`threadsData` が `miagetabi`）。`koa.lil` など KOAlil のアカウントが見えたら、何も予約せず止まり、`inbox/sns-brand-wrong`（`ownerOnly: true`）を出す。Instagram・Threads のつなぎ込みが終わっていない間（`networksData` に無い間）は、その SNS への予約も投稿もせず、下書きだけ作る。ブランド番号が空・見つからないときも、何も予約せず `inbox/sns-brand`（`ownerOnly: true`、`ownerReason`: 「SNS タブの『アカウント』で、ミアゲタビ用のブランドを選んでください」）。
+2. 予約するアプリは、予約の前に `getBrandSettings` で、**7609507 に @miagetabi の Instagram・Threads がつながっている**ことを確かめる（`networksData` の `instagramData`・`threadsData` が `miagetabi`）。`koa.lil` など KOAlil のアカウントが見えたら予約が止まる。エージェントは、`settings/sns.brandId` が 7609507 でない・空のときは `inbox/sns-brand`（`ownerOnly: true`、`ownerReason`: 「SNS タブの『アカウント』で、ミアゲタビ用のブランド（miagetabi）を選んでください」）を出し、`koa.lil` が見えたら `inbox/sns-brand-wrong`（`ownerOnly: true`）を出す。Instagram・Threads のつなぎ込みが終わっていない間は、下書きだけ作る。
 3. **X は Metricool に載せない**（`createScheduledPost` に `twitter` を渡さない）。
 4. **公式の発表を見る前に「延期」「中止」「成功」「失敗」を書かない。**
 5. **日時・場所・方角は、一次情報で確かめたものだけ。** 確かめられないことは書かない。
@@ -25,7 +25,7 @@ Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の
 | 項目 | Instagram | Threads | X |
 |---|---|---|---|
 | ID | @miagetabi | @miagetabi（Instagram と同じログイン） | @miagetabi |
-| 運用 | Metricool（自動） | Metricool（自動） | **手動**：週1回の下書き → 運営者が COWORK へ → Chrome で予約 |
+| 運用 | Metricool（自動予約） | Metricool（自動予約） | **手動**：週1回の下書き → 運営者（コピー）か X予約エージェント（Chrome）が予約 |
 | 役割 | 写真と図解で「行ってみたい」をつくる | 文章で毎日の「見上げ」を届ける。会話の場 | 速報・延期告知・打ち上げ実況。宇宙好きが集まる場所 |
 | 頻度 | 週2〜3投稿 | 1日1投稿 | 1日1投稿（予約）＋速報 |
 | リンク | 本文に入れず「プロフィールのリンクから」 | **本文に入れてよい（1投稿に1つまで）** | 原則リプライ（`replyText`）。予約でできないときは 5 章末の例外 |
@@ -35,8 +35,8 @@ Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の
 ## 2. 自動でよいもの・運営者が確認するもの（`approval`）
 | 区分 | 投稿 | 扱い |
 |---|---|---|
-| `auto`：Instagram・Threads | 見上げ予報、前日リマインド、図解の豆知識、スポット・記事紹介、Instagram のカルーセル、参加型・投票（Threads） | 審査 OK のあと、**エージェントが Metricool に予約してよい**。運用開始から数週間は、予約後に運営者へ一覧（`inbox/sns-week-<YYYYMMDD>`） |
-| `auto`：X | 見上げ予報、前日リマインド、図解の豆知識、投票、参加型 | **下書きを作るだけ。** 予約は運営者が下書きを COWORK に渡したあと、Chrome で行う |
+| `auto`：Instagram・Threads | 見上げ予報、前日リマインド、図解の豆知識、スポット・記事紹介、Instagram のカルーセル、参加型・投票（Threads） | 審査 OK と画像（公開 URL）のあと、**アプリが Metricool に予約してよい**（自動予約がオンのとき）。運用開始から数週間は、週ごとに運営者へ一覧（`inbox/sns-week-<YYYYMMDD>`） |
+| `auto`：X | 見上げ予報、前日リマインド、図解の豆知識、投票、参加型 | **下書きを作るだけ。** 予約は運営者が「X の下書きをまとめてコピー」か「X の予約を頼む」で行う |
 | `owner`：全 SNS 共通 | **延期・変更の告知、打ち上げの結果、訂正** | 下書きまで。運営者が確認する（アプリの「運営者が確認した」）まで予約しない |
 | `owner`：全 SNS 共通 | **参加型で届いた写真の紹介、公式投稿の引用** | 写真は本人の許可が取れてから。引用は運営者が確認してから |
 | （作らない） | 打ち上げの実況スレッド | 運営者が対応できる日だけ（依頼の `note` に「実況」があるときだけ下書きを作る。予約しない） |
@@ -109,8 +109,7 @@ Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の
 4. 目標は公式発表から30分以内に下書きまで。X の延期告知は速さが大切なので、運営者が手で投稿してよい（文面を渡す）。
 
 ## 10. いつ動くか・手順
-- 定時：**毎朝 8:43 と夕方 18:43**。日本時間の**土曜は「週の作業」（来週分）**。そのほかの日は、直前の変化・当日分・延期の確認と、**予約（10-B）**。毎月1日は月報（12 章）。依頼：`kind: "sns"`（`note` に「実況」「延期」「予約だけ」などの指示。画像担当が画像（公開 URL）を作り終えたときも「予約だけ」で起動される）。
-- 定時の実行環境には Metricool のコネクタがある（このルーティンだけ）。ツール名は `mcp__Metricool_Social_Media_Management__…`。ToolSearch で `select:` して読み込む。無ければ予約はせず、下書きと報告だけ。
+- 定時：**毎朝 8:43**。日本時間の**土曜は「週の作業」（来週分）**。そのほかの日は、直前の変化・当日分・延期の確認。毎月1日は月報（12 章）。依頼：`kind: "sns"`（`note` に「実況」「延期」などの指示）。
 
 ### 10-A．下書きを作る（共通）
 1. サイト（予定まとめ・記事）と公式ページで、来週の打ち上げ・天体イベントを確かめる（`articles`（公開済み）・`events`・直近60日の `posts`）。
@@ -125,27 +124,18 @@ Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の
     "xNote": "（X のみ）運営者が見ておくこと。無ければ空", "articleId": "", "eventId": "",
     "imageBrief": {"…5 章": ""}, "imageNote": "", "sources": ["確かめた公式URL"], "by": "sns", "createdAt": "<今>"}
    ```
-   X の投稿は、運営者がアプリで「X の下書きを保存」を押すと、`x-drafts-YYYYMMDD.md`（来週月〜日・日時・本文・リンク・画像・出典・メモ）と画像になって渡される。エージェントはファイルを作らない。
+   X の投稿は、運営者がアプリの「X の下書きをまとめてコピー」を押すと、日時・本文・リンク・画像・出典・メモの形（`## 1. 2026-MM-DD（曜）HH:MM ［型］` の並び）でコピーされる。エージェントはファイルを作らない。
 6. 審査に回す：作った投稿の ID を `note` に並べて `jobs/snsreview-<YYYYMMDDHHMM>`（`kind: "snsreview"`）を `queued` で書き、起動（`ops/agent-jobs.md` の 6）。
 7. 週の要約を受信箱に1件（運用開始から数週間。`inbox/sns-week-<YYYYMMDD>`、`kind: "other"`、`body`：日時・SNS・本文・出典の一覧。`ownerOnly` は付けない）。
 8. 依頼を `done`、報告（3行以内）。
 
-**予約前のチェック**：□ Metricool に予約するものは投稿先が 7609507（miagetabi）□ 日時・方角を公式で確かめ出典 URL を控えた □ 時刻は日本時間で曜日を `sky.py` で確かめた □ 打ち上げの予定は、いま延期になっていない □ 1行目に数字・画像の指示がある・ハッシュタグは規定の数以内 □ あおる言葉を使っていない □ X の文字数（140字ていど）と Threads の 500字を超えていない。
+**予約前のチェック**：□ `settings/sns.brandId` が 7609507（miagetabi）□ 日時・方角を公式で確かめ出典 URL を控えた □ 時刻は日本時間で曜日を `sky.py` で確かめた □ 打ち上げの予定は、いま延期になっていない □ 1行目に数字・画像の指示がある・ハッシュタグは規定の数以内 □ あおる言葉を使っていない □ X の文字数（140字ていど）と Threads の 500字を超えていない。
 
-### 10-B．Instagram・Threads を Metricool に予約する
-対象：`channel` が `Instagram` か `Threads`、`status` が `審査済み`、`approval` が `auto`（または `ownerOk: true`）、`metricool` がまだ無い、日時が**今から10分以上先**、**`imageUrl`（公開 URL。カルーセルは `imageUrls`）がある**（画像担当が WordPress のメディアに上げて書く。Instagram は必須。Threads は `imageBrief` があるなら画像を待つ）。
-1. `getBrandSettings` で 7609507 を確かめる（0 章の 1〜2）。
-2. 同じ時刻の `getScheduledPosts`（`brandId: "7609507"`、`timezone: "Asia/Tokyo"`）で、同じ文の予約が無いか確かめる（あれば作らず、その `uuid` を記録だけ）。
-3. `createScheduledPost`：`blogId: "7609507"`、`date: "YYYY-MM-DDTHH:MM:00+09:00"`、`info` は JSON 文字列：
-   ```json
-   {"autoPublish": true, "draft": false, "descendants": [], "firstCommentText": "", "hasNotReadNotes": false,
-    "media": ["<imageUrl（カルーセルは全部、順番どおり）>"], "mediaAltText": [], "providers": [{"network": "instagram|threads"}],
-    "publicationDate": {"dateTime": "YYYY-MM-DDTHH:MM:00", "timezone": "Asia/Tokyo"}, "shortener": false, "smartLinkData": {"ids": []},
-    "text": "<本文>", "instagramData": {"type": "POST", "isAiGenerated": false}  /  "threadsData": {}}
-   ```
-   （`providers` に入れた SNS の `…Data` だけを付ける。**`twitter` は入れない。**）
-4. 結果の `plannerUrl`（`openWithPostUuid=<数字>`）を控え、`posts/<ID>` を `update`（`if_version`）：`status: "予約済み"`、`metricool: {"blogId": "7609507", "uuid", "plannerUrl", "scheduledAt": "<今>"}`。失敗（エラー）のときは `status` を変えず、`inbox/sns-sched-<投稿ID>`（`kind: "other"`、エラー文。鍵は書かない）を出す。
-5. 予約した一覧（日時・SNS・本文の頭・出典 URL）を報告する。
+### 10-B．Instagram・Threads が予約されるまで（エージェントは予約しない）
+1. 下書き（10-A）→ SNS 審査（OK で `審査済み`）→ 画像担当が図解を作り、**Instagram・Threads の投稿は WordPress のメディアに上げて公開 URL（`imageUrl`・カルーセルは `imageUrls`）を書く**。
+2. アプリが、次の条件をすべて満たす投稿を Metricool の miagetabi ブランド（7609507）に予約する：`channel` が `Instagram` か `Threads`、`status` が `審査済み`、`approval` が `auto`（または運営者が確認した `ownerOk`）、日時が今から5分以上先、Instagram は `imageUrl` あり、Threads は500字以内。**自動予約がオフなら、運営者が「Metricool に予約」を押す。**
+3. 予約されると `status: "予約済み"`・`metricool`（`blogId`・`uuid`・`plannerUrl`）が入る。エージェントはこの項目を書かない。
+4. 予約できない投稿（画像の URL が無い等）は、`inbox/sns-sched-<投稿ID>`（`kind: "other"`）で何が足りないかを書く（`ownerOnly` は付けない。受信箱担当が画像担当に作り直しを頼む）。
 
 ## 11. 差し戻し（`job.note` に「差し戻し」と投稿の ID）
 `posts/<ID>.review.notes` の指摘だけを直し、`status` を `"下書き"` に戻して再審査。2回まで（3回目は審査が受信箱に出し、受信箱担当がその投稿を作り直させる）。
@@ -154,7 +144,7 @@ Instagram・Threads・X（どれも @miagetabi）の投稿を**作る**。元の
 型ごと・SNS ごとに数字をまとめて受信箱に1件（`inbox/sns-month-<YYYYMM>`）：見上げ予報・前日リマインド・図解・カルーセル＝保存／参加型・投票＝リプライ・投票数／実況・引用＝インプレッション・リポスト／すべて＝プロフィールのアクセス・記事へのクリック。Instagram・Threads は Metricool（`getAnalyticsAvailableMetrics`・`getAnalyticsDataByMetrics`）、X は運営者が貼った数字から（無ければ「未取得」。作り話をしない）。フォロワー数より**見上げ予報が保存・リポストされているか**を重く見る。最初の3か月は、**Threads と X のどちらに宇宙好きの反応が多いか**も比べ、X への手作業が重い、または Threads の反応が良ければ、配分の見直しを提案する。
 
 ## 13. やらないこと
-KOAlil の ko ブランドへの投稿・予約／**ミアゲタビの X を Metricool に載せる**・X の予約を運営者の下書きなしで入れる／X の画面操作・パスワード・認証コードの入力／あおる言葉・見え方の誇張／いいね回り・フォロー返し狙い／ほかの人の写真の無断転載／AI で作った写真風の画像／公式発表前の結果の投稿／延期・結果・訂正・引用を運営者の確認なしに予約すること。間違えたときは投稿を黙って消さず、訂正の下書き（`approval: "owner"`）を作る。別のブランド・アカウントに出したときは、すぐ `inbox/sns-brand-wrong`（`ownerOnly: true`）。
+KOAlil の ko ブランドへの投稿・予約／**ミアゲタビの X を Metricool に載せる**・X の予約を運営者の下書きなしで入れる／X の画面操作・パスワード・認証コードの入力（X の予約は X予約エージェントの仕事）／Metricool のツールを使うこと／あおる言葉・見え方の誇張／いいね回り・フォロー返し狙い／ほかの人の写真の無断転載／AI で作った写真風の画像／公式発表前の結果の投稿／延期・結果・訂正・引用を運営者の確認なしに予約すること。間違えたときは投稿を黙って消さず、訂正の下書き（`approval: "owner"`）を作る。別のブランド・アカウントに出したときは、すぐ `inbox/sns-brand-wrong`（`ownerOnly: true`）。
 
 ## 14. 当面の予定
 - つなぎ込み済み（2026-10-24確認）：Metricool の miagetabi ブランド（7609507）に、Instagram（@miagetabi）・Threads（@miagetabi）・Facebook ページ（miagetabi）がつながっている。予約・投稿ができる（Facebook は使わない）。

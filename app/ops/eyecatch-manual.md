@@ -88,7 +88,7 @@ SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の
 4. **作った画像を自分で開いて確かめる**：文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
 5. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
 6. **公開 URL にする（Instagram・Threads の投稿だけ。X は不要）**：Metricool は公開 URL しか受け取れないため、作った画像（`images/sns-<投稿ID>`。カルーセルは各枚）を WordPress のメディアに上げる。画像の db ドキュメントを `out_dir` つきの `get` で保存し、`python3 publish_wp.py snsmedia <保存した json> <投稿ID> "<alt 文：図の内容を1文>"`（`ops/publish_wp.py`。認証情報は環境変数。値は表示しない）。最後の行の `url` を、`posts/<ID>` の `imageUrl`（カルーセルは `imageUrls` に順番どおり。`imageUrl` は1枚目）に `update`（`if_version`）。**画像のバイトは自分で変えない**（403 が出たら `eyecatch.py` の `save_jpeg` が避ける作りになっている。それでも 403 なら `error` で止め、受信箱へ）。メディアに上げる以外の WordPress の書き込みはしない。
-7. **予約を頼む**：上げた投稿があれば、SNS エージェントを「予約だけ」で起動する（`jobs/sns-sched-<YYYYMMDDHHMM>`、`kind: "sns"`、`note: "予約だけ"`、`by: "designer"` を `queued` で書き、`settings/background.snsTriggerId` を `fire_trigger`。`ops/agent-jobs.md` の 6）。
+7. （予約はアプリが行う。Metricool のツールは使わない。）
 8. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
 
 ## 6. してはいけないこと
