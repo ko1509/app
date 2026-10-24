@@ -610,7 +610,7 @@ const TABS=[
   {id:"events",l:"イベント",ic:"cal",en:"EVENTS",eyebrow:"打ち上げ・天体・宇宙スポット",title:"イベント"},
   {id:"agents",l:"編集部",ic:"agent",en:"NEWSROOM",eyebrow:"AIエージェント",title:"編集部"},
   {id:"sns",l:"SNS",ic:"sns",en:"SOCIAL",eyebrow:"X・Instagram・Threads",title:"告知の予定"},
-  {id:"access",l:"アクセス",ic:"users",en:"ACCESS",eyebrow:"サイトの来訪者（GA4）",title:"アクセス"},
+  {id:"access",l:"アクセス",ic:"users",en:"ACCESS",eyebrow:"サイト解析（GA4）",title:"アクセス"},
   {id:"kpi",l:"KPI",ic:"kpi",en:"KPI",eyebrow:"3か月後の判断",title:"KPI"}
 ];
 
@@ -1002,8 +1002,8 @@ function bindSns(pg){
   pg.querySelectorAll("[data-ownerok]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();try{await S.db.doc("posts/"+b.dataset.ownerok).update({ownerOk:true,ownerOkAt:iso(),updatedAt:iso()});toast("確認済みにしました")}catch(_){toast("保存できませんでした")}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-acmap]").forEach(b=>b.onclick=()=>{S.acMap=b.dataset.acmap;render()});
   const acC=$("#acChart");if(acC){const info=JSON.parse(acC.dataset.days||"[]");acC.querySelectorAll("[data-acday]").forEach(h=>{const go=()=>{acC.querySelectorAll(".h.on").forEach(x=>x.classList.remove("on"));h.classList.add("on");$("#acTip").innerHTML=info[+h.dataset.acday]||""};h.onclick=go;h.onmouseenter=go})}
-  pg.querySelectorAll("[data-accc]").forEach(el=>{const go=()=>{const g=((S.analytics||{}).geo||[]).find(x=>x.code===el.dataset.accc);if(g&&$("#acMapTip"))$("#acMapTip").innerHTML=`${acFlag(g.code)} ${esc(acJa(g.code))}　<b>${acNum(g.users)}</b>人　閲覧 ${acNum(g.views)}`};el.onclick=go;el.onmouseenter=go});
-  pg.querySelectorAll("[data-acpf]").forEach(el=>{const go=()=>{const J=window.MG_JAPAN,p=J&&J.prefs.find(x=>String(x.id)===el.dataset.acpf),r=p&&((S.analytics||{}).jpRegions||[]).find(x=>acNorm(x.name)===acNorm(p.en));if(r&&$("#acJpTip"))$("#acJpTip").innerHTML=`${esc(p.ja)}　<b>${acNum(r.users)}</b>人　閲覧 ${acNum(r.views)}`};el.onclick=go;el.onmouseenter=go});
+  pg.querySelectorAll("[data-accc]").forEach(el=>{const go=()=>{const g=((S.analytics||{}).geo||[]).find(x=>x.code===el.dataset.accc);if(g&&$("#acMapTip"))$("#acMapTip").innerHTML=`${acFlag(g.code)} ${esc(acJa(g.code))}　ユーザー <b>${acNum(g.users)}</b>　PV ${acNum(g.views)}`};el.onclick=go;el.onmouseenter=go});
+  pg.querySelectorAll("[data-acpf]").forEach(el=>{const go=()=>{const J=window.MG_JAPAN,p=J&&J.prefs.find(x=>String(x.id)===el.dataset.acpf),r=p&&((S.analytics||{}).jpRegions||[]).find(x=>acNorm(x.name)===acNorm(p.en));if(r&&$("#acJpTip"))$("#acJpTip").innerHTML=`${esc(p.ja)}　ユーザー <b>${acNum(r.users)}</b>　PV ${acNum(r.views)}`};el.onclick=go;el.onmouseenter=go});
   pg.querySelectorAll("[data-xdone]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.xdone);if(!p)return;try{await S.db.doc("posts/"+p._id).update({status:"予約済み",updatedAt:iso(),xManual:{at:iso()}});toast("X に予約済みにしました")}catch(err){toast("書けませんでした："+(err.message||err.code))}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-xbatch]").forEach(b=>b.onclick=async e=>{e.stopPropagation();const L=S.posts.filter(p=>p.channel==="X"&&p.status==="審査済み").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
     if(!L.length){toast("審査済みの X の投稿がありません");return}
@@ -1048,8 +1048,8 @@ function kpiTiles(k,limit){
       <div class="d-bar"><i style="width:${Math.min(100,val/d.good*100).toFixed(0)}%"></i></div><span class="s">合格 ${d.pass.toLocaleString()}・好調 ${d.good.toLocaleString()}</span></div>`}).join("")}</div>`;
 }
 /* ---------- アクセス（GA4 の集計を、グラフ・地図・記事カードで見せる） ---------- */
-const AC_DEV={mobile:"スマホ",desktop:"パソコン",tablet:"タブレット","smart tv":"テレビ"};
-const AC_CH={"Organic Search":"検索から","Direct":"URLを直接・ブックマーク","Referral":"ほかのサイトから","Organic Social":"SNSから","Paid Search":"広告（検索）","Email":"メール","Unassigned":"不明","Organic Video":"動画から","Display":"広告（表示）"};
+const AC_DEV={mobile:"スマホ",desktop:"パソコン",tablet:"タブレット","smart tv":"スマートTV"};
+const AC_CH={"Organic Search":"自然検索","Direct":"ダイレクト","Referral":"参照（他サイト）","Organic Social":"ソーシャル","Paid Search":"有料検索","Email":"メール","Unassigned":"未分類","Organic Video":"動画","Display":"ディスプレイ広告"};
 const AC_PAGE={"/":"トップページ","/launch/schedule/":"打ち上げ予定まとめ","/category/launch/":"打ち上げを見る（一覧）","/category/sky/":"星空・天体（一覧）","/category/spot/":"宇宙スポット（一覧）","/category/gear/":"持ち物・機材（一覧）"};
 const acNum=n=>Number(n||0).toLocaleString();
 const acJa=(()=>{try{const d=new Intl.DisplayNames(["ja"],{type:"region"});return c=>{try{return d.of(c)||c}catch(_){return c}}}catch(_){return c=>c}})();
@@ -1069,31 +1069,31 @@ function acChart(a){
   const line=D.map((p,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(p.users).toFixed(1)}`).join("");
   const every=Math.ceil(n/7),labs=D.map((p,i)=>(n-1-i)%every===0?`<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${p.d.getMonth()+1}/${p.d.getDate()}</text>`:"").join("");
   const hits=D.map((p,i)=>`<rect class="h" data-acday="${i}" x="${(L+bw*i).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ph}"/>`).join("");
-  const info=D.map(p=>`${p.d.getMonth()+1}月${p.d.getDate()}日（${WD[p.d.getDay()]}）　閲覧 <b>${acNum(p.views)}</b>　利用者 <b>${acNum(p.users)}</b>`);
+  const info=D.map(p=>`${p.d.getMonth()+1}月${p.d.getDate()}日（${WD[p.d.getDay()]}）　PV <b>${acNum(p.views)}</b>　ユーザー <b>${acNum(p.users)}</b>`);
   const last=D[n-1];
-  return `<div class="ac-chart" id="acChart" data-days='${esc(JSON.stringify(info))}'><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="日ごとの閲覧数（棒）と利用者（線）">${grid}${bars}<path d="${line}" class="u"/>${labs}${hits}</svg>
-    <div class="ac-tip" id="acTip">${info[n-1]}</div><div class="ac-leg"><span><i class="b"></i>閲覧数（棒）</span><span><i class="u"></i>利用者（線）</span><span class="d-sub">棒をタップすると、その日の数字が出ます</span></div></div>`}
+  return `<div class="ac-chart" id="acChart" data-days='${esc(JSON.stringify(info))}'><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="日別のページビュー（棒）とユーザー数（線）">${grid}${bars}<path d="${line}" class="u"/>${labs}${hits}</svg>
+    <div class="ac-tip" id="acTip">${info[n-1]}</div><div class="ac-leg"><span><i class="b"></i>ページビュー（棒）</span><span><i class="u"></i>ユーザー数（線）</span><span class="d-sub">棒をタップすると日別の数値を表示します</span></div></div>`}
 function acWorld(a){
   const W=window.MG_WORLD,geo=(a.geo||[]).filter(g=>g.code);
   if(!W)return `<div class="d-empty">地図を読み込めませんでした</div>`;
-  if(!geo.length)return `<div class="d-empty">国別のデータは、次の取得（毎朝）から出ます</div>`;
+  if(!geo.length)return `<div class="d-empty">国別データは次回の取得（毎朝）から表示されます</div>`;
   const by={};for(const g of geo)by[g.code]=g;const mx=Math.max(1,...geo.map(g=>g.users));
   const land=W.shapes.map(s=>{const g=by[s.c];return `<path d="${s.d}" class="${g?"hit":"land"}"${g?` style="fill:${acShade(g.users,mx)}" data-accc="${s.c}"`:""}/>`}).join("");
   const dots=geo.slice(0,10).map(g=>{const p=W.points[g.code];if(!p)return "";const r=3+7*Math.sqrt(g.users/mx);return `<circle cx="${p[0]}" cy="${p[1]}" r="${r.toFixed(1)}" class="dot" data-accc="${g.code}"/>`}).join("");
   const top=geo.slice(0,8);
-  return `<div class="ac-map"><svg viewBox="0 0 ${W.w} ${W.h}" role="img" aria-label="国別の利用者の世界地図"><path d="${W.sphere}" class="sea"/>${land}${dots}</svg><div class="ac-tip" id="acMapTip">${acFlag(top[0].code)} ${esc(acJa(top[0].code))}　<b>${acNum(top[0].users)}</b>人　閲覧 ${acNum(top[0].views)}</div></div>
-    <div class="ac-rank">${top.map(g=>`<div class="ac-r" data-accc="${g.code}"><span class="fl">${acFlag(g.code)}</span><b>${esc(acJa(g.code))}</b><span class="num">${acNum(g.users)}人</span><i style="width:${(g.users/mx*100).toFixed(0)}%"></i></div>`).join("")}</div>`}
+  return `<div class="ac-map"><svg viewBox="0 0 ${W.w} ${W.h}" role="img" aria-label="国別ユーザー数の世界地図"><path d="${W.sphere}" class="sea"/>${land}${dots}</svg><div class="ac-tip" id="acMapTip">${acFlag(top[0].code)} ${esc(acJa(top[0].code))}　ユーザー <b>${acNum(top[0].users)}</b>　PV ${acNum(top[0].views)}</div></div>
+    <div class="ac-rank">${top.map(g=>`<div class="ac-r" data-accc="${g.code}"><span class="fl">${acFlag(g.code)}</span><b>${esc(acJa(g.code))}</b><span class="num">${acNum(g.users)}</span><i style="width:${(g.users/mx*100).toFixed(0)}%"></i></div>`).join("")}</div>`}
 function acJapan(a){
   const J=window.MG_JAPAN,rs=a.jpRegions||[];
   if(!J)return `<div class="d-empty">地図を読み込めませんでした</div>`;
-  if(!rs.length)return `<div class="d-empty">日本の都道府県別のデータは、次の取得（毎朝）から出ます</div>`;
+  if(!rs.length)return `<div class="d-empty">都道府県別データは次回の取得（毎朝）から表示されます</div>`;
   const by={};for(const r of rs)by[acNorm(r.name)]=r;const mx=Math.max(1,...rs.map(r=>r.users));
   const prefs=J.prefs.map(p=>({...p,r:by[acNorm(p.en)]}));
   const paths=prefs.map(p=>`<path d="${p.d}" class="${p.r?"hit":"land"}"${p.r?` style="fill:${acShade(p.r.users,mx)}" data-acpf="${p.id}"`:""}/>`).join("");
   const top=prefs.filter(p=>p.r).sort((x,y)=>y.r.users-x.r.users).slice(0,8),f=top[0];
   const rest=rs.filter(r=>!J.prefs.some(p=>acNorm(p.en)===acNorm(r.name))&&acNorm(r.name)!=="(not set)").length;
-  return `<div class="ac-map jp"><svg viewBox="${J.vb.join(" ")}" role="img" aria-label="都道府県別の利用者の日本地図">${paths}</svg><div class="ac-tip" id="acJpTip">${esc(f.ja)}　<b>${acNum(f.r.users)}</b>人　閲覧 ${acNum(f.r.views)}</div></div>
-    <div class="ac-rank">${top.map(p=>`<div class="ac-r" data-acpf="${p.id}"><b>${esc(p.ja)}</b><span class="num">${acNum(p.r.users)}人</span><i style="width:${(p.r.users/mx*100).toFixed(0)}%"></i></div>`).join("")}${rest?`<div class="d-sub">そのほか、地域が分からない訪問 ${rest}件</div>`:""}</div>`}
+  return `<div class="ac-map jp"><svg viewBox="${J.vb.join(" ")}" role="img" aria-label="都道府県別ユーザー数の日本地図">${paths}</svg><div class="ac-tip" id="acJpTip">${esc(f.ja)}　ユーザー <b>${acNum(f.r.users)}</b>　PV ${acNum(f.r.views)}</div></div>
+    <div class="ac-rank">${top.map(p=>`<div class="ac-r" data-acpf="${p.id}"><b>${esc(p.ja)}</b><span class="num">${acNum(p.r.users)}</span><i style="width:${(p.r.users/mx*100).toFixed(0)}%"></i></div>`).join("")}${rest?`<div class="d-sub">地域を特定できなかったアクセス ${rest}件</div>`:""}</div>`}
 function acEyeImg(id){S.eyeImg=S.eyeImg||{};if(id in S.eyeImg)return S.eyeImg[id]||"";S.eyeImg[id]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+id+"-eyecatch").get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.eyeImg[id]=(im&&im.dataUrl)||"";if(S.eyeImg[id])render()}catch(_){S.eyeImg[id]=""}})();return ""}
 function acPageCards(a){
@@ -1106,10 +1106,10 @@ function acPageCards(a){
     const title=art?(art.title||titles[path]):(AC_PAGE[path]||(titles[path]||path).replace(/\s*[|｜]\s*ミアゲタビ.*$/,""));
     const img=art?acEyeImg(art._id):"";
     return `<div class="ac-pg"><div class="th">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:`<span class="ph">${ic(art?"doc":"home")}</span>`}<em>${i+1}</em></div>
-      <div class="tx"><b>${esc(title)}</b><span class="d-sub">${esc(path)}</span><div class="nums"><span class="num">${acNum(r.views)}<small> 閲覧</small></span><span class="num">${acNum(r.users)}<small> 人</small></span></div><i style="width:${((r.views||0)/mx*100).toFixed(0)}%"></i></div></div>`}).join("")}</div>`}
+      <div class="tx"><b>${esc(title)}</b><span class="d-sub">${esc(path)}</span><div class="nums"><span class="num">${acNum(r.views)}<small> PV</small></span><span class="num">${acNum(r.users)}<small> ユーザー</small></span></div><i style="width:${((r.views||0)/mx*100).toFixed(0)}%"></i></div></div>`}).join("")}</div>`}
 function acBars(rows,label){
   const mx=Math.max(1,...(rows||[]).map(r=>r.users));
-  return rows&&rows.length?rows.slice(0,6).map(r=>`<div class="ac-row"><b>${esc(label?label(r.name):r.name||"(不明)")}</b><span class="num">${acNum(r.users)}人</span><span class="bar"><i style="width:${(r.users/mx*100).toFixed(0)}%"></i></span></div>`).join(""):`<div class="d-empty">データなし</div>`}
+  return rows&&rows.length?rows.slice(0,6).map(r=>`<div class="ac-row"><b>${esc(label?label(r.name):r.name||"(不明)")}</b><span class="num">${acNum(r.users)}</span><span class="bar"><i style="width:${(r.users/mx*100).toFixed(0)}%"></i></span></div>`).join(""):`<div class="d-empty">データなし</div>`}
 function viewAccess(){
   const a=S.analytics;
   if(!a) return `<div class="d-card"><h3 style="margin:0 0 8px">まだ計測が始まっていません</h3><p style="margin:0 0 8px;font-size:14px;color:var(--label-2)">サイトに Google アナリティクス（GA4）を入れ、読み取りの設定をすると、毎朝ここに「何人が・どこから・何で」見に来たかが出ます。</p></div>${accessBtn()}`;
@@ -1117,15 +1117,15 @@ function viewAccess(){
   const tile=(ico,k,v,u,hint)=>`<div class="d-stat ac-kpi"><span class="k">${ic(ico)}${k}</span><span class="v">${acNum(v)}<small>${u}</small></span><span class="s">${hint}</span></div>`;
   const dev=(a.devices||[]),devT=Math.max(1,dev.reduce((s,x)=>s+x.users,0));
   const mapTab=S.acMap||"world";
-  return `${err}<div><div class="d-sec"><h2>直近${a.days||28}日のアクセス</h2><p>更新：${esc((a.at||"").replace("T"," ").slice(0,16))}（毎朝）</p></div>
-    <div class="d-stats">${tile("users","来た人",t.users,"人","のべ人数ではなく、人の数")}${tile("doc","見られたページ",t.views,"回","ページの表示回数")}${tile("inbox","訪問",t.sessions,"回","1回の来訪を1と数えます")}${tile("home","はじめての人",t.newUsers,"人","初めて来てくれた人")}</div></div>
-  <div class="d-card"><div class="d-sec"><h2>いつ見られた？</h2><p>日ごとの閲覧数</p></div>${acChart(a)}</div>
-  <div class="d-card"><div class="d-sec"><h2>どこから来た？</h2><div class="d-seg" role="group" aria-label="地図">${[["world","世界"],["jp","日本"]].map(([k,l])=>`<button type="button" data-acmap="${k}" aria-pressed="${mapTab===k}">${l}</button>`).join("")}</div></div>
+  return `${err}<div><div class="d-sec"><h2>アクセス概況（直近${a.days||28}日間）</h2><p>最終更新：${esc((a.at||"").replace("T"," ").slice(0,16))}（毎朝）</p></div>
+    <div class="d-stats">${tile("users","ユーザー数",t.users,"人","サイトを訪れた人数（重複なし）")}${tile("doc","ページビュー",t.views,"PV","ページが表示された回数")}${tile("inbox","セッション",t.sessions,"回","サイトへの訪問回数")}${tile("home","新規ユーザー",t.newUsers,"人","期間中に初めて訪問した人数")}</div></div>
+  <div class="d-card"><div class="d-sec"><h2>日別ページビュー</h2><p>ページビュー（棒）とユーザー数（線）の推移</p></div>${acChart(a)}</div>
+  <div class="d-card"><div class="d-sec"><h2>地域別ユーザー</h2><div class="d-seg" role="group" aria-label="地図">${[["world","世界"],["jp","日本"]].map(([k,l])=>`<button type="button" data-acmap="${k}" aria-pressed="${mapTab===k}">${l}</button>`).join("")}</div></div>
     ${mapTab==="jp"?acJapan(a):acWorld(a)}</div>
-  <div><div class="d-sec"><h2>どのページが人気？</h2><p>閲覧数の多い順（記事はアイキャッチつき）</p></div>${acPageCards(a)}</div>
-  <div class="ac-grid"><div class="d-card"><h3 class="ac-h">何で見てる？</h3><div class="ac-dev">${dev.map(x=>`<div><b>${Math.round(x.users/devT*100)}%</b><span>${esc(AC_DEV[String(x.name).toLowerCase()]||x.name)}</span></div>`).join("")||`<div class="d-empty">データなし</div>`}</div>
-      <div class="ac-sub">ブラウザ</div>${acBars(a.browsers)}<div class="ac-sub">OS</div>${acBars(a.os)}</div>
-    <div class="d-card"><h3 class="ac-h">どうやって来た？</h3>${acBars(a.channels,n=>AC_CH[n]||n)}<div class="ac-sub">よく来るサイト・サービス</div>${acBars(a.sources,n=>n==="(direct)"?"直接":n==="(not set)"?"不明":n)}</div></div>
+  <div><div class="d-sec"><h2>人気ページ</h2><p>ページビュー上位（記事はアイキャッチ付き）</p></div>${acPageCards(a)}</div>
+  <div class="ac-grid"><div class="d-card"><h3 class="ac-h">デバイス・環境</h3><div class="ac-dev">${dev.map(x=>`<div><b>${Math.round(x.users/devT*100)}%</b><span>${esc(AC_DEV[String(x.name).toLowerCase()]||x.name)}</span></div>`).join("")||`<div class="d-empty">データなし</div>`}</div>
+      <div class="ac-sub">ブラウザ別</div>${acBars(a.browsers)}<div class="ac-sub">OS別</div>${acBars(a.os)}</div>
+    <div class="d-card"><h3 class="ac-h">流入経路</h3>${acBars(a.channels,n=>AC_CH[n]||n)}<div class="ac-sub">参照元（上位）</div>${acBars(a.sources,n=>n==="(direct)"?"ダイレクト":n==="(not set)"?"未設定":n)}</div></div>
   ${accessBtn()}`}
 function accessBtn(){return S.canWrite?`<div style="margin-top:12px"><button type="button" class="d-btn small secondary" data-job="access">いま更新</button></div>`:""}
 function viewKpi(){
