@@ -409,6 +409,9 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 .sv-img{aspect-ratio:4/5;margin:0 -14px;background:#0B0B10;color:rgba(255,255,255,.7);display:grid;place-items:center;text-align:center;font-size:13px;overflow:hidden} .sv-img span{padding:20px}
 .sv-count{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--label-2)} .sv-count i{width:22px;height:22px;border-radius:50%;background:conic-gradient(#1d9bf0 var(--p),var(--fill-strong) 0);flex:none}
 .sv-count.over,.sv-count.over span{color:var(--bad)} .sv-count.over i{background:conic-gradient(var(--bad) 100%,var(--bad) 0)}
+.sv-img{position:relative}.sv-car{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.sv-car::-webkit-scrollbar{display:none}.sv-car img{flex:0 0 100%;scroll-snap-align:center}
+.sv-cnt{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:2px 8px;border-radius:99px}.sv-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px}.sv-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}.sv-dots i.on{background:#fff}
+.sv-days{display:block;column-width:340px;column-gap:12px}.sv-days>.sv-day{break-inside:avoid;margin:0 0 14px;display:block}.sv-days .sv-grid{grid-template-columns:minmax(0,1fr)}.sv-days .sv-dayhead{margin-bottom:8px}
 .sv-img img{width:100%;height:100%;object-fit:cover;display:block}
 .sv-act{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--brand) 8%,var(--fill))}
 .sv-act .is-dis{opacity:.45;pointer-events:none}
@@ -854,6 +857,11 @@ function postImg(p){const k=p.imageId;if(k){S.snsImg=S.snsImg||{};if(k in S.snsI
   if(/^https:\/\//.test(p.imageUrl||"")&&(!k||S.snsImg[k]===""))return p.imageUrl;if(!k)return "";
   S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
+document.addEventListener("scroll",e=>{const c=e.target;if(!c||!c.matches||!c.matches("[data-car]"))return;const n=c.children.length,i=Math.min(n-1,Math.max(0,Math.round(c.scrollLeft/c.clientWidth)));const w=c.parentNode;const t=w.querySelector(".sv-cnt");if(t)t.textContent=(i+1)+"/"+n;w.querySelectorAll(".sv-dots i").forEach((d,k)=>d.classList.toggle("on",k===i))},true);
+function postImgs(p){const a=Array.isArray(p.imageUrls)?p.imageUrls.filter(u=>/^https:\/\//.test(u||"")):[];return a.length?a:(()=>{const u=postImg(p);return u?[u]:[]})()}
+function igSlides(p){const a=postImgs(p);if(!a.length)return `<span>${p.imageId||p.status==="審査済み"?"画像担当が画像を作っています":esc(p.imageNote||"審査を通ると画像担当が画像を作ります")}<br><b>画像のURLを入れると予約できます</b></span>`;
+  if(a.length===1)return `<img src="${esc(a[0])}" alt="" loading="lazy">`;
+  return `<div class="sv-car" data-car>${a.map((u,i)=>`<img src="${esc(u)}" alt="${i+1}枚目" loading="lazy">`).join("")}</div><span class="sv-cnt">1/${a.length}</span><span class="sv-dots">${a.map((_,i)=>`<i${i?"":' class="on"'}></i>`).join("")}</span>`}
 function postImgBar(p){const g=p.imageId&&(S.snsImg||{})[p.imageId];
   return g?`<div class="sv-act"><span class="d-sub">${(p.imageIds||[]).length>1?`図解 ${p.imageIds.length}枚（1枚目を表示）。`:""}${p.channel==="X"?"X の予約画面に、この画像を保存して添付します":/^https:\/\//.test(p.imageUrl||"")?"公開 URL つき（Metricool に予約できます）":"公開 URL を待っています（画像担当が WordPress に上げます）"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">${(p.imageIds||[]).length>1?`画像を保存（${p.imageIds.length}枚）`:"画像を保存"}</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
 function xCard(p){const n=xLen(p.text),d=parse(p.date);
@@ -869,7 +877,7 @@ function thCard(p){const cap=String(p.text||""),n=[...cap].length;
     <div class="sv-count ${n>500?"over":""}"><i style="--p:${Math.min(100,n/500*100)}%"></i><span class="num">${n}/500</span></div>${postMeta(p)}</button>`}
 function igCard(p){const tags=(String(p.text||"").match(/[#＃][^\s#＃　]+/g)||[]).length,d=parse(p.date),cap=String(p.text||"");
   return `<button type="button" class="sv sv-ig" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>${esc(igHandle())}</b><span>ミアゲタビ</span></div><span class="sv-logo ig">◎</span></div>
-    <div class="sv-img">${(()=>{const u=postImg(p);return u?`<img src="${esc(u)}" alt="" loading="lazy">`:`<span>${p.imageId||p.status==="審査済み"?"画像担当が画像を作っています":esc(p.imageNote||"審査を通ると画像担当が画像を作ります")}<br><b>画像のURLを入れると予約できます</b></span>`})()}</div>${postImgBar(p)}
+    <div class="sv-img">${igSlides(p)}</div>${postImgBar(p)}
     <div class="sv-text"><b>${esc(igHandle())}</b> ${snsText(cap.length>150?cap.slice(0,150)+"…":cap)}${cap.length>150?' <span class="d-sub">もっと見る</span>':""}</div>
     <div class="sv-count ${tags>2?"over":""}"><span class="num">${[...cap].length}/300字 · タグ ${tags}/2</span></div>${postMeta(p)}</button>`}
 /* ---------- Metricool で予約（運営者がワンタップ。審査済みの投稿だけ） ---------- */
@@ -886,7 +894,8 @@ function mcProblems(p){const out=[],d=parse(p.date);
   if(p.channel==="X")out.push("X は Metricool では予約しません（下のボタンで、X の予約機能に貼る形でコピーします）");
   if(!d||!/^\d{1,2}:\d{2}$/.test(p.time||""))out.push("投稿日と時刻（例 19:00）が必要");
   else if(new Date(`${p.date}T${p.time.padStart(5,"0")}:00+09:00`)<new Date(Date.now()+5*6e4))out.push("投稿の時刻が過ぎています（5分以上先にしてください）");
-  if(p.channel==="Instagram"&&!/^https:\/\//.test(p.imageUrl||""))out.push("Instagram は画像の URL が必要");
+  if(p.channel==="Instagram"&&!postImgs(p).filter(u=>/^https:\/\//.test(u)).length)out.push("Instagram は画像の URL が必要");
+  if(p.channel==="Instagram"&&p.kind==="カルーセル"&&postImgs(p).filter(u=>/^https:\/\//.test(u)).length<2)out.push("カルーセルは画像が2枚以上必要（imageUrls に URL を並べる）");
   if(p.channel==="Threads"&&[...String(p.text||"")].length>500)out.push("Threads の文字数が500を超えています");
   if(p.approval==="owner"&&!p.ownerOk)out.push("運営者の確認が先です（延期・結果・訂正・引用）。確認したら「運営者が確認した」を押してください");
   return out}
@@ -925,7 +934,7 @@ async function mcSchedule(id,auto){
     let dup=near.find(x=>(x.providers||[]).some(v=>v.network===net)&&norm(x.text)===norm(p.text));
     let uuid=dup?String(dup.uuid||""):"",url="";
     if(!dup){
-      const info={autoPublish:true,draft:false,descendants:[],firstCommentText:"",hasNotReadNotes:false,media:/^https:\/\//.test(p.imageUrl||"")?[p.imageUrl]:[],mediaAltText:[],providers:[{network:net}],
+      const info={autoPublish:true,draft:false,descendants:[],firstCommentText:"",hasNotReadNotes:false,media:(Array.isArray(p.imageUrls)&&p.imageUrls.length?p.imageUrls:(/^https:\/\//.test(p.imageUrl||"")?[p.imageUrl]:[])).filter(u=>/^https:\/\//.test(u)),mediaAltText:[],providers:[{network:net}],
         publicationDate:{dateTime:at+":00",timezone:"Asia/Tokyo"},shortener:false,smartLinkData:{ids:[]},text:p.text};
       if(net==="threads")info.threadsData={allowedCountryCodes:[]};
       if(net==="instagram")info.instagramData={type:"POST",isAiGenerated:false};
@@ -998,8 +1007,8 @@ const SNS_ST=[["draft","下書き",["下書き","差し戻し"],"画像と審査
 const snsGroupOf=p=>(SNS_ST.find(g=>g[2].includes(p.status))||SNS_ST[0])[0];
 function snsDays(list){
   const days=[...new Set(list.map(p=>p.date||""))];
-  return days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
-    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):p.channel==="Threads"?thCard(p):xCard(p))).join("")}</div></section>`}).join("")}
+  return `<div class="sv-days">`+days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
+    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):p.channel==="Threads"?thCard(p):xCard(p))).join("")}</div></section>`}).join("")+`</div>`}
 function viewSns(){
   setTimeout(mcSync,0);setTimeout(mcAuto,300);
   const ch=S.snsCh||"all",st=S.snsSt||"all",byCh=[...S.posts].filter(p=>ch==="all"||(p.channel||"X")===ch||p.channel==="両方").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
@@ -1780,4 +1789,5 @@ render();requestAnimationFrame(()=>placeLens(false));
 })();
 })();
 </script>
+
 
