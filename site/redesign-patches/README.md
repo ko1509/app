@@ -12,6 +12,22 @@
   - Chromium では、もともと長いタスクが出ない（性能の高い環境のため）。**iPhone で揺れが減るかは、実機でしか分からない。**
 - 戻し方：足した `<script>` を消すだけ。
 
+## 1-2. 対策1b：スマホでは背景の星を出さない（`mg-no-stars-mobile.css`）
+- **WebKit での測定**（この環境に Playwright の WebKit を入れた。iPhone 14 の画面、公開中のサイト、スクロール1600px、3回の中央値。ソフトウェア描画なので、絶対値は iPhone と違う。相対比較にだけ使う）：
+
+  | 条件 | ヒストリー（フレーム間隔の中央値／遅い5%） | 記事（同） |
+  |---|---|---|
+  | そのまま | 50ms／69ms | 34ms／46ms |
+  | 対策1（描画の停止）だけ | 47ms／72ms | 33ms／46ms |
+  | 対策1＋`#mg-stars` を非表示 | **25ms／46ms** | **20ms／31ms** |
+  | 対策1＋`#mg-fx`（演出）を非表示 | 42ms／61ms | 27ms／36ms |
+  | 対策1＋星を、スクロール中だけ非表示 | 47ms／64ms | 28ms／40ms（ほぼ効かない） |
+  | 対策1＋星を CSS のグラデーションに置換 | 104ms／130ms（**悪化**） | 23ms／110ms（悪化） |
+  | `will-change`・`translateZ`・`contain`・不透明度を1に・`overflow-x:clip` を外す・ヘッダーの合成化 | 効果なし（±数ms） | 効果なし |
+- 読み取り：重いのは JS の描画ではなく、**全画面に固定した星の canvas を、スクロールのたびに合成し直すこと**。canvas のレイヤー化・小細工では軽くならず、**出さない**のが一番効く。スクロール中だけ隠す、CSS の星に置き換える、は効かない（悪化もある）。
+- 代わりに失うもの：スマホの背景の星（デコレーション）。演出（`#mg-fx`）・ロゴ・ティッカーは残る。
+- 実機の iPhone（GPU 合成）では、差はもっと小さいかもしれない。**対策1と1bを入れて、実機で揺れが減るかを見て、減ったら星を戻す（1bを消す）か、星を間引く方向を考える。**
+
 ## 2. ライブのコードを読んで分かったこと（原因の候補の絞り込み）
 - `frame()`（星・流れ星・ロゴ）は常時 rAF で動く。スマホは33msに間引き済みだが、スクロール中も動いている → 対策1で止める。
 - `punch()`（`punchRects`・`blockRects`）は、本文の全テキストノードと最大500要素の `getBoundingClientRect` を測る重い処理。`scroll` のたびに `prT=0` に戻して**毎フレーム測り直す**作りだが、動くのは「打ち上げの演出（`launches.length`）」の最中だけ。演出中にスクロールすると強く揺れる可能性がある。→ 対策2の候補。
@@ -19,7 +35,7 @@
 - `#body_wrap{overflow-x:clip!important}`：iOS の古い版では sticky に影響する例がある。→ 対策3の候補（横スクロールが出ないか要確認）。
 - `.l-header{position:sticky;top:var(--wp-admin--admin-bar--height,0px)}`、`.mz-htl__stick{position:sticky;top:var(--hdr)}`：ヘッダーの高さは小数2桁で保持済み。
 
-## 3. 次に試す順番（対策1で直らないとき）
+## 3. 次に試す順番（対策1・1bで直らないとき）
 1. **対策2**：`punch()` を、スクロール中は呼ばない（`W.addEventListener('scroll',function(){prT=0})` を、`prT=t` に変えて測り直しを間引く。または演出中は `moving` のとき `punch` を飛ばす）。
 2. **対策3**：スマホだけ `#body_wrap{overflow-x:visible!important}` にして、`html{overflow-x:hidden}` で横のはみ出しを抑える。**ページが横に動かないか**を確かめてから。
 3. **対策4**：ヘッダーをスマホだけ `position:fixed` にして、同じ高さのスペーサーを入れる。
@@ -30,4 +46,4 @@
 - 対策1を入れたあとの変化（「少し減った」「変わらない」「年表だけ残る」など）。
 
 ## 5. 反映のしかた（引き継ぎメモの手順）
-管理画面のカスタマイザーを開いたタブで、`mg-scroll-calm.js` を `<script>…</script>` で包んだものを、`wp.customize('loos_customizer[foot_code]')` の値の**最後**に足して、`wp.customize.previewer.save()`。SiteGuard Lite（WAF）はオンのまま。設定は変えない。
+管理画面のカスタマイザーを開いたタブで、(1) `mg-scroll-calm.js` を `<script>…</script>` で包んだものを、`wp.customize('loos_customizer[foot_code]')` の値の**最後**に足す。(2) `mg-no-stars-mobile.css` の中身を、`wp.customize('custom_css[swell_child]')` の値の**最後**に足す。そのあと `wp.customize.previewer.save()`。SiteGuard Lite（WAF）はオンのまま。設定は変えない。

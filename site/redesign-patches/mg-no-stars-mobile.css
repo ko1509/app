@@ -1,0 +1,5 @@
+/* ミアゲタビ：スマホでは、背景の星の canvas（#mg-stars）を出さない。
+ * WebKit（iPhone と同じ描画エンジン）での測定で、全画面に固定した星の canvas が、スクロール1コマの重さの約半分を占めていたため。
+ * カスタム CSS（custom_css[swell_child]）の最後に足す。戻すときは、この1ブロックを消すだけ。
+ * 演出用の #mg-fx は、そのまま残す（打ち上げの演出・流れ星は、スマホでも出る）。 */
+@media (max-width: 699px) { #mg-stars { display: none !important; } }
