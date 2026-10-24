@@ -7,7 +7,7 @@
 使い方： python3 ga4_report.py [日数=28] > access.json
 値は表示しない。鍵・ID は出力に含めない。
 """
-import base64, json, os, sys, time, urllib.parse, urllib.request
+import base64, json, os, re, sys, time, urllib.parse, urllib.request
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -40,8 +40,14 @@ def report(tok, prop, days, dims, mets, limit=10, order=None):
                                {"Authorization": "Bearer " + tok, "Content-Type": "application/json"})
     with urllib.request.urlopen(r) as f:
         d = json.load(f)
-    return [{"d": [x["value"] for x in row["dimensionValues"]], "m": [float(x["value"]) for x in row["metricValues"]]}
+    return [{"d": [x["value"] for x in row.get("dimensionValues", [])], "m": [float(x["value"]) for x in row["metricValues"]]}
             for row in d.get("rows", [])]
+
+
+def clean_email(v):
+    """環境変数に JSON の1行（"client_email": "xxx@….iam.gserviceaccount.com",）やクォートごと貼られても、メールだけを取り出す"""
+    m = re.search(r"[\w.+-]+@[\w.-]+\.iam\.gserviceaccount\.com", v or "")
+    return m.group(0) if m else (v or "").strip()
 
 
 def main():
@@ -55,7 +61,7 @@ def main():
         raw = "{" + raw.rstrip().rstrip(",") + "}"
     sa = json.loads(raw, strict=False)
     if "client_email" not in sa:  # 鍵の行だけ入れた場合は、別の環境変数のメールを使う
-        sa["client_email"] = os.environ.get("GA4_CLIENT_EMAIL", "").strip()
+        sa["client_email"] = clean_email(os.environ.get("GA4_CLIENT_EMAIL", ""))
     if not sa["client_email"] or "private_key" not in sa:
         print("鍵に client_email か private_key がありません（GA4_CLIENT_EMAIL を足すか、JSON全体を入れ直す）", file=sys.stderr)
         sys.exit(2)
