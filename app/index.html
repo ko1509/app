@@ -994,14 +994,24 @@ function bindSns(pg){
     if(id&&b&&/koa/i.test(b.label+JSON.stringify(b.networksData||{}))){toast("KOAlil のブランドは選べません。ミアゲタビ用のブランドを作ってください");return}
     try{await S.db.doc("settings/sns").set({...S.snsConf,xHandle:$("#snsX").value.trim().replace(/^@/,""),igHandle:$("#snsIg").value.trim().replace(/^@/,""),threadsHandle:$("#snsTh").value.trim().replace(/^@/,""),brandId:id,brandLabel:b?b.label:(S.snsConf.brandLabel||""),updatedAt:iso()});toast("保存しました")}catch(e){toast("保存できませんでした："+(e.message||e.code))}};
 }
+const SNS_ST=[["draft","下書き",["下書き","差し戻し"],"画像と審査を待っています"],["ok","審査済み",["審査済み"],"審査 OK。予約を待っています"],["sched","予約済み",["予約済み","投稿済み"],"予約・投稿が済んでいます"]];
+const snsGroupOf=p=>(SNS_ST.find(g=>g[2].includes(p.status))||SNS_ST[0])[0];
+function snsDays(list){
+  const days=[...new Set(list.map(p=>p.date||""))];
+  return days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
+    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):p.channel==="Threads"?thCard(p):xCard(p))).join("")}</div></section>`}).join("")}
 function viewSns(){
   setTimeout(mcSync,0);setTimeout(mcAuto,300);
-  const ch=S.snsCh||"all",list=[...S.posts].filter(p=>ch==="all"||(p.channel||"X")===ch||p.channel==="両方").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
-  const days=[...new Set(list.map(p=>p.date||""))];
+  const ch=S.snsCh||"all",st=S.snsSt||"all",byCh=[...S.posts].filter(p=>ch==="all"||(p.channel||"X")===ch||p.channel==="両方").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
+  const cnt=k=>byCh.filter(p=>snsGroupOf(p)===k).length;
+  const stSeg=`<div class="d-seg" role="group" aria-label="状態"><button type="button" data-snsst="all" aria-pressed="${st==="all"}">すべて ${byCh.length}</button>${SNS_ST.map(([k,l])=>`<button type="button" data-snsst="${k}" aria-pressed="${st===k}">${l} ${cnt(k)}</button>`).join("")}</div>`;
+  let body;
+  if(!byCh.length)body=`<div class="d-card d-empty">投稿の予定はまだありません。</div>`;
+  else if(st==="all")body=SNS_ST.map(([k,l,,hint])=>{const L=byCh.filter(p=>snsGroupOf(p)===k);return `<div><div class="d-sec"><h2>${l}</h2><p class="num">${L.length}件・${hint}</p></div>${L.length?snsDays(L):`<div class="d-card d-empty">${l}の投稿はありません。</div>`}</div>`}).join("");
+  else{const L=byCh.filter(p=>snsGroupOf(p)===st);body=L.length?snsDays(L):`<div class="d-card d-empty">この状態の投稿はありません。</div>`}
   return `${agentsCard("sns")}<div class="d-actions"><div class="d-seg" role="group" aria-label="媒体">${[["all","すべて"],["X","X"],["Instagram","Instagram"],["Threads","Threads"]].map(([k,l])=>`<button type="button" data-ch="${k}" aria-pressed="${ch===k}">${l}</button>`).join("")}</div><span style="flex:1"></span>${S.canWrite?`<button type="button" class="d-btn small" data-xreq="1">Xの予約を頼む</button><button type="button" class="d-btn small secondary" data-xbatch="1">Xの下書きをまとめてコピー</button><button type="button" class="d-btn small secondary" data-job="sns">${ic("sns")}告知文を頼む</button>`:""}${addBtn("post","投稿を追加")}</div>
-  ${list.length?days.map(d=>{const dd=parse(d),items=list.filter(p=>(p.date||"")===d);return `<section class="sv-day"><div class="sv-dayhead ${dd&&diff(dd)===0?"today":""}"><b class="num">${dd?(dd.getMonth()+1)+"/"+dd.getDate():"—"}</b><span>${dd?["SUN","MON","TUE","WED","THU","FRI","SAT"][dd.getDay()]+" · "+relDay(dd):"日付なし"}</span><em class="num">${items.length}件</em></div>
-    <div class="sv-grid">${items.map(p=>(p.channel==="Instagram"?igCard(p):p.channel==="Threads"?thCard(p):xCard(p))).join("")}</div></section>`}).join("")
-    :`<div class="d-card d-empty">投稿の予定はまだありません。</div>`}
+  <div class="d-actions">${stSeg}</div>
+  ${body}
   ${snsAccounts()}`;
 }
 function latestKpi(){return [...S.kpi].sort((a,b)=>b._id.localeCompare(a._id))[0]}
@@ -1699,6 +1709,7 @@ function bind(){
     base=v===0?new Date(t.getFullYear(),t.getMonth(),1):new Date(base.getFullYear(),base.getMonth()+v,1);S.evMonth=`${base.getFullYear()}-${pad(base.getMonth()+1)}-01`;render()});
   bindSns(pg);
   pg.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{S.snsCh=b.dataset.ch;render()});
+  pg.querySelectorAll("[data-snsst]").forEach(b=>b.onclick=()=>{S.snsSt=b.dataset.snsst;render()});
   pg.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{S.filter.pillar=b.dataset.filter;render()});
   pg.querySelectorAll("[data-chk]").forEach(b=>b.onclick=async()=>{
     const id=b.dataset.chk,k=b.dataset.k,cur={...(S.checks[id]||{})};cur[k]=b.getAttribute("aria-pressed")!=="true";
