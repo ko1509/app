@@ -850,11 +850,12 @@ const KO_BRAND="7372301"; // KOAlilのブランド。ミアゲタビの投稿は
 // db の画像（images/<ID>）を一度だけ読んで覚えておく
 function dbImg(k){if(!k||!S.db)return "";S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
-function postImg(p){if(/^https:\/\//.test(p.imageUrl||""))return p.imageUrl;const k=p.imageId;if(!k)return "";
+function postImg(p){const k=p.imageId;if(k){S.snsImg=S.snsImg||{};if(k in S.snsImg){if(S.snsImg[k])return S.snsImg[k]}else{S.snsImg[k]=null;(async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})()}}
+  if(/^https:\/\//.test(p.imageUrl||"")&&(!k||S.snsImg[k]===""))return p.imageUrl;if(!k)return "";
   S.snsImg=S.snsImg||{};if(k in S.snsImg)return S.snsImg[k]||"";S.snsImg[k]=null;
   (async()=>{try{const sn=await S.db.doc("images/"+k).get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.snsImg[k]=(im&&im.dataUrl)||"";if(S.snsImg[k])render()}catch(_){S.snsImg[k]=""}})();return ""}
-function postImgBar(p){const g=!(/^https:\/\//.test(p.imageUrl||""))&&p.imageId&&(S.snsImg||{})[p.imageId];
-  return g?`<div class="sv-act"><span class="d-sub">${p.channel==="X"?"Xの予約画面に、この画像を保存して添付します":p.channel==="Instagram"?"予約には、この画像を WordPress のメディアなどに上げて URL を入れてください":"画像つきで予約するなら、上げた画像の URL を入れてください"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">${(p.imageIds||[]).length>1?`画像を保存（${p.imageIds.length}枚）`:"画像を保存"}</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
+function postImgBar(p){const g=p.imageId&&(S.snsImg||{})[p.imageId];
+  return g?`<div class="sv-act"><span class="d-sub">${(p.imageIds||[]).length>1?`図解 ${p.imageIds.length}枚（1枚目を表示）。`:""}${p.channel==="X"?"X の予約画面に、この画像を保存して添付します":/^https:\/\//.test(p.imageUrl||"")?"公開 URL つき（Metricool に予約できます）":"公開 URL を待っています（画像担当が WordPress に上げます）"}</span><span role="button" tabindex="0" class="d-btn small secondary" data-snsdl="${esc(p._id)}">${(p.imageIds||[]).length>1?`画像を保存（${p.imageIds.length}枚）`:"画像を保存"}</span>${S.canWrite?`<span role="button" tabindex="0" class="d-btn small secondary" data-snsre="${esc(p._id)}">作り直す</span>`:""}</div>`:""}
 function xCard(p){const n=xLen(p.text),d=parse(p.date);
   return `<button type="button" class="sv sv-x" data-edit="post" data-id="${esc(p._id)}">${postWhen(p)}<div class="sv-head">${snsAvatar}<div class="sv-who"><b>ミアゲタビ</b><span>@${esc(xHandle())}</span></div><span class="sv-logo">𝕏</span></div>
     <div class="sv-text">${snsText(p.text)||'<span class="d-sub">（本文なし）</span>'}</div>
