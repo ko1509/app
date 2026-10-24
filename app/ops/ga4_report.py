@@ -30,11 +30,13 @@ def token(sa):
         return json.load(r)["access_token"]
 
 
-def report(tok, prop, days, dims, mets, limit=10, order=None):
+def report(tok, prop, days, dims, mets, limit=10, order=None, flt=None):
     req = {"dateRanges": [{"startDate": f"{days}daysAgo", "endDate": "today"}],
            "dimensions": [{"name": d} for d in dims], "metrics": [{"name": m} for m in mets], "limit": limit}
     if order:
         req["orderBys"] = order
+    if flt:
+        req["dimensionFilter"] = flt
     r = urllib.request.Request(f"https://analyticsdata.googleapis.com/v1beta/properties/{prop}:runReport",
                                json.dumps(req).encode(),
                                {"Authorization": "Bearer " + tok, "Content-Type": "application/json"})
@@ -85,6 +87,15 @@ def main():
         "channels": top(["sessionDefaultChannelGroup"]), "sources": top(["sessionSource"], n=10),
         "pages": top(["pagePath"], n=15),
     }
+    # 世界地図・日本地図用：国（ISO2 コード）と、日本の都道府県（GA4 の region 名）。アクセスの多い順
+    order = [{"metric": {"metricName": "activeUsers"}, "desc": True}]
+    out["geo"] = [{"code": r["d"][0], "name": r["d"][1], "users": int(r["m"][0]), "views": int(r["m"][1])}
+                  for r in report(tok, prop, days, ["countryId", "country"], ["activeUsers", "screenPageViews"], 100, order)]
+    jp = {"filter": {"fieldName": "countryId", "stringFilter": {"matchType": "EXACT", "value": "JP"}}}
+    out["jpRegions"] = [{"name": r["d"][0], "users": int(r["m"][0]), "views": int(r["m"][1])}
+                        for r in report(tok, prop, days, ["region"], ["activeUsers", "screenPageViews"], 60, order, jp)]
+    # 人気ページ：パスと、ページのタイトル（アプリで記事と結び付ける）
+    out["pageTitles"] = {r["d"][0]: r["d"][1] for r in report(tok, prop, days, ["pagePath", "pageTitle"], ["screenPageViews"], 60)}
     json.dump(out, sys.stdout, ensure_ascii=False)
 
 

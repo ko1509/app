@@ -321,7 +321,17 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
   background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px color-mix(in srgb,var(--c) 35%,transparent)}
 .ag-ic svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 .ag-planner{--c:var(--gear)} .ag-writer{--c:var(--sky)} .ag-reviewer{--c:var(--launch)} .ag-watch{--c:#d70015} .ag-sns{--c:#2a6496} .ag-eventfetch{--c:#7a5af8} .ag-snsreview{--c:#3d7f57} .ag-audit{--c:var(--spot)} .ag-access{--c:var(--gear)} .ag-steward{--c:var(--launch)}
-.ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.ac-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:6px 0;font-size:14px}.ac-row b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-row .bar{grid-column:1/-1;height:4px;border-radius:2px;background:var(--fill,rgba(128,128,128,.18))}.ac-row .bar i{display:block;height:100%;border-radius:2px;background:var(--accent,#0a84ff)}.ac-chart{width:100%;height:120px}
+.ac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.ac-h{margin:0 0 8px;font-size:16px}.ac-sub{margin:14px 0 4px;font-size:12px;color:var(--label-2);font-weight:600}
+.ac-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;padding:5px 0;font-size:14px}.ac-row b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-row .bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--fill)}.ac-row .bar i{display:block;height:100%;border-radius:3px;background:var(--accent,#E8481C)}
+.ac-kpi .k{display:flex;align-items:center;gap:6px}.ac-kpi .k svg{width:16px;height:16px;opacity:.7}.ac-kpi .s{font-size:11px;color:var(--label-2)}
+.ac-chart{position:relative}.ac-chart svg{width:100%;height:auto;display:block;overflow:visible}.ac-chart text{font-size:13px;fill:var(--label-2)}.ac-chart .g{stroke:var(--separator,rgba(128,128,128,.25));stroke-width:1}.ac-chart .b{fill:var(--accent,#E8481C);opacity:.55}.ac-chart .b.now{opacity:1}.ac-chart .u{fill:none;stroke:var(--label,#111);stroke-width:2;stroke-linejoin:round;opacity:.75}.ac-chart .h{fill:transparent;cursor:pointer}.ac-chart .h:hover{fill:rgba(128,128,128,.12)}.ac-chart .h.on{fill:rgba(128,128,128,.18)}
+.ac-tip{margin:8px 0 2px;padding:8px 12px;border-radius:12px;background:var(--fill);font-size:14px;min-height:20px}.ac-tip b{font-variant-numeric:tabular-nums}
+.ac-leg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--label-2);margin-top:6px}.ac-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}.ac-leg i.b{background:var(--accent,#E8481C)}.ac-leg i.u{background:var(--label,#111);height:3px;vertical-align:3px}
+.ac-map svg{width:100%;height:auto;display:block}.ac-map .sea{fill:var(--fill)}.ac-map .land{fill:var(--bg-elevated,#fff);stroke:var(--separator,rgba(128,128,128,.4));stroke-width:.5}.ac-map .hit{stroke:var(--label-2);stroke-width:.6;cursor:pointer}.ac-map .dot{fill:#E8481C;stroke:#fff;stroke-width:1.2;cursor:pointer;opacity:.9}.ac-map.jp svg{max-height:70vh;max-width:520px;margin:0 auto}.ac-map.jp .land{fill:var(--fill)}
+.ac-rank{display:grid;gap:4px;margin-top:10px}.ac-r{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--fill);font-size:14px;overflow:hidden;cursor:pointer}.ac-r:not(:has(.fl)){grid-template-columns:minmax(0,1fr) auto}.ac-r i{position:absolute;left:0;bottom:0;height:3px;background:var(--accent,#E8481C);opacity:.7}.ac-r b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ac-r .fl{font-size:18px}
+.ac-pages{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.ac-pg{display:flex;gap:12px;align-items:stretch;padding:10px;border-radius:16px;background:var(--bg-elevated,var(--fill));box-shadow:var(--shadow,none);border:1px solid var(--separator,transparent)}.ac-pg .th{position:relative;flex:none;width:108px;aspect-ratio:1200/630;border-radius:10px;overflow:hidden;background:#0B0B10;align-self:flex-start}.ac-pg .th img{width:100%;height:100%;object-fit:cover;display:block}.ac-pg .th .ph{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.55)}.ac-pg .th .ph svg{width:26px;height:26px}.ac-pg em{position:absolute;left:5px;top:5px;min-width:20px;padding:1px 6px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;font-style:normal;font-size:12px;font-weight:700;text-align:center}
+.ac-pg .tx{position:relative;min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;padding-bottom:6px}.ac-pg .tx b{font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ac-pg .tx .d-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.ac-pg .nums{display:flex;gap:12px;font-size:15px;font-weight:700;margin-top:2px}.ac-pg .nums small{font-size:11px;font-weight:400;color:var(--label-2)}.ac-pg .tx i{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:var(--accent,#E8481C);opacity:.7}
+.ac-dev{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}.ac-dev div{padding:10px;border-radius:12px;background:var(--fill);text-align:center}.ac-dev b{display:block;font-size:22px}.ac-dev span{font-size:12px;color:var(--label-2)}
 .ag-detail{display:grid;gap:6px;padding:12px 14px;border-radius:16px;background:var(--glass-strong);box-shadow:0 0 0 1px var(--glass-edge);min-width:0}
 .ag-dhead{display:flex;gap:8px;align-items:center} .ag-dhead b{font-size:15px;flex:1;min-width:0}
 .ag-detail dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:13px} .ag-detail dt{color:var(--label-2)} .ag-detail dd{margin:0;overflow-wrap:anywhere}
@@ -527,6 +537,7 @@ button.d-row{cursor:pointer} button.d-row:hover{background:var(--fill)}
 <div class="toast" id="toast" role="status"></div>
 <div id="sheetHost"></div>
 
+<script src="geo/world.js"></script><script src="geo/japan.js"></script>
 <script>
 (function(){
 /* ---------- アイコン ---------- */
@@ -989,6 +1000,10 @@ function bindSns(pg){
   pg.querySelectorAll("[data-xcopy]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.xcopy);if(p)toast(await cp(xPlain(p))?"コピーしました":"コピーできませんでした")};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   const au=$("#snsAuto");if(au)au.onchange=async()=>{try{await S.db.doc("settings/sns").update({autoSchedule:au.checked,updatedAt:iso()});toast(au.checked?"自動で予約します":"自動予約を止めました")}catch(_){toast("保存できませんでした")}};
   pg.querySelectorAll("[data-ownerok]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();try{await S.db.doc("posts/"+b.dataset.ownerok).update({ownerOk:true,ownerOkAt:iso(),updatedAt:iso()});toast("確認済みにしました")}catch(_){toast("保存できませんでした")}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
+  pg.querySelectorAll("[data-acmap]").forEach(b=>b.onclick=()=>{S.acMap=b.dataset.acmap;render()});
+  const acC=$("#acChart");if(acC){const info=JSON.parse(acC.dataset.days||"[]");acC.querySelectorAll("[data-acday]").forEach(h=>{const go=()=>{acC.querySelectorAll(".h.on").forEach(x=>x.classList.remove("on"));h.classList.add("on");$("#acTip").innerHTML=info[+h.dataset.acday]||""};h.onclick=go;h.onmouseenter=go})}
+  pg.querySelectorAll("[data-accc]").forEach(el=>{const go=()=>{const g=((S.analytics||{}).geo||[]).find(x=>x.code===el.dataset.accc);if(g&&$("#acMapTip"))$("#acMapTip").innerHTML=`${acFlag(g.code)} ${esc(acJa(g.code))}　<b>${acNum(g.users)}</b>人　閲覧 ${acNum(g.views)}`};el.onclick=go;el.onmouseenter=go});
+  pg.querySelectorAll("[data-acpf]").forEach(el=>{const go=()=>{const J=window.MG_JAPAN,p=J&&J.prefs.find(x=>String(x.id)===el.dataset.acpf),r=p&&((S.analytics||{}).jpRegions||[]).find(x=>acNorm(x.name)===acNorm(p.en));if(r&&$("#acJpTip"))$("#acJpTip").innerHTML=`${esc(p.ja)}　<b>${acNum(r.users)}</b>人　閲覧 ${acNum(r.views)}`};el.onclick=go;el.onmouseenter=go});
   pg.querySelectorAll("[data-xdone]").forEach(b=>{const go=async e=>{e.stopPropagation();e.preventDefault();const p=S.posts.find(x=>x._id===b.dataset.xdone);if(!p)return;try{await S.db.doc("posts/"+p._id).update({status:"予約済み",updatedAt:iso(),xManual:{at:iso()}});toast("X に予約済みにしました")}catch(err){toast("書けませんでした："+(err.message||err.code))}};b.onclick=go;b.onkeydown=e=>{if(e.key==="Enter"||e.key===" ")go(e)}});
   pg.querySelectorAll("[data-xbatch]").forEach(b=>b.onclick=async e=>{e.stopPropagation();const L=S.posts.filter(p=>p.channel==="X"&&p.status==="審査済み").sort((a,b)=>((a.date||"")+(a.time||"")).localeCompare((b.date||"")+(b.time||"")));
     if(!L.length){toast("審査済みの X の投稿がありません");return}
@@ -1032,21 +1047,86 @@ function kpiTiles(k,limit){
     return `<div class="d-stat ${cls}"><span class="k">${d.l}</span><span class="v">${val.toLocaleString()}<small>${d.u}</small></span>
       <div class="d-bar"><i style="width:${Math.min(100,val/d.good*100).toFixed(0)}%"></i></div><span class="s">合格 ${d.pass.toLocaleString()}・好調 ${d.good.toLocaleString()}</span></div>`}).join("")}</div>`;
 }
-function acList(title,rows,unit){
+/* ---------- アクセス（GA4 の集計を、グラフ・地図・記事カードで見せる） ---------- */
+const AC_DEV={mobile:"スマホ",desktop:"パソコン",tablet:"タブレット","smart tv":"テレビ"};
+const AC_CH={"Organic Search":"検索から","Direct":"URLを直接・ブックマーク","Referral":"ほかのサイトから","Organic Social":"SNSから","Paid Search":"広告（検索）","Email":"メール","Unassigned":"不明","Organic Video":"動画から","Display":"広告（表示）"};
+const AC_PAGE={"/":"トップページ","/launch/schedule/":"打ち上げ予定まとめ","/category/launch/":"打ち上げを見る（一覧）","/category/sky/":"星空・天体（一覧）","/category/spot/":"宇宙スポット（一覧）","/category/gear/":"持ち物・機材（一覧）"};
+const acNum=n=>Number(n||0).toLocaleString();
+const acJa=(()=>{try{const d=new Intl.DisplayNames(["ja"],{type:"region"});return c=>{try{return d.of(c)||c}catch(_){return c}}}catch(_){return c=>c}})();
+const acFlag=c=>/^[A-Z]{2}$/.test(c||"")?String.fromCodePoint(...[...c].map(x=>127397+x.charCodeAt(0))):"🌐";
+const acNorm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\s*(prefecture|ken|fu|to)$/,"").trim();
+const acShade=(v,mx)=>v>0?`rgba(232,72,28,${(.22+.7*Math.sqrt(v/Math.max(1,mx))).toFixed(2)})`:"";
+function acNice(max){const s=Math.pow(10,Math.floor(Math.log10(Math.max(1,max)))),r=max/s;const k=r<=1?1:r<=2?2:r<=5?5:10;return k*s}
+function acDays(a){ // 日ごとの数字を、期間の全部の日で並べる（無い日は 0）
+  const m={};for(const x of a.daily||[])m[x.date]=x;const days=a.days||28,end=(a.at||"").slice(0,10)||iso().slice(0,10),e=new Date(end+"T00:00:00");const out=[];
+  for(let i=days-1;i>=0;i--){const d=new Date(e);d.setDate(e.getDate()-i);const k=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");const x=m[k]||{};out.push({k,d,views:x.views||0,users:x.users||0})}
+  return out}
+function acChart(a){
+  const D=acDays(a),W=480,H=250,L=44,R=8,T=14,B=30,pw=W-L-R,ph=H-T-B,mx=Math.max(1,...D.map(x=>x.views)),top=acNice(mx)*1,step=top/4,n=D.length,bw=pw/n;
+  const y=v=>T+ph-v/top*ph,x=i=>L+bw*i+bw/2,WD="日月火水木金土";
+  const grid=[0,1,2,3,4].map(i=>{const v=step*i;return `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${acNum(Math.round(v))}</text>`}).join("");
+  const bars=D.map((p,i)=>`<rect class="b${p.k===D[n-1].k?" now":""}" x="${(L+bw*i+bw*.16).toFixed(1)}" y="${y(p.views).toFixed(1)}" width="${(bw*.68).toFixed(1)}" height="${Math.max(p.views?2:0,(p.views/top*ph)).toFixed(1)}" rx="3"/>`).join("");
+  const line=D.map((p,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(p.users).toFixed(1)}`).join("");
+  const every=Math.ceil(n/7),labs=D.map((p,i)=>(n-1-i)%every===0?`<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${p.d.getMonth()+1}/${p.d.getDate()}</text>`:"").join("");
+  const hits=D.map((p,i)=>`<rect class="h" data-acday="${i}" x="${(L+bw*i).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ph}"/>`).join("");
+  const info=D.map(p=>`${p.d.getMonth()+1}月${p.d.getDate()}日（${WD[p.d.getDay()]}）　閲覧 <b>${acNum(p.views)}</b>　利用者 <b>${acNum(p.users)}</b>`);
+  const last=D[n-1];
+  return `<div class="ac-chart" id="acChart" data-days='${esc(JSON.stringify(info))}'><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="日ごとの閲覧数（棒）と利用者（線）">${grid}${bars}<path d="${line}" class="u"/>${labs}${hits}</svg>
+    <div class="ac-tip" id="acTip">${info[n-1]}</div><div class="ac-leg"><span><i class="b"></i>閲覧数（棒）</span><span><i class="u"></i>利用者（線）</span><span class="d-sub">棒をタップすると、その日の数字が出ます</span></div></div>`}
+function acWorld(a){
+  const W=window.MG_WORLD,geo=(a.geo||[]).filter(g=>g.code);
+  if(!W)return `<div class="d-empty">地図を読み込めませんでした</div>`;
+  if(!geo.length)return `<div class="d-empty">国別のデータは、次の取得（毎朝）から出ます</div>`;
+  const by={};for(const g of geo)by[g.code]=g;const mx=Math.max(1,...geo.map(g=>g.users));
+  const land=W.shapes.map(s=>{const g=by[s.c];return `<path d="${s.d}" class="${g?"hit":"land"}"${g?` style="fill:${acShade(g.users,mx)}" data-accc="${s.c}"`:""}/>`}).join("");
+  const dots=geo.slice(0,10).map(g=>{const p=W.points[g.code];if(!p)return "";const r=3+7*Math.sqrt(g.users/mx);return `<circle cx="${p[0]}" cy="${p[1]}" r="${r.toFixed(1)}" class="dot" data-accc="${g.code}"/>`}).join("");
+  const top=geo.slice(0,8);
+  return `<div class="ac-map"><svg viewBox="0 0 ${W.w} ${W.h}" role="img" aria-label="国別の利用者の世界地図"><path d="${W.sphere}" class="sea"/>${land}${dots}</svg><div class="ac-tip" id="acMapTip">${acFlag(top[0].code)} ${esc(acJa(top[0].code))}　<b>${acNum(top[0].users)}</b>人　閲覧 ${acNum(top[0].views)}</div></div>
+    <div class="ac-rank">${top.map(g=>`<div class="ac-r" data-accc="${g.code}"><span class="fl">${acFlag(g.code)}</span><b>${esc(acJa(g.code))}</b><span class="num">${acNum(g.users)}人</span><i style="width:${(g.users/mx*100).toFixed(0)}%"></i></div>`).join("")}</div>`}
+function acJapan(a){
+  const J=window.MG_JAPAN,rs=a.jpRegions||[];
+  if(!J)return `<div class="d-empty">地図を読み込めませんでした</div>`;
+  if(!rs.length)return `<div class="d-empty">日本の都道府県別のデータは、次の取得（毎朝）から出ます</div>`;
+  const by={};for(const r of rs)by[acNorm(r.name)]=r;const mx=Math.max(1,...rs.map(r=>r.users));
+  const prefs=J.prefs.map(p=>({...p,r:by[acNorm(p.en)]}));
+  const paths=prefs.map(p=>`<path d="${p.d}" class="${p.r?"hit":"land"}"${p.r?` style="fill:${acShade(p.r.users,mx)}" data-acpf="${p.id}"`:""}/>`).join("");
+  const top=prefs.filter(p=>p.r).sort((x,y)=>y.r.users-x.r.users).slice(0,8),f=top[0];
+  const rest=rs.filter(r=>!J.prefs.some(p=>acNorm(p.en)===acNorm(r.name))&&acNorm(r.name)!=="(not set)").length;
+  return `<div class="ac-map jp"><svg viewBox="${J.vb.join(" ")}" role="img" aria-label="都道府県別の利用者の日本地図">${paths}</svg><div class="ac-tip" id="acJpTip">${esc(f.ja)}　<b>${acNum(f.r.users)}</b>人　閲覧 ${acNum(f.r.views)}</div></div>
+    <div class="ac-rank">${top.map(p=>`<div class="ac-r" data-acpf="${p.id}"><b>${esc(p.ja)}</b><span class="num">${acNum(p.r.users)}人</span><i style="width:${(p.r.users/mx*100).toFixed(0)}%"></i></div>`).join("")}${rest?`<div class="d-sub">そのほか、地域が分からない訪問 ${rest}件</div>`:""}</div>`}
+function acEyeImg(id){S.eyeImg=S.eyeImg||{};if(id in S.eyeImg)return S.eyeImg[id]||"";S.eyeImg[id]=null;
+  (async()=>{try{const sn=await S.db.doc("images/"+id+"-eyecatch").get();const im=sn&&(typeof sn.data==="function"?sn.data():sn);S.eyeImg[id]=(im&&im.dataUrl)||"";if(S.eyeImg[id])render()}catch(_){S.eyeImg[id]=""}})();return ""}
+function acPageCards(a){
+  const rows=(a.pages||[]).slice(0,10),mx=Math.max(1,...rows.map(r=>r.views||0)),titles=a.pageTitles||{};
+  if(!rows.length)return `<div class="d-empty">まだデータがありません</div>`;
+  const arts=S.articles;
+  const pathOf=x=>{try{return new URL(x,"https://miagetabi.space").pathname}catch(_){return x}};
+  return `<div class="ac-pages">${rows.map((r,i)=>{
+    const path=r.name,art=arts.find(x=>(x.url&&pathOf(x.url)===path)||(x.path&&pathOf(x.path)===path)||(x.site&&x.site.link&&pathOf(x.site.link)===path));
+    const title=art?(art.title||titles[path]):(AC_PAGE[path]||(titles[path]||path).replace(/\s*[|｜]\s*ミアゲタビ.*$/,""));
+    const img=art?acEyeImg(art._id):"";
+    return `<div class="ac-pg"><div class="th">${img?`<img src="${esc(img)}" alt="" loading="lazy">`:`<span class="ph">${ic(art?"doc":"home")}</span>`}<em>${i+1}</em></div>
+      <div class="tx"><b>${esc(title)}</b><span class="d-sub">${esc(path)}</span><div class="nums"><span class="num">${acNum(r.views)}<small> 閲覧</small></span><span class="num">${acNum(r.users)}<small> 人</small></span></div><i style="width:${((r.views||0)/mx*100).toFixed(0)}%"></i></div></div>`}).join("")}</div>`}
+function acBars(rows,label){
   const mx=Math.max(1,...(rows||[]).map(r=>r.users));
-  return `<div class="d-card"><h3 style="margin:0 0 6px;font-size:15px">${title}</h3>${rows&&rows.length?rows.map(r=>`<div class="ac-row"><b>${esc(r.name||"(不明)")}</b><span class="num">${r.users.toLocaleString()}${unit||"人"}</span><span class="bar"><i style="width:${(r.users/mx*100).toFixed(0)}%"></i></span></div>`).join(""):`<div class="d-empty">データなし</div>`}</div>`}
+  return rows&&rows.length?rows.slice(0,6).map(r=>`<div class="ac-row"><b>${esc(label?label(r.name):r.name||"(不明)")}</b><span class="num">${acNum(r.users)}人</span><span class="bar"><i style="width:${(r.users/mx*100).toFixed(0)}%"></i></span></div>`).join(""):`<div class="d-empty">データなし</div>`}
 function viewAccess(){
   const a=S.analytics;
-  if(!a) return `<div class="d-card"><h3 style="margin:0 0 8px">まだ計測が始まっていません</h3><p style="margin:0 0 8px;font-size:14px;color:var(--label-2)">サイトに Google アナリティクス（GA4）を入れ、読み取りの設定をすると、毎朝ここに「何人が・どこから・何で」見に来たかが出ます。</p><ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:var(--label-2)"><li>analytics.google.com で GA4 のプロパティを作る（ウェブ・https://miagetabi.space）</li><li>測定ID（G-から始まる）を、サイトの &lt;head&gt; に入れる（ConoHa のWordPress →「Site Kit」か、SWELL の「高度な設定→headに出力するコード」）</li><li>Google Cloud でサービスアカウントを作り、JSONの鍵を取る → GA4「管理→アクセス管理」で、その メールを「閲覧者」に追加</li><li>実行環境の環境変数に <code>GA4_PROPERTY_ID</code>（数字）と <code>GA4_SERVICE_ACCOUNT_JSON</code>（鍵の中身）を入れる（チャットには貼らない）</li><li>下の「いま更新」を押す</li></ol></div>${accessBtn()}`;
-  const t=a.totals||{},d=a.daily||[],mx=Math.max(1,...d.map(x=>x.views));
-  const W=600,H=110,n=Math.max(1,d.length),bw=W/n;
-  const chart=d.length?`<svg class="ac-chart" viewBox="0 0 ${W} ${H+16}" preserveAspectRatio="none" role="img" aria-label="日ごとの閲覧数">${d.map((x,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-x.views/mx*H).toFixed(1)}" width="${Math.max(1,bw-2).toFixed(1)}" height="${(x.views/mx*H).toFixed(1)}" rx="1.5" fill="var(--accent,#0a84ff)"><title>${esc(x.date)} 閲覧${x.views}・利用者${x.users}</title></rect>`).join("")}</svg>`:"";
-  const tile=(k,v,u)=>`<div class="d-stat"><span class="k">${k}</span><span class="v">${Number(v||0).toLocaleString()}<small>${u}</small></span></div>`;
-  const err=a.status==="error"?`<div class="d-card" style="color:var(--bad,#d70015)">前回の取得に失敗しました：${esc(a.error||"")}（数字は前回のまま）</div>`:"";
-  return `${err}<div><div class="d-sec"><h2>直近${a.days||28}日</h2><p>更新：${esc((a.at||"").replace("T"," ").slice(0,16))}</p></div><div class="d-stats">${tile("利用者",t.users,"人")}${tile("新しい人",t.newUsers,"人")}${tile("訪問回数",t.sessions,"回")}${tile("閲覧数",t.views,"PV")}${tile("よく見た率",t.engagement,"%")}</div></div>
-  <div class="d-card"><h3 style="margin:0 0 6px;font-size:15px">日ごとの閲覧数</h3>${chart||`<div class="d-empty">まだ日ごとの数字がありません</div>`}</div>
-  <div class="ac-grid">${acList("どこから（国・地域）",a.regions)}${acList("何で（端末）",a.devices)}${acList("ブラウザ",a.browsers)}${acList("OS",a.os)}${acList("どうやって（流入の種類）",a.channels)}${acList("どのサイトから",a.sources)}</div>
-  ${acList("人気のページ",a.pages)}${accessBtn()}`}
+  if(!a) return `<div class="d-card"><h3 style="margin:0 0 8px">まだ計測が始まっていません</h3><p style="margin:0 0 8px;font-size:14px;color:var(--label-2)">サイトに Google アナリティクス（GA4）を入れ、読み取りの設定をすると、毎朝ここに「何人が・どこから・何で」見に来たかが出ます。</p></div>${accessBtn()}`;
+  const t=a.totals||{},err=a.status==="error"?`<div class="d-card" style="color:var(--bad,#d70015)">前回の取得に失敗しました：${esc(a.error||"")}（数字は前回のまま）</div>`:"";
+  const tile=(ico,k,v,u,hint)=>`<div class="d-stat ac-kpi"><span class="k">${ic(ico)}${k}</span><span class="v">${acNum(v)}<small>${u}</small></span><span class="s">${hint}</span></div>`;
+  const dev=(a.devices||[]),devT=Math.max(1,dev.reduce((s,x)=>s+x.users,0));
+  const mapTab=S.acMap||"world";
+  return `${err}<div><div class="d-sec"><h2>直近${a.days||28}日のアクセス</h2><p>更新：${esc((a.at||"").replace("T"," ").slice(0,16))}（毎朝）</p></div>
+    <div class="d-stats">${tile("users","来た人",t.users,"人","のべ人数ではなく、人の数")}${tile("doc","見られたページ",t.views,"回","ページの表示回数")}${tile("inbox","訪問",t.sessions,"回","1回の来訪を1と数えます")}${tile("home","はじめての人",t.newUsers,"人","初めて来てくれた人")}</div></div>
+  <div class="d-card"><div class="d-sec"><h2>いつ見られた？</h2><p>日ごとの閲覧数</p></div>${acChart(a)}</div>
+  <div class="d-card"><div class="d-sec"><h2>どこから来た？</h2><div class="d-seg" role="group" aria-label="地図">${[["world","世界"],["jp","日本"]].map(([k,l])=>`<button type="button" data-acmap="${k}" aria-pressed="${mapTab===k}">${l}</button>`).join("")}</div></div>
+    ${mapTab==="jp"?acJapan(a):acWorld(a)}</div>
+  <div><div class="d-sec"><h2>どのページが人気？</h2><p>閲覧数の多い順（記事はアイキャッチつき）</p></div>${acPageCards(a)}</div>
+  <div class="ac-grid"><div class="d-card"><h3 class="ac-h">何で見てる？</h3><div class="ac-dev">${dev.map(x=>`<div><b>${Math.round(x.users/devT*100)}%</b><span>${esc(AC_DEV[String(x.name).toLowerCase()]||x.name)}</span></div>`).join("")||`<div class="d-empty">データなし</div>`}</div>
+      <div class="ac-sub">ブラウザ</div>${acBars(a.browsers)}<div class="ac-sub">OS</div>${acBars(a.os)}</div>
+    <div class="d-card"><h3 class="ac-h">どうやって来た？</h3>${acBars(a.channels,n=>AC_CH[n]||n)}<div class="ac-sub">よく来るサイト・サービス</div>${acBars(a.sources,n=>n==="(direct)"?"直接":n==="(not set)"?"不明":n)}</div></div>
+  ${accessBtn()}`}
 function accessBtn(){return S.canWrite?`<div style="margin-top:12px"><button type="button" class="d-btn small secondary" data-job="access">いま更新</button></div>`:""}
 function viewKpi(){
   const list=[...S.kpi].sort((a,b)=>a._id.localeCompare(b._id)),k=latestKpi();
