@@ -42,7 +42,7 @@ def html():
         css, js = "", ""
     else:
         css, js = rd("mg-progress-calm.css"), rd("mg-progress-calm.js")
-    if "--fixes" in sys.argv: js += "\n" + rd("mg-launch-nosmoke.js")  # 打ち上げ演出の煙を描かない／年表の下の進み具合バーのズレ直し
+    if "--fixes" in sys.argv: js += "\n" + rd("mg-launch-nosmoke.js"); css += rd("mg-history-bar.css")  # 打ち上げ演出の煙を描かない／年表の下の進み具合バーのズレ直し
     if "--header-fixed" in sys.argv: css += rd("mg-header-fixed.css")  # スマホのヘッダーを sticky から fixed へ
     if "--no-stars" in sys.argv: css += rd("mg-no-stars-mobile.css")
     if "--calm" in sys.argv: js += "\n" + rd("mg-scroll-calm.js")
