@@ -33,11 +33,13 @@ def wp(method, path, body=None):
 
 
 def html():
-    """ウィジェットに入れるもの。既定は「進捗バーをヘッダーの外へ」（mg-progress-calm）だけ。
+    """ウィジェットに入れるもの。既定は「進捗バーをヘッダーの外へ」（mg-progress-calm）だけ。--progress-off：進捗バーを廃止（mg-progress-off）。
     --calm：スクロール中の描画停止（mg-scroll-calm.js）も入れる。--no-stars：スマホで星を出さない（どちらも、試したが揺れは直らなかったので、既定では入れない）"""
     rd = lambda n: open(os.path.join(HERE, n), encoding="utf-8").read()
-    css = rd("mg-progress-calm.css")
-    js = rd("mg-progress-calm.js")
+    if "--progress-off" in sys.argv:  # 進捗バーの廃止（実験）
+        css, js = rd("mg-progress-off.css"), rd("mg-progress-off.js")
+    else:
+        css, js = rd("mg-progress-calm.css"), rd("mg-progress-calm.js")
     if "--no-stars" in sys.argv: css += rd("mg-no-stars-mobile.css")
     if "--calm" in sys.argv: js += "\n" + rd("mg-scroll-calm.js")
     out = f'{MARK}<style id="mg-calm-css">{css}</style><script id="mg-calm-js">{js}</script>'

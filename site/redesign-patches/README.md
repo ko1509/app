@@ -1,6 +1,11 @@
 # スマホ（iPhone Safari）でヘッダーと年表が揺れる件の対策
 
-## 現在の状態（2026-10-25 夜）
+## 現在の状態（2026-10-25 深夜）
+- 進捗バーを**廃止**する実験を公開サイトに入れた（`python3 deploy_widget.py apply --progress-off`、部品は `mg-progress-off.js`＋`.css`）。直前の「ヘッダーの外に出す」版（`mg-progress-calm`）でも、運営者の iPhone で揺れが残ったため。この版は WAF の除外なしで通った（`createElement` を含まない）。
+- 公開ページで確認：4ページ・iPhone 14 と PC とも、進捗バー（`.mg-prog`・`.mg-prog2`）なし、ヘッダーの書き換え 0回、エラーなし。星は表示。
+- これで揺れが直らなければ、原因は進捗バーではない。次は、ヒストリーの年表の更新・ヘッダー自体の作り（sticky）・本体スクリプトの他の処理を切り分ける。
+
+## 以前の状態（2026-10-25 夜）
 - **進捗バーの対策（`mg-progress-calm.js`＋`.css`）が公開サイトに入っている**（フッター直前のウィジェット `custom_html-2`、`python3 deploy_widget.py apply`）。WAF（SiteGuard Lite）が `createElement` を含むスクリプトを止めるため、運営者が WAF を一時停止して反映した。**反映のあとは WAF を戻すこと。**
 - 公開ページで確認（WebKit・iPhone 14 と PC）：記事ページで、ヘッダーの書き換え 0回・進捗バーはヘッダーの外・幅は元の計算と一致・エラーなし。ヒストリー・トップ・カテゴリでは何も起きない（エラーなし）。
 - 外すには：`python3 deploy_widget.py remove`（使用停止中へ移す）。今後の更新も、`createElement` を含むので、WAF の除外か一時停止が要る。
