@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""スマホの揺れ対策（mg-scroll-calm.js と mg-no-stars-mobile.css）を、WordPress のウィジェットエリア「フッター直前」（before_footer）に
+カスタム HTML ウィジェットとして入れる（全ページ共通で、フッターの直前に出力される）。管理画面のカスタマイザーに入れない場合の、REST での反映方法。
+
+  python3 deploy_widget.py plan      # 何をするかだけ出す（書かない）
+  python3 deploy_widget.py apply     # 作る（同じ印のウィジェットがあれば内容を更新）
+  python3 deploy_widget.py remove    # 外す（「使用停止中のウィジェット」へ移す）
+
+環境変数 MIAGETABI_WP_USER / MIAGETABI_WP_APP_PASSWORD（値は表示しない）。印：<!-- mg-calm -->。更新は POST（PUT は止められる）。
+"""
+import base64, json, os, sys, urllib.error, urllib.request
+
+BASE = "https://miagetabi.space/wp-json"
+HERE = os.path.dirname(os.path.abspath(__file__))
+MARK = "<!-- mg-calm -->"
+SIDEBAR = "before_footer"
+
+
+def auth():
+    u, p = os.environ.get("MIAGETABI_WP_USER"), os.environ.get("MIAGETABI_WP_APP_PASSWORD")
+    if not (u and p): raise SystemExit("MIAGETABI_WP_USER / MIAGETABI_WP_APP_PASSWORD が環境にありません")
+    return "Basic " + base64.b64encode(f"{u}:{p}".encode()).decode()
+
+
+def wp(method, path, body=None):
+    h = {"Authorization": auth(), "User-Agent": "miagetabi-calm", "Content-Type": "application/json"}
+    data = json.dumps(body).encode() if body is not None else None
+    try:
+        with urllib.request.urlopen(urllib.request.Request(BASE + path, method=method, data=data, headers=h), timeout=60) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"WordPress が {e.code} を返しました（{method} {path}）" + ("。WAF に止められた可能性（回避しない。止めて運営者に知らせる）" if b"<html" in e.read(300).lower() else ""))
+
+
+def html():
+    js = open(os.path.join(HERE, "mg-scroll-calm.js"), encoding="utf-8").read()
+    out = f'{MARK}<script id="mg-calm-js">{js}</script>'
+    if "--no-stars" in sys.argv:  # スマホで星を出さない（2026-10-25 に試したが、揺れは直らず、運営者の指示で戻した。既定では入れない）
+        css = open(os.path.join(HERE, "mg-no-stars-mobile.css"), encoding="utf-8").read()
+        out = f'{MARK}<style id="mg-calm-css">{css}</style><script id="mg-calm-js">{js}</script>'
+    assert "&" not in out, "「&」が含まれています（WordPress が書き換えるため入れない）"
+    return out
+
+
+def find():
+    for w in wp("GET", "/wp/v2/widgets?per_page=100&context=edit"):
+        raw = ((w.get("instance") or {}).get("raw") or {})
+        if w.get("id_base") == "custom_html" and MARK in (raw.get("content") or ""): return w
+    return None
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "plan"
+    cur = find()
+    if cmd == "plan":
+        print(json.dumps({"置き場所": SIDEBAR, "いまの状態": ("あり（" + cur["id"] + "）" if cur else "なし"), "文字数": len(html())}, ensure_ascii=False)); return
+    if cmd == "apply":
+        body = {"id_base": "custom_html", "sidebar": SIDEBAR, "instance": {"raw": {"title": "", "content": html()}}}
+        w = wp("POST", f"/wp/v2/widgets/{cur['id']}", body) if cur else wp("POST", "/wp/v2/widgets", body)
+        print(json.dumps({"ok": True, "id": w["id"], "sidebar": w["sidebar"]}, ensure_ascii=False)); return
+    if cmd == "remove":
+        if not cur: print("ありません"); return
+        wp("POST", f"/wp/v2/widgets/{cur['id']}", {"sidebar": "wp_inactive_widgets"}); print("使用停止中へ移しました"); return
+    raise SystemExit(__doc__)
+
+
+if __name__ == "__main__":
+    main()
