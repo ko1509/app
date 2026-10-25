@@ -14,3 +14,6 @@ bar.style.setProperty('--mzp',q.toFixed(4))}
 function req(){if(!raf)raf=requestAnimationFrame(upd)}
 function re(){kn=null;req()}
 window.addEventListener('scroll',req,{passive:true});window.addEventListener('resize',re);window.addEventListener('load',re);[600,2800].forEach(function(t){setTimeout(re,t)});req()})();
+
+(function(){var tr=document.querySelector('.mz-htl__track');if(!tr)return;var d=Object.getOwnPropertyDescriptor(Element.prototype,'scrollWidth');if(!d)return;
+Object.defineProperty(tr,'scrollWidth',{configurable:true,get:function(){var real=d.get.call(tr),c=tr.lastElementChild;if(!c)return real;var end=c.offsetLeft+c.offsetWidth+(parseFloat(getComputedStyle(tr).paddingRight)||0);return end>0?Math.min(real,end):real}})})();
