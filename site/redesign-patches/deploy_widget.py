@@ -40,6 +40,7 @@ def html():
         css, js = rd("mg-progress-off.css"), rd("mg-progress-off.js")
     else:
         css, js = rd("mg-progress-calm.css"), rd("mg-progress-calm.js")
+    if "--header-fixed" in sys.argv: css += rd("mg-header-fixed.css")  # スマホのヘッダーを sticky から fixed へ
     if "--no-stars" in sys.argv: css += rd("mg-no-stars-mobile.css")
     if "--calm" in sys.argv: js += "\n" + rd("mg-scroll-calm.js")
     out = f'{MARK}<style id="mg-calm-css">{css}</style><script id="mg-calm-js">{js}</script>'
