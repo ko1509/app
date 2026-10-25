@@ -1,0 +1,2 @@
+/* 進捗バー（ヘッダーの外の固定要素）。元の .mg-prog は、スクリプトがヘッダーから外して捨てる */
+.mg-prog2{position:fixed;left:0;right:0;top:calc(var(--wp-admin--admin-bar--height,0px) + var(--hdr,58px) - 2px);height:2px;background:var(--acc);transform:scaleX(0);transform-origin:0 50%;z-index:71;pointer-events:none;will-change:transform}

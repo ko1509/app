@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""スマホの揺れ対策（mg-scroll-calm.js と mg-no-stars-mobile.css）を、WordPress のウィジェットエリア「フッター直前」（before_footer）に
+"""スマホの揺れ対策（既定：mg-progress-calm.js と .css。他にオプションの部品あり）を、WordPress のウィジェットエリア「フッター直前」（before_footer）に
 カスタム HTML ウィジェットとして入れる（全ページ共通で、フッターの直前に出力される）。管理画面のカスタマイザーに入れない場合の、REST での反映方法。
 
   python3 deploy_widget.py plan      # 何をするかだけ出す（書かない）
@@ -33,11 +33,14 @@ def wp(method, path, body=None):
 
 
 def html():
-    js = open(os.path.join(HERE, "mg-scroll-calm.js"), encoding="utf-8").read()
-    out = f'{MARK}<script id="mg-calm-js">{js}</script>'
-    if "--no-stars" in sys.argv:  # スマホで星を出さない（2026-10-25 に試したが、揺れは直らず、運営者の指示で戻した。既定では入れない）
-        css = open(os.path.join(HERE, "mg-no-stars-mobile.css"), encoding="utf-8").read()
-        out = f'{MARK}<style id="mg-calm-css">{css}</style><script id="mg-calm-js">{js}</script>'
+    """ウィジェットに入れるもの。既定は「進捗バーをヘッダーの外へ」（mg-progress-calm）だけ。
+    --calm：スクロール中の描画停止（mg-scroll-calm.js）も入れる。--no-stars：スマホで星を出さない（どちらも、試したが揺れは直らなかったので、既定では入れない）"""
+    rd = lambda n: open(os.path.join(HERE, n), encoding="utf-8").read()
+    css = rd("mg-progress-calm.css")
+    js = rd("mg-progress-calm.js")
+    if "--no-stars" in sys.argv: css += rd("mg-no-stars-mobile.css")
+    if "--calm" in sys.argv: js += "\n" + rd("mg-scroll-calm.js")
+    out = f'{MARK}<style id="mg-calm-css">{css}</style><script id="mg-calm-js">{js}</script>'
     assert "&" not in out, "「&」が含まれています（WordPress が書き換えるため入れない）"
     return out
 
