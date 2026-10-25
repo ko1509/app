@@ -38,8 +38,11 @@ def html():
     rd = lambda n: open(os.path.join(HERE, n), encoding="utf-8").read()
     if "--progress-off" in sys.argv:  # 進捗バーの廃止（実験）
         css, js = rd("mg-progress-off.css"), rd("mg-progress-off.js")
+    elif "--fixes" in sys.argv:  # 進捗バーは元のまま（何も足さない）
+        css, js = "", ""
     else:
         css, js = rd("mg-progress-calm.css"), rd("mg-progress-calm.js")
+    if "--fixes" in sys.argv: js += "\n" + rd("mg-launch-nosmoke.js")  # 打ち上げ演出の煙を描かない／年表の下の進み具合バーのズレ直し
     if "--header-fixed" in sys.argv: css += rd("mg-header-fixed.css")  # スマホのヘッダーを sticky から fixed へ
     if "--no-stars" in sys.argv: css += rd("mg-no-stars-mobile.css")
     if "--calm" in sys.argv: js += "\n" + rd("mg-scroll-calm.js")
