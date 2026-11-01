@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>確率ルーレット</title>
+<style>
+:root{--bg:#f4f5f9;--card:#fff;--ink:#1f2433;--sub:#6b7285;--line:#e2e5ee;--accent:#4f46e5}
+@media (prefers-color-scheme:dark){:root{--bg:#14161f;--card:#1e2130;--ink:#eceef6;--sub:#9aa1b5;--line:#2e3247;--accent:#8b85ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px;display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:860px){main{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}}
+h1{font-size:20px;margin:0;grid-column:1/-1}
+h2{font-size:15px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stage{text-align:center}
+.wheelwrap{position:relative;width:min(100%,420px);aspect-ratio:1;margin:0 auto}
+canvas{width:100%;height:100%;display:block}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid var(--ink);filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.turn{margin:12px 0 4px;font-size:18px;font-weight:700}
+.result{min-height:28px;font-size:16px;color:var(--sub)}
+.result b{color:var(--ink);font-size:20px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;padding:12px 28px;font-size:17px}
+input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.row input[type=text]{flex:1;width:0}
+.row input[type=number]{width:78px;text-align:right}
+.row input[type=color]{width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:none}
+.eff{width:52px;text-align:right;color:var(--sub);font-variant-numeric:tabular-nums;font-size:13px}
+.x{padding:4px 9px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.note{font-size:12px;color:var(--sub)}
+.warn{color:#d97706}
+.players{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px}
+.chip.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip button{border:0;background:none;color:inherit;padding:0 4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:4px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:600}
+td.n,th.n{text-align:center}
+.hist{max-height:160px;overflow:auto;font-size:13px}
+.hist div{padding:3px 0;border-bottom:1px solid var(--line)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.full{grid-column:1/-1}
+</style>
+</head>
+<body>
+<main>
+<h1>🎯 確率ルーレット</h1>
+
+<section class="card stage">
+  <div class="wheelwrap"><canvas id="wheel" width="840" height="840"></canvas><div class="pointer"></div></div>
+  <div class="turn" id="turn"></div>
+  <button class="primary" id="spin">回す</button>
+  <div class="result" id="result"></div>
+</section>
+
+<div style="display:grid;gap:16px;min-width:0">
+  <section class="card">
+    <h2>項目と確率</h2>
+    <div id="items"></div>
+    <div class="bar">
+      <button id="addItem">＋ 項目を追加</button>
+      <button id="equalize">均等にする</button>
+      <span class="note" id="total"></span>
+    </div>
+    <div class="note" style="margin-top:6px">合計が100%でなくても、入力値の比率で自動的に正規化されます(右の数字が実際の確率)。0%の項目は出ません。</div>
+  </section>
+
+  <section class="card">
+    <h2>プレイヤー</h2>
+    <div class="players" id="players"></div>
+    <div class="row"><input type="text" id="newPlayer" placeholder="名前を入力" maxlength="20"><button id="addPlayer">追加</button></div>
+  </section>
+</div>
+
+<section class="card full">
+  <h2>結果</h2>
+  <div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div><table id="tally"></table></div>
+    <div><div class="hist" id="hist"></div></div>
+  </div>
+  <div class="bar"><button id="clearLog">結果をリセット</button></div>
+</section>
+</main>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'prob-roulette-v1';
+const PALETTE = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#84cc16'];
+const $ = id => document.getElementById(id);
+
+let state = load() || {
+  items: [
+    {name:'大当たり', pct:10, color:PALETTE[0]},
+    {name:'当たり',   pct:30, color:PALETTE[1]},
+    {name:'ハズレ',   pct:60, color:PALETTE[3]},
+  ],
+  players: ['プレイヤー1','プレイヤー2'],
+  turn: 0,
+  log: []   // {player, item, color}
+};
+let rot = 0, spinning = false;
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)); }catch{ return null; } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch{} }
+
+// ---- 確率計算 ----
+function weights(){
+  const w = state.items.map(i => Math.max(0, Number(i.pct) || 0));
+  const sum = w.reduce((a,b)=>a+b,0);
+  return {w, sum, p: w.map(x => sum ? x/sum : 0)};
+}
+function rand01(){
+  const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296;
+}
+function pick(){
+  const {p,sum} = weights(); if(!sum) return -1;
+  let r = rand01(), acc = 0, last = -1;
+  for(let i=0;i<p.length;i++){ if(p[i]>0){ last=i; acc+=p[i]; if(r<acc) return i; } }
+  return last;
+}
+
+// ---- 描画 ----
+function draw(){
+  const c = $('wheel'), g = c.getContext('2d'), S = c.width, R = S/2 - 8;
+  g.clearRect(0,0,S,S);
+  const {p,sum} = weights();
+  g.save(); g.translate(S/2,S/2);
+  if(!sum){
+    g.fillStyle='#999'; g.beginPath(); g.arc(0,0,R,0,Math.PI*2); g.fill();
+    g.fillStyle='#fff'; g.font='bold 36px sans-serif'; g.textAlign='center'; g.fillText('確率を入力してください',0,0);
+    g.restore(); return;
+  }
+  g.rotate(rot);
+  let a = -Math.PI/2;
+  state.items.forEach((it,i) => {
+    if(p[i] <= 0) return;
+    const sw = p[i]*Math.PI*2;
+    g.beginPath(); g.moveTo(0,0); g.arc(0,0,R,a,a+sw); g.closePath();
+    g.fillStyle = it.color; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke();
+    if(sw > 0.18){
+      g.save(); g.rotate(a+sw/2); g.textAlign='right'; g.textBaseline='middle';
+      g.fillStyle='#fff'; g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=4;
+      const size = Math.max(22, Math.min(40, sw*60));
+      g.font = `bold ${size}px sans-serif`;
+      let t = it.name || '(無名)'; const max = R*0.78;
+      while(g.measureText(t).width > max && t.length > 1) t = t.slice(0,-1);
+      g.fillText(t, R-24, 0); g.restore();
+    }
+    a += sw;
+  });
+  g.restore();
+  g.save(); g.translate(S/2,S/2);
+  g.beginPath(); g.arc(0,0,26,0,Math.PI*2); g.fillStyle='#fff'; g.fill();
+  g.lineWidth=4; g.strokeStyle='#1f2433'; g.stroke(); g.restore();
+}
+
+// ---- 回転 ----
+function spin(){
+  if(spinning) return;
+  if(!state.players.length){ $('result').textContent='プレイヤーを追加してください'; return; }
+  const idx = pick(); if(idx < 0) return;
+  const {p} = weights();
+  // 当選項目の中心角(時計回り、上=0)
+  let start = 0; for(let i=0;i<idx;i++) start += p[i]*Math.PI*2;
+  const sw = p[idx]*Math.PI*2;
+  const center = start + sw/2 + (rand01()-0.5)*sw*0.8;
+  const TAU = Math.PI*2;
+  let delta = ((-center - rot) % TAU + TAU) % TAU;
+  const target = rot + delta + TAU*(5 + Math.floor(rand01()*3));
+  const from = rot, dur = 4500, t0 = performance.now();
+  spinning = true; $('spin').disabled = true; $('result').textContent = '…';
+  const ease = t => 1 - Math.pow(1-t, 4);
+  (function frame(now){
+    const t = Math.min(1,(now-t0)/dur);
+    rot = from + (target-from)*ease(t); draw();
+    if(t < 1) return requestAnimationFrame(frame);
+    rot = target % TAU; spinning = false; $('spin').disabled = false;
+    finish(idx);
+  })(t0);
+}
+function finish(idx){
+  const it = state.items[idx], player = state.players[state.turn % state.players.length];
+  state.log.push({player, item: it.name, color: it.color});
+  state.turn = (state.turn + 1) % state.players.length;
+  $('result').innerHTML = `<b>${esc(player)}</b> → <b style="color:${it.color}">${esc(it.name)}</b>`;
+  save(); renderPlayers(); renderLog();
+}
+
+// ---- UI ----
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderItems(){
+  const box = $('items'); box.innerHTML = '';
+  const {p,sum} = weights();
+  state.items.forEach((it,i) => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<input type="color" value="${it.color}" aria-label="色">
+      <input type="text" value="${esc(it.name)}" placeholder="項目名" maxlength="20">
+      <input type="number" min="0" step="any" value="${it.pct}" aria-label="確率">
+      <span class="eff" id="eff${i}">${(p[i]*100).toFixed(1)}%</span>
+      <button class="x" aria-label="削除">✕</button>`;
+    const [col,name,pct,,del] = row.children;
+    col.oninput = () => { it.color = col.value; save(); draw(); renderLog(); };
+    name.oninput = () => { it.name = name.value; save(); draw(); };
+    pct.oninput = () => { it.pct = pct.value === '' ? 0 : Number(pct.value); save(); updateEff(); draw(); };
+    del.onclick = () => { if(spinning) return; state.items.splice(i,1); save(); renderItems(); draw(); };
+    box.appendChild(row);
+  });
+  updateEff();
+}
+function updateEff(){
+  const {p,sum} = weights();
+  p.forEach((x,i) => { const e = $('eff'+i); if(e) e.textContent = (x*100).toFixed(1)+'%'; });
+  const t = $('total'), raw = Math.round(sum*100)/100;
+  t.className = 'note' + (raw !== 100 ? ' warn' : '');
+  t.textContent = `入力合計: ${raw}%` + (raw !== 100 ? '(比率で正規化)' : '');
+}
+function renderPlayers(){
+  const box = $('players'); box.innerHTML = '';
+  state.players.forEach((n,i) => {
+    const s = document.createElement('span');
+    s.className = 'chip' + (i === state.turn % state.players.length ? ' cur' : '');
+    s.innerHTML = `${esc(n)}<button aria-label="削除">✕</button>`;
+    s.querySelector('button').onclick = () => {
+      if(spinning) return;
+      state.players.splice(i,1);
+      state.turn = state.players.length ? Math.min(state.turn > i ? state.turn-1 : state.turn, state.players.length-1) : 0;
+      save(); renderPlayers();
+    };
+    box.appendChild(s);
+  });
+  $('turn').textContent = state.players.length ? `次: ${state.players[state.turn % state.players.length]} の番` : 'プレイヤーを追加してください';
+}
+function renderLog(){
+  const names = [...new Set(state.log.map(l => l.item))];
+  const t = $('tally');
+  if(!state.log.length){ t.innerHTML = '<tr><th>まだ結果がありません</th></tr>'; $('hist').innerHTML=''; return; }
+  const ps = [...new Set([...state.players, ...state.log.map(l=>l.player)])];
+  let h = '<tr><th>プレイヤー</th>' + names.map(n => `<th class="n">${esc(n)}</th>`).join('') + '<th class="n">計</th></tr>';
+  ps.forEach(pl => {
+    const mine = state.log.filter(l => l.player === pl);
+    h += `<tr><td>${esc(pl)}</td>` + names.map(n => `<td class="n">${mine.filter(l=>l.item===n).length}</td>`).join('') + `<td class="n">${mine.length}</td></tr>`;
+  });
+  t.innerHTML = h;
+  $('hist').innerHTML = state.log.slice().reverse().map((l,i) =>
+    `<div>${state.log.length-i}. ${esc(l.player)} → <span class="dot" style="background:${l.color}"></span>${esc(l.item)}</div>`).join('');
+}
+
+$('spin').onclick = spin;
+$('addItem').onclick = () => {
+  if(spinning) return;
+  state.items.push({name:'項目'+(state.items.length+1), pct:10, color:PALETTE[state.items.length % PALETTE.length]});
+  save(); renderItems(); draw();
+};
+$('equalize').onclick = () => {
+  if(spinning || !state.items.length) return;
+  const v = Math.round(10000/state.items.length)/100;
+  state.items.forEach(i => i.pct = v); save(); renderItems(); draw();
+};
+function addPlayer(){
+  const v = $('newPlayer').value.trim(); if(!v) return;
+  state.players.push(v); $('newPlayer').value=''; save(); renderPlayers();
+}
+$('addPlayer').onclick = addPlayer;
+$('newPlayer').onkeydown = e => { if(e.key === 'Enter') addPlayer(); };
+$('clearLog').onclick = () => { if(spinning) return; state.log = []; state.turn = 0; $('result').textContent=''; save(); renderPlayers(); renderLog(); };
+
+renderItems(); renderPlayers(); renderLog(); draw();
+})();
+</script>
+</body>
+</html>
