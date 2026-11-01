@@ -47,6 +47,7 @@ td.n,th.n{text-align:center}
 .hist div{padding:3px 0;border-bottom:1px solid var(--line)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
 .full{grid-column:1/-1}
+body.busy .cfg{pointer-events:none;opacity:.6}
 </style>
 </head>
 <body>
@@ -61,7 +62,7 @@ td.n,th.n{text-align:center}
 </section>
 
 <div style="display:grid;gap:16px;min-width:0">
-  <section class="card">
+  <section class="card cfg">
     <h2>項目と確率</h2>
     <div id="items"></div>
     <div class="bar">
@@ -72,7 +73,7 @@ td.n,th.n{text-align:center}
     <div class="note" style="margin-top:6px">合計が100%でなくても、入力値の比率で自動的に正規化されます(右の数字が実際の確率)。0%の項目は出ません。</div>
   </section>
 
-  <section class="card">
+  <section class="card cfg">
     <h2>プレイヤー</h2>
     <div class="players" id="players"></div>
     <div class="row"><input type="text" id="newPlayer" placeholder="名前を入力" maxlength="20"><button id="addPlayer">追加</button></div>
@@ -127,64 +128,93 @@ function pick(){
   return last;
 }
 
+// ---- 分割(同じ項目の細かいピースをホイール全体に散らす) ----
+const SLICES = 28, TAU = Math.PI*2;
+function segments(){
+  const {p,sum} = weights(); if(!sum) return [];
+  const segs = [];
+  p.forEach((x,i) => {
+    if(x <= 0) return;
+    const k = Math.max(1, Math.round(x*SLICES));
+    for(let j=0;j<k;j++) segs.push({item:i, pos:(j+0.5)/k, sw:x/k*TAU});
+  });
+  segs.sort((a,b) => a.pos-b.pos || a.item-b.item);
+  let a = 0; segs.forEach(s => { s.start = a; a += s.sw; });
+  return segs;
+}
+
 // ---- 描画 ----
 function draw(){
   const c = $('wheel'), g = c.getContext('2d'), S = c.width, R = S/2 - 8;
   g.clearRect(0,0,S,S);
-  const {p,sum} = weights();
+  const segs = segments();
   g.save(); g.translate(S/2,S/2);
-  if(!sum){
-    g.fillStyle='#999'; g.beginPath(); g.arc(0,0,R,0,Math.PI*2); g.fill();
+  if(!segs.length){
+    g.fillStyle='#999'; g.beginPath(); g.arc(0,0,R,0,TAU); g.fill();
     g.fillStyle='#fff'; g.font='bold 36px sans-serif'; g.textAlign='center'; g.fillText('確率を入力してください',0,0);
     g.restore(); return;
   }
   g.rotate(rot);
-  let a = -Math.PI/2;
-  state.items.forEach((it,i) => {
-    if(p[i] <= 0) return;
-    const sw = p[i]*Math.PI*2;
-    g.beginPath(); g.moveTo(0,0); g.arc(0,0,R,a,a+sw); g.closePath();
+  segs.forEach(s => {
+    const it = state.items[s.item], a = -Math.PI/2 + s.start;
+    g.beginPath(); g.moveTo(0,0); g.arc(0,0,R,a,a+s.sw); g.closePath();
     g.fillStyle = it.color; g.fill();
-    g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke();
-    if(sw > 0.18){
-      g.save(); g.rotate(a+sw/2); g.textAlign='right'; g.textBaseline='middle';
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.9)'; g.stroke();
+    if(s.sw*130 >= 16){
+      g.save(); g.rotate(a+s.sw/2); g.textAlign='right'; g.textBaseline='middle';
       g.fillStyle='#fff'; g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=4;
-      const size = Math.max(22, Math.min(40, sw*60));
-      g.font = `bold ${size}px sans-serif`;
-      let t = it.name || '(無名)'; const max = R*0.78;
+      g.font = `bold ${Math.min(34, s.sw*130)}px sans-serif`;
+      let t = it.name || '(無名)'; const max = R*0.6;
       while(g.measureText(t).width > max && t.length > 1) t = t.slice(0,-1);
-      g.fillText(t, R-24, 0); g.restore();
+      g.fillText(t, R-20, 0); g.restore();
     }
-    a += sw;
   });
   g.restore();
   g.save(); g.translate(S/2,S/2);
-  g.beginPath(); g.arc(0,0,26,0,Math.PI*2); g.fillStyle='#fff'; g.fill();
+  g.beginPath(); g.arc(0,0,26,0,TAU); g.fillStyle='#fff'; g.fill();
   g.lineWidth=4; g.strokeStyle='#1f2433'; g.stroke(); g.restore();
 }
 
-// ---- 回転 ----
-function spin(){
-  if(spinning) return;
+// ---- 回転: 回す → 自分でストップ → 長い減速 ----
+let phase = 'idle', omega = 0, last = 0;
+const TOP_SPEED = 13, ACCEL = 16, STOP_MS = 9000, K = 4;
+function setBtn(){
+  const b = $('spin'); spinning = phase !== 'idle';
+  b.textContent = phase === 'idle' ? '回す' : phase === 'running' ? 'ストップ' : '止まるまで…';
+  b.disabled = phase === 'stopping';
+  document.body.classList.toggle('busy', spinning);
+}
+function start(){
+  if(phase !== 'idle') return;
   if(!state.players.length){ $('result').textContent='プレイヤーを追加してください'; return; }
-  const idx = pick(); if(idx < 0) return;
-  const {p} = weights();
-  // 当選項目の中心角(時計回り、上=0)
-  let start = 0; for(let i=0;i<idx;i++) start += p[i]*Math.PI*2;
-  const sw = p[idx]*Math.PI*2;
-  const center = start + sw/2 + (rand01()-0.5)*sw*0.8;
-  const TAU = Math.PI*2;
-  let delta = ((-center - rot) % TAU + TAU) % TAU;
-  const target = rot + delta + TAU*(5 + Math.floor(rand01()*3));
-  const from = rot, dur = 4500, t0 = performance.now();
-  spinning = true; $('spin').disabled = true; $('result').textContent = '…';
-  const ease = t => 1 - Math.pow(1-t, 4);
+  if(!weights().sum) return;
+  phase = 'running'; omega = 0; last = performance.now();
+  $('result').textContent = '好きなタイミングでストップ!'; setBtn();
+  requestAnimationFrame(tick);
+}
+function tick(now){
+  if(phase !== 'running') return;
+  const dt = Math.min(0.05,(now-last)/1000); last = now;
+  omega = Math.min(TOP_SPEED, omega + ACCEL*dt);
+  rot = (rot + omega*dt) % TAU; draw();
+  requestAnimationFrame(tick);
+}
+function stop(){
+  if(phase !== 'running') return;
+  phase = 'stopping'; setBtn(); $('result').textContent = '…';
+  const idx = pick();                                  // 先に確率どおりに当選項目を決める
+  const mine = segments().filter(s => s.item === idx);
+  const seg = mine[Math.floor(rand01()*mine.length)];  // その項目のピースのどれかに止める
+  const center = seg.start + seg.sw/2 + (rand01()-0.5)*seg.sw*0.8;
+  const need = (((-center - rot) % TAU) + TAU) % TAU;
+  let D = need + Math.ceil((omega*STOP_MS/1000/K - need)/TAU)*TAU;  // 現在速度になめらかに繋がる距離
+  while(D < TAU*3) D += TAU;
+  const from = rot, t0 = performance.now();
   (function frame(now){
-    const t = Math.min(1,(now-t0)/dur);
-    rot = from + (target-from)*ease(t); draw();
+    const t = Math.min(1,(now-t0)/STOP_MS);
+    rot = from + D*(1 - Math.pow(1-t, K)); draw();
     if(t < 1) return requestAnimationFrame(frame);
-    rot = target % TAU; spinning = false; $('spin').disabled = false;
-    finish(idx);
+    rot %= TAU; phase = 'idle'; setBtn(); finish(idx);
   })(t0);
 }
 function finish(idx){
@@ -255,7 +285,7 @@ function renderLog(){
     `<div>${state.log.length-i}. ${esc(l.player)} → <span class="dot" style="background:${l.color}"></span>${esc(l.item)}</div>`).join('');
 }
 
-$('spin').onclick = spin;
+$('spin').onclick = () => phase === 'idle' ? start() : stop();
 $('addItem').onclick = () => {
   if(spinning) return;
   state.items.push({name:'項目'+(state.items.length+1), pct:10, color:PALETTE[state.items.length % PALETTE.length]});
