@@ -1,0 +1,6 @@
+{"title": "金星が11月30日にいちばん明るく｜明け方の東南東の空で探す", "category": "sky",
+ "headline": "明けの明星を探す", "sub": "11月30日、最大光度の金星を東南東で", "kicker": "VENUS 2026",
+ "en": "The brightest star at dawn is not a star.", "seed": 26,
+ "composition": {"tone": "dawn", "ground": "hills", "horizon": 0.72, "milky": false,
+   "clouds": {"y0": 0.60, "y1": 0.70, "density": 0.25},
+   "motifs": [{"type": "planet", "kind": "venus", "cx": 0.66, "cy": 0.36}]}}

@@ -1,0 +1,5 @@
+{"title": "火星が2027年2月20日に地球へ最接近｜一晩中見える時期と探し方", "category": "sky",
+ "headline": "赤い火星が最接近", "sub": "2027年2月20日、一晩中見える時期", "kicker": "MARS 2027",
+ "en": "A steady red light, all night long.", "seed": 27,
+ "composition": {"tone": "night", "ground": "mountains", "rough": 120, "horizon": 0.74,
+   "motifs": [{"type": "planet", "kind": "mars", "cx": 0.68, "cy": 0.34, "size": 1.1}]}}

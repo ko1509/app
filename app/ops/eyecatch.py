@@ -422,6 +422,16 @@ class Scene:
             img = img + (self.blur(lay, rr * .5) * rr * 60 + self.blur(lay, rr * 3) * rr * 30)[..., None] * np.array(col)
         return img
 
+    def m_planet(self, img, cx=.66, cy=.38, kind="venus", size=1.0):
+        """明るい惑星を1つ：金星（白く強く輝く）・火星（赤みを帯びた安定した光）・木星（クリーム色）。尾も線も描かない"""
+        spec = {"venus": ((1, .98, .90), 1.0, 1.0), "mars": ((1, .52, .30), .62, .55), "jupiter": ((1, .93, .78), .72, .75)}[kind]
+        col, st, halo = spec; y, x = np.mgrid[0:H, 0:W].astype(np.float32); d = np.sqrt((x - W * cx) ** 2 + (y - H * cy) ** 2)
+        core = np.exp(-d ** 2 / (2 * (3.2 * size) ** 2)) * 3.0 * st
+        near = np.exp(-d / (16 * size)) * .9 * st * halo
+        wide = np.exp(-d / (95 * size)) * .20 * st * halo
+        glare = np.exp(-d / (260 * size)) * .06 * halo
+        return img + (core + near + wide + glare)[..., None] * np.array(col)
+
     def m_straight(self, img, p0, p1, dots=False):
         if dots:
             lay = np.zeros((H, W), np.float32)
@@ -717,6 +727,30 @@ class Scene:
             img = img + l[..., None] * np.array([1, .75, .45])
         return img
 
+    def m_exhibit(self, img, hz, x=.66, size=1.0, model=True):
+        """宇宙機関の展示館：横に長い低い建物、ガラス面の明かり、入口。model=True で手前に簡略化したロケット模型（実在の機体ではない）を照明で照らす"""
+        cx = W * x; by = H * hz + 8; bw = W * .26 * size; bh = H * .085 * size
+        y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        body = self._mask(lambda d: (d.rectangle((cx - bw, by - bh, cx + bw, H), fill=255), d.polygon([(cx - bw * .55, by - bh), (cx - bw * .30, by - bh * 1.55), (cx + bw * .45, by - bh * 1.55), (cx + bw * .70, by - bh)], fill=255)))
+        img = self.put(img, body, (.018, .022, .034), sky=(.15, .19, .28))
+        n = 12; gx0 = cx - bw + 36; gw = (2 * bw - 72) / n
+        glass = self._mask(lambda d: [d.rectangle((gx0 + i * gw + 3, by - bh * .86, gx0 + (i + 1) * gw - 3, by - bh * .12), fill=255) for i in range(n)], .7)
+        shade = np.clip(1.15 - (y - (by - bh * .86)) / (bh * .9), .35, 1)
+        img = img + (glass * shade)[..., None] * np.array([.95, .78, .50]) * .85 + self.blur(glass, 26)[..., None] * np.array([1, .66, .34]) * .45
+        door = self._mask(lambda d: d.rectangle((cx - bw * .07, by - bh * .5, cx + bw * .07, by), fill=255), .6)
+        img = img + door[..., None] * np.array([1, .86, .6]) + self.blur(door, 34)[..., None] * np.array([1, .66, .34]) * .5
+        if model:
+            mx = cx - bw * 1.28; mh = H * .17 * size; mw = mh * .085; base = by + 10
+            rk = self._mask(lambda d: (d.rectangle((mx - mw, base - mh, mx + mw, base - 14), fill=255), d.polygon([(mx - mw, base - mh), (mx + mw, base - mh), (mx, base - mh - mw * 3.4)], fill=255),
+                                       d.rectangle((mx - mw * 3.0, base - 14, mx + mw * 3.0, base), fill=255),
+                                       d.polygon([(mx - mw, base - 14 - mh * .18), (mx - mw * 2.6, base - 14), (mx - mw, base - 14)], fill=255), d.polygon([(mx + mw, base - 14 - mh * .18), (mx + mw * 2.6, base - 14), (mx + mw, base - 14)], fill=255)), .6)
+            sp = np.exp(-((xx - mx + mh * .55) ** 2 + (y - base + mh * .45) ** 2) / (2 * (mh * .5) ** 2)) * .22
+            img = img + sp[..., None] * np.array([1, .9, .7])
+            img = self.put(img, rk, (.05, .055, .07), sky=(.22, .26, .36))
+            rim = np.clip(self.blur(rk, 5) - rk, 0, 1) * np.clip(1.0 - (y - (base - mh)) / mh, 0, 1)
+            img = img + rim[..., None] * np.array([1, .86, .6]) * 1.1 + (rk * .06 * np.clip(1.0 - (y - (base - mh)) / mh, 0, 1))[..., None] * np.array([1, .8, .55])
+        return img
+
     def m_lighthouse(self, img, hz, x=.78, size=1.0, beam=-1):
         """岬の灯台：崖の上の白い塔と、海へのびる光の帯"""
         cx = W * x; k = size * S / 2; gy = H * hz
@@ -840,6 +874,12 @@ class Scene:
                     w = sz * .55
                     d.polygon([(X - w * .30, base - sz * .07), (X + w * .40, base - sz * .07), (X + w * .70, base), (X - w * .65, base)], fill=255)
                     d.ellipse((X + w * .02, base - sz * .085, X + w * .30, base - sz * .045), fill=255)
+                elif k == "lantern":  # キャンプ用ランタン：台座・ガラスのほや・笠・持ち手
+                    h = sz * .22; w = h * .62
+                    d.rounded_rectangle((X - w * .46, base - h * .17, X + w * .46, base), radius=8, fill=255)
+                    d.ellipse((X - w * .5, base - h * .86, X + w * .5, base - h * .14), fill=255)
+                    d.rounded_rectangle((X - w * .40, base - h, X + w * .40, base - h * .84), radius=8, fill=255)
+                    d.arc((X - w * .42, base - h * 1.38, X + w * .42, base - h * .92), 180, 360, fill=255, width=7)
                 elif k == "headlamp":
                     d.rounded_rectangle((X - 34, base - 30, X + 34, base), radius=10, fill=255)
                     d.arc((X - 90, base - 60, X + 90, base + 30), 160, 20, fill=255, width=10)
@@ -857,6 +897,11 @@ class Scene:
                     ring = np.exp(-((dd - r * .9) / 3) ** 2) * .5
                     hl = np.exp(-(((xx - cxl + r * .35) / (r * .16)) ** 2 + ((y - base + r * 1.55) / (r * .10)) ** 2)) * .9
                     img = img * (1 - lens[..., None]) + lens[..., None] * glass + (ring + hl * lens)[..., None] * np.array([.9, .85, 1])
+            if k == "lantern":  # ほやの中で灯る暖色の明かりと、まわりを照らす光
+                h = sz * .22; w = h * .62; y, xx = np.mgrid[0:H, 0:W].astype(np.float32); cyg = base - h * .50
+                glob = np.clip(1 - (((xx - X) / (w * .42)) ** 2 + ((y - cyg) / (h * .34)) ** 2), 0, 1) ** .6
+                pool = np.exp(-(((xx - X) / (w * 3.2)) ** 2 + ((y - cyg) / (h * 2.2)) ** 2)) * .22
+                img = img + (glob * .95)[..., None] * np.array([1, .72, .36]) + pool[..., None] * np.array([1, .6, .28]) + self.blur(glob, 22)[..., None] * np.array([1, .6, .3]) * .5
             if k == "mug" and it.get("steam", True):
                 st = self.lowres_noise(18, 6, sx=.4, sy=1, octaves=4); y, xx = np.mgrid[0:H, 0:W].astype(np.float32)
                 h = sz * .09; env = np.exp(-((xx - X - np.sin(y / 60) * 18) / (h * .35)) ** 2) * np.clip((base - h - y) / (h * 3.2), 0, 1) * np.clip(1 - (base - h - y) / (h * 3.2), 0, 1) * (y < base - h)
@@ -904,6 +949,7 @@ class Scene:
             elif k == "constellation": img = self.m_constellation(img, mo.get("name", "orion"), mo.get("cx", .70), mo.get("cy", .30), mo.get("scale", 1), mo.get("radiant"), mo.get("lines", False))
             elif k in ("moon", "bigmoon"): img = self.m_moon(img, mo.get("cx", .72), mo.get("cy", .28 if k == "moon" else hz - .12), mo.get("r", 110 if k == "moon" else 260), k == "bigmoon")
             elif k == "planets": img = self.m_planets(img, mo.get("cx", .68), mo.get("cy", .42))
+            elif k == "planet": img = self.m_planet(img, mo.get("cx", .66), mo.get("cy", .38), mo.get("kind", "venus"), mo.get("size", 1.0))
             elif k == "eclipse": img = self.m_eclipse(img, mo.get("cx", .70), mo.get("cy", .30), mo.get("r", 90), mo.get("sequence", False))
             elif k == "comet": img = self.m_comet(img, mo.get("cx", .68), mo.get("cy", .30), mo.get("angle", -35), mo.get("length", .30))
             elif k == "iss": img = self.m_straight(img, (mo.get("x0", .30), mo.get("y0", .62)), (mo.get("x1", .95), mo.get("y1", .12)))
@@ -953,7 +999,7 @@ class Scene:
             if mo["type"] == "liftoff": img = self.liftoff(img, hz, mo.get("x", .66), mo.get("scale", 1.0), mo.get("rise", .35), tone)
         lamp = next(((W * m.get("x", .7) + 34, H * m.get("y", .99) - 15, tuple(m.get("color", (1, .12, .06))), m.get("strength", 1.0))
                      for m in motifs if m["type"] == "headlamp"), None)
-        gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp", "sheet")]
+        gear = [m for m in motifs if m["type"] in ("chair", "backpack", "thermos", "mug", "binoculars", "bench", "headlamp", "sheet", "lantern")]
         for mo in motifs:
             k = mo["type"]
             if k in ("dome", "tripod", "phone"): img = self.m_object(img, k, hz, mo.get("x", .72))
@@ -964,6 +1010,7 @@ class Scene:
             elif k == "lighthouse": img = self.m_lighthouse(img, hz, mo.get("x", .78), mo.get("size", 1.0), mo.get("beam", -1))
             elif k == "antenna": img = self.m_antenna(img, hz, mo.get("x", .70), mo.get("size", 1.0), mo.get("tilt", 35))
             elif k == "tent": img = self.m_tent(img, hz, mo.get("x", .74), mo.get("size", 1.0), mo.get("y", .90))
+            elif k == "exhibit": img = self.m_exhibit(img, hz, mo.get("x", .66), mo.get("size", 1.0), mo.get("model", True))
         if gear: img = self.m_gear(img, sorted(gear, key=lambda m: (m["type"] != "bench", m["type"] != "sheet")), hz, lamp)
         if c.get("rain"): img = self.rain(img, c["rain"].get("amount", .6), c["rain"].get("angle", 12))
         return img

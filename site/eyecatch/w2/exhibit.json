@@ -1,0 +1,5 @@
+{"title": "JAXA筑波宇宙センターに行ってみよう｜展示館・見学ツアー・アクセス", "category": "spot",
+ "headline": "筑波で宇宙に触れる", "sub": "展示館・見学ツアー・アクセス", "kicker": "TSUKUBA",
+ "en": "Where the sky comes indoors.", "seed": 10,
+ "composition": {"tone": "bluehour", "ground": "hills", "horizon": 0.66, "clouds": {"y0": 0.45, "y1": 0.60, "density": 0.3},
+   "motifs": [{"type": "exhibit", "x": 0.68, "size": 1.15, "model": true}]}}

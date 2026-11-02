@@ -1,0 +1,6 @@
+{"title": "流星群の観察に要るもの｜レジャーシート・イス・防寒の考え方", "category": "gear",
+ "headline": "流星群の持ち物", "sub": "シート・イス・防寒の考え方", "kicker": "METEOR CHECKLIST",
+ "en": "A small light, a long night.", "seed": 24,
+ "composition": {"tone": "night", "ground": "forest", "horizon": 0.64,
+   "motifs": [{"type": "meteors", "rx": 0.7, "ry": 0.18, "n": 2},
+              {"type": "sheet", "x": 0.70, "size": 1.0, "y": 0.90}, {"type": "lantern", "x": 0.80, "y": 0.86, "size": 1.0}, {"type": "chair", "x": 0.60, "y": 0.86, "size": 1.0}]}}
