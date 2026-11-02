@@ -81,11 +81,18 @@
 - カード：`draft.eyecatch`（`draft` が無ければ `eyecatch`）に `{"spec": {…}, "imageId": "<articleId>-eyecatch", "round": <稿の round>, "createdAt": "<今>"}`。
 
 ## 5. SNS の画像（`kind: "snsimage"`）：図解だけ（写真風の絵は使わない）
+
+**デザインの決まり（運営者の指示：図解は作り込む。ふつうの「文字だけのカード」で終わらせない）**
+- 土台は `sns_cards.py` が描く：夜空の黒の地・ごく淡い星・下の地平のうすい光・上の進行バー（カルーセル）・下の MIAGETABI と「模式図」・スワイプの合図。**進行バーと表紙の短い線は飾りで、強調の数に入れない。** 強調のオレンジは1枚に1か所だけ。
+- **1枚に伝えることは1つ**。文字は大きく少なく（見出し14字前後、補足は2行まで）。数字（時刻・個数・高さ）は `stat`（大きな数字）で見せる。方角と高さは `direction`（光る点・地平線までの引き出し線・度つき）で見せる。
+- カルーセルの型：①表紙（`cover: true`、`art`: 月の話は `moon`、ほかは `arcs`）→ ②数字（`stat`）→ ③図（`direction`）または要点（`slide`）→ ④「保存して」とサイトへの案内（`cover: true`）。2〜3枚目を同じ見た目の文字だけのカードにしない。
+- 見出しの折り返しは `\n` で自分で決める（例 `"保存して、\n夜に見返してね"`）。助詞や1文字だけが次の行に残らないようにする。
+- 星・月・円弧などの飾りは写真風にしない（図・記号のまま）。
 SNS 審査が OK にした投稿（`postIds`）に画像を作る。運営者の「作り直す」の依頼も同じ（`note` に指示）。**アイキャッチの `eyecatch.py` の写真風の背景は SNS には使わない。** 道具は `ops/sns_cards.py`（`eyecatch.py` と同じフォルダに置いて実行）。夜空の黒 #0B0B10 の地に白い線と文字、強調はオレンジ #E8481C 1か所だけ、右下に「模式図」。
 1. 投稿ごとに `posts/<ID>` を読む。`status` が `審査済み` でないもの（作り直しの依頼を除く）、`予約済み`・`投稿済み` のものは作らない。
 2. spec は投稿の `imageBrief` をほぼそのまま使う（`type`: `week`・`direction`・`slide`・`poll`、カルーセルは `slides`。形は `ops/sns-manual.md` の 5 章と `sns_cards.py` の先頭）。`format` は `channel` が `X` なら `"x"`（1200×675）、`Instagram` なら `"ig"`（1080×1350）。`imageBrief` に `type` が無い古い形（`scene`・`headline` など）のときは、本文の内容に合う `slide`（見出しと要点）か `direction` に直す。**`scene`（風景の指示）は使わない。**
 3. `python3 sns_cards.py spec.json out.jpg`（カルーセルは `out-1.jpg`・`out-2.jpg` … ができる）。
-4. **作った画像を自分で開いて確かめる**：文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
+4. **作った画像を自分で開いて確かめる（全枚を並べて見る）**：見出しの折り返しが不自然でないか／数字が大きく読めるか／余白が空きすぎ・詰まりすぎでないか／2〜3枚目が文字だけの同じカードになっていないか／文字が欠けていない・はみ出していない／日時・数字・方角が本文と同じ／強調が1か所だけ／`direction` の点が正しい位置（`az`・`alt` は `sky.py` で出した値）／カルーセルは最初が大きなタイトル、最後が「保存して」とサイトへの案内。直すのは spec（3回まで）。
 5. **WordPress のメディアに上げて、公開 URL を取る**（Instagram・Threads の予約と X の添付に使う）：できた画像ごとに、環境変数 `MIAGETABI_WP_USER`・`MIAGETABI_WP_APP_PASSWORD`（有無は `test -n` だけで確かめる。値は表示・記録しない）で `POST https://miagetabi.space/wp-json/wp/v2/media`（本文は JPEG のバイト、`Content-Type: image/jpeg`、`Content-Disposition: attachment; filename="sns-<投稿ID>[-<番号>]-<YYYYMMDDHHMM>.jpg"`）。返ってきた `id` に `POST /wp/v2/media/<id>`（`alt_text`・`title`：投稿の1行目）を送る。返ってきた `source_url` を控える（`ops/publish_wp.py` の `upload` と同じやり方。コマンドで足りる：画像の db ドキュメントを保存して `python3 publish_wp.py snsmedia <保存した json> <投稿ID> "<alt 文>"` → 最後の行の `url`）。上げられない・環境変数が無いときは、画像は db だけに保存し、受信箱に1件（`inbox/snsimage-wp`、`ownerOnly: true`、`ownerReason`：「WordPress の認証情報が実行環境に無いため、画像を上げられませんでした」）を出す。
 6. 保存：1枚なら `images/sns-<投稿ID>` を `set`：`{"kind": "sns", "postId", "format", "dataUrl", "spec", "createdAt"}`。`posts/<ID>` に `imageId: "sns-<投稿ID>"` と、5 で得た `imageUrl`（カルーセルは `imageUrls` の配列も）を `update`（`if_version` つき）。**カルーセル**は `images/sns-<投稿ID>-1`、`-2` … を同じ形で `set` し、`posts/<ID>` に `imageId`（1枚目）と `imageIds`（全部の ID の配列）を書く。
 7. 依頼を `done` にし、報告する（3行以内：何件・何枚作ったか）。
