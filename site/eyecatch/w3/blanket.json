@@ -1,0 +1,5 @@
+{"title": "ロケット打ち上げ見学の持ち物｜種子島の見学場で困らないチェックリスト", "category": "gear",
+ "headline": "見学の持ち物", "sub": "種子島の見学場で困らないチェックリスト", "kicker": "LAUNCH CHECKLIST",
+ "en": "For the cold hour before the light.", "seed": 31,
+ "composition": {"tone": "dawn", "ground": "sea", "horizon": 0.64, "clouds": {"y0": 0.50, "y1": 0.60, "density": 0.3},
+   "motifs": [{"type": "bench", "x0": 0.46}, {"type": "blanket", "x": 0.60, "y": 0.795, "size": 1.0}, {"type": "thermos", "x": 0.78, "y": 0.795, "size": 1.0}, {"type": "binoculars", "x": 0.86, "y": 0.795, "size": 1.0}]}}

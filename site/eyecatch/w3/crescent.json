@@ -1,0 +1,5 @@
+{"title": "水星が2027年2月3日に東方最大離角｜日の入り後の西の空で探す", "category": "sky",
+ "headline": "夕空の水星を探す", "sub": "2027年2月3日、日の入り後の西の空", "kicker": "MERCURY 2027",
+ "en": "A thin crescent, then a small bright spark.", "seed": 28,
+ "composition": {"tone": "dusk", "ground": "sea", "horizon": 0.72, "clouds": {"y0": 0.56, "y1": 0.68, "density": 0.2},
+   "motifs": [{"type": "crescent", "cx": 0.62, "cy": 0.30, "r": 72, "phase": 0.24, "tilt": 28}, {"type": "planet", "kind": "jupiter", "cx": 0.74, "cy": 0.44, "size": 0.8}]}}
