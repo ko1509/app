@@ -1,0 +1,5 @@
+{"title": "しぶんぎ座流星群2027｜1/4未明、初夢前に流れ星を見よう", "category": "sky",
+ "headline": "年明けの流れ星", "sub": "1月4日の未明、防寒して東北東へ", "kicker": "QUADRANTIDS 2027",
+ "en": "The first stars of the year, in the cold.", "seed": 16,
+ "composition": {"tone": "night", "ground": "snow", "rough": 80, "horizon": 0.70,
+   "motifs": [{"type": "meteors", "rx": 0.66, "ry": 0.16, "n": 2}]}}

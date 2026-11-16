@@ -781,6 +781,29 @@ class Scene:
         beacon = np.exp(-((xx - bx) ** 2 + (y - byy) ** 2) / (2 * 4 ** 2)) * 2.2 + np.exp(-np.sqrt((xx - bx) ** 2 + (y - byy) ** 2) / 26) * .5
         return img + beacon[..., None] * np.array([1, .12, .06])
 
+    def m_mist(self, img, hz, y=None, density=.55, tint=(.55, .62, .78), height=.07):
+        """地面にたまる低い霧：谷や海辺の明け方・夕方に。tint は霧の色、y は中心の高さ（既定は地平線の少し下）"""
+        yc = (hz + .02 if y is None else y); n = self.lowres_noise(7, 3, sx=1.0, sy=.22, octaves=4)
+        band = np.exp(-((self.yy - yc) / height) ** 2) * np.clip((n - (1 - density)) * 3.0, 0, 1)
+        return img + (band * .30)[..., None] * np.array(tint)
+
+    def m_shuttlebus(self, img, hz, x=.60, size=1.0, y=.88):
+        """無料送迎バス：横から見たバス。窓の暖色の明かり、ヘッドライト、車輪。ロゴ・文字は描かない"""
+        cx = W * x; base = H * y; L = W * .22 * size; Hh = H * .15 * size; wr = Hh * .17
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        body = self._mask(lambda d: (d.rounded_rectangle((cx - L / 2, base - Hh - wr * .4, cx + L / 2, base - wr * .6), radius=int(Hh * .16), fill=255),
+                                     d.ellipse((cx - L * .40 - wr, base - wr * 2, cx - L * .40 + wr, base), fill=255), d.ellipse((cx + L * .32 - wr, base - wr * 2, cx + L * .32 + wr, base), fill=255)), .7)
+        img = self.put(img, body, (.05, .056, .078), sky=(.55, .62, .80), rim=8)
+        n = 7; wx0 = cx - L / 2 + L * .05; ww = (L * .90) / n
+        win = self._mask(lambda d: [d.rounded_rectangle((wx0 + i * ww + ww * .10, base - Hh * .92, wx0 + (i + 1) * ww - ww * .10, base - Hh * .50), radius=6, fill=255) for i in range(n)], .6)
+        img = img + win[..., None] * np.array([1, .80, .48]) * .8 + self.blur(win, 18)[..., None] * np.array([1, .66, .34]) * .35
+        hx, hy = cx + L / 2 - 6, base - Hh * .28
+        lamp = np.exp(-((xx - hx) ** 2 + (yy - hy) ** 2) / (2 * 6 ** 2)) * 2.6 + np.exp(-np.sqrt((xx - hx) ** 2 + (yy - hy) ** 2) / 55) * .55
+        cone = np.exp(-(((xx - hx - L * .35) / (L * .30)) ** 2 + ((yy - hy - Hh * .30) / (Hh * .30)) ** 2)) * .22
+        img = img + (lamp + cone)[..., None] * np.array([1, .90, .66])
+        wheels = self._mask(lambda d: [d.ellipse((wxp - wr, base - wr * 2, wxp + wr, base), fill=255) for wxp in (cx - L * .40, cx + L * .32)], .5)
+        return img * (1 - wheels[..., None] * .9)
+
     def m_lighthouse(self, img, hz, x=.78, size=1.0, beam=-1):
         """岬の灯台：崖の上の白い塔と、海へのびる光の帯"""
         cx = W * x; k = size * S / 2; gy = H * hz
@@ -1032,8 +1055,14 @@ class Scene:
             img = self.ground(img, "city", hz, None)
         elif g in ("mountains", "forest"):
             img = self.mountains(img, hz, 3, c.get("rough", 170), trees=(g == "forest"))
+        elif g == "snow":  # 雪の積もった丘：夜空の色を受けてほの青く明るい。尾根に淡い光
+            img = self.mountains(img, hz, 2, c.get("rough", 90), near=(.17, .21, .32))
+            n = self.lowres_noise(9, 3, sx=1.0, sy=.4, octaves=4); gm = np.clip((self.yy - hz) / .08, 0, 1) * np.clip((.98 - self.yy) / .2, 0, 1)
+            img = img + (gm * (.015 + .09 * n ** 1.5))[..., None] * np.array([.62, .74, 1.0])
         else:
             img = self.mountains(img, hz, 2, 60)
+        for mo in motifs:
+            if mo["type"] == "mist": img = self.m_mist(img, hz, mo.get("y"), mo.get("density", .55), tuple(mo.get("tint", (.55, .62, .78))), mo.get("height", .07))
         for mo in motifs:
             if mo["type"] == "liftoff": img = self.liftoff(img, hz, mo.get("x", .66), mo.get("scale", 1.0), mo.get("rise", .35), tone)
         lamp = next(((W * m.get("x", .7) + 34, H * m.get("y", .99) - 15, tuple(m.get("color", (1, .12, .06))), m.get("strength", 1.0))
@@ -1048,6 +1077,7 @@ class Scene:
             elif k == "deck": img = self.m_deck(img, hz, mo.get("people", 3))
             elif k == "lighthouse": img = self.m_lighthouse(img, hz, mo.get("x", .78), mo.get("size", 1.0), mo.get("beam", -1))
             elif k == "antenna": img = self.m_antenna(img, hz, mo.get("x", .70), mo.get("size", 1.0), mo.get("tilt", 35))
+            elif k == "shuttlebus": img = self.m_shuttlebus(img, hz, mo.get("x", .60), mo.get("size", 1.0), mo.get("y", .88))
             elif k == "tent": img = self.m_tent(img, hz, mo.get("x", .74), mo.get("size", 1.0), mo.get("y", .90))
             elif k == "hangar": img = self.m_hangar(img, hz, mo.get("x", .70), mo.get("size", 1.0))
             elif k == "exhibit": img = self.m_exhibit(img, hz, mo.get("x", .66), mo.get("size", 1.0), mo.get("model", True))

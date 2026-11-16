@@ -1,0 +1,5 @@
+{"title": "内之浦（鹿児島・肝付町）でロケット打ち上げを見るガイド｜イプシロンSに備えて", "category": "launch",
+ "headline": "内之浦で見る打ち上げ", "sub": "イプシロンSに備える見学ガイド", "kicker": "UCHINOURA",
+ "en": "Mist in the valley, light on the hill.", "seed": 15,
+ "composition": {"tone": "dawn", "ground": "mountains", "rough": 150, "horizon": 0.72, "clouds": {"y0": 0.50, "y1": 0.62, "density": 0.3},
+   "motifs": [{"type": "mist", "y": 0.74, "density": 0.7, "height": 0.06, "tint": [0.95, 0.72, 0.6]}, {"type": "antenna", "x": 0.72, "size": 0.9, "tilt": 35}]}}

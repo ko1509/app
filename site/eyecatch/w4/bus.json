@@ -1,0 +1,5 @@
+{"title": "筑波宇宙センター特別公開2026｜無料送迎バスと駐車場の予約", "category": "spot",
+ "headline": "送迎バスで会場へ", "sub": "駐車場は事前予約制、バスは11月28日", "kicker": "TSUKUBA OPEN DAY",
+ "en": "The last stretch, by shuttle.", "seed": 10,
+ "composition": {"tone": "bluehour", "ground": "hills", "horizon": 0.66, "clouds": {"y0": 0.46, "y1": 0.60, "density": 0.3},
+   "motifs": [{"type": "shuttlebus", "x": 0.66, "size": 1.15, "y": 0.84}]}}
