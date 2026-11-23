@@ -1,0 +1,5 @@
+{"title": "12/24は2026年でいちばん大きな満月｜クリスマスにスマホで月をきれいに撮る", "category": "sky",
+ "headline": "大きな満月とかさ", "sub": "12月24日、クリスマスの夜の月", "kicker": "SUPERMOON 2026",
+ "en": "A ring of ice around the winter moon.", "seed": 17,
+ "composition": {"tone": "moonlit", "ground": "snow", "rough": 70, "horizon": 0.72, "stars": 1200,
+   "motifs": [{"type": "moon", "cx": 0.68, "cy": 0.30, "r": 96}, {"type": "halo", "cx": 0.68, "cy": 0.30, "r": 250, "width": 28}]}}

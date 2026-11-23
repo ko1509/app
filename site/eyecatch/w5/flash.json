@@ -1,0 +1,5 @@
+{"title": "ロケットの打ち上げが延期になったら？宿・飛行機・見学チケットの考え方", "category": "launch",
+ "headline": "延期になったら", "sub": "宿・飛行機・見学チケットの考え方", "kicker": "IF DELAYED",
+ "en": "When the weather says wait.", "seed": 13,
+ "composition": {"tone": "bluehour", "ground": "sea", "horizon": 0.72, "clouds": {"y0": 0.42, "y1": 0.66, "density": 0.75},
+   "motifs": [{"type": "flash", "cx": 0.34, "cy": 0.56, "size": 1.0, "strength": 1.8}, {"type": "pad", "x": 0.70, "scale": 1.0}]}}
